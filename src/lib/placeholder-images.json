@@ -1,3 +1,46 @@
 {
-  "placeholderImages": []
+  "placeholderImages": [
+    {
+      "id": "1",
+      "description": "Avatar for Innovate Inc.",
+      "imageUrl": "https://images.unsplash.com/photo-1691951764668-cb6a5cb10ee1?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHwxMHx8YWJzdHJhY3QlMjBjb21wYW55fGVufDB8fHx8MTc1OTI2NTY2OXww&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "abstract company"
+    },
+    {
+      "id": "2",
+      "description": "Avatar for Apex Solutions",
+      "imageUrl": "https://images.unsplash.com/photo-1713176988815-47bb84f325b1?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHwyfHxjb3Jwb3JhdGUlMjBsb2dvfGVufDB8fHx8MTc1OTI0NzY4Mnww&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "corporate logo"
+    },
+    {
+      "id": "3",
+      "description": "Avatar for Quantum Corp",
+      "imageUrl": "https://images.unsplash.com/photo-1505156868547-9b49f4df4e04?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHwxMHx8dGVjaCUyMGxvZ298ZW58MHx8fHwxNzU5MzMxNTU4fDA&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "tech logo"
+    },
+    {
+      "id": "4",
+      "description": "Avatar for Legacy Ltd.",
+      "imageUrl": "https://images.unsplash.com/photo-1570217430750-62ccc52e8c57?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHw3fHxjbGFzc2ljJTIwbG9nb3xlbnwwfHx8fDE3NTkyNzQ3MTF8MA&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "classic logo"
+    },
+    {
+      "id": "5",
+      "description": "Avatar for Synergy Group",
+      "imageUrl": "https://images.unsplash.com/photo-1668536018801-0c7035b042b9?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHwxMHx8bW9kZXJuJTIwY29tcGFueXxlbnwwfHx8fDE3NTkzNDg1NTd8MA&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "modern company"
+    },
+    {
+      "id": "6",
+      "description": "User avatar",
+      "imageUrl": "https://images.unsplash.com/photo-1570170609489-43197f518df0?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHwxMHx8cHJvZmVzc2lvbmFsJTIwcGVyc29ufGVufDB8fHx8MTc1OTI1MzI5OXww&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "professional person"
+    },
+    {
+      "id": "7",
+      "description": "Company logo placeholder",
+      "imageUrl": "https://images.unsplash.com/photo-1662052955282-da15376f3919?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHw2fHxidXNpbmVzcyUyMGxvZ298ZW58MHx8fHwxNzU5Mjg0MzUxfDA&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "business logo"
+    }
+  ]
 }
