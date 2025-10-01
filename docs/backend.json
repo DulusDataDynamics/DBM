@@ -33,8 +33,7 @@
         "id",
         "email",
         "businessName",
-        "createdAt",
-        "settingsId"
+        "createdAt"
       ]
     },
     "Task": {
@@ -154,7 +153,7 @@
         },
         "address": {
           "type": "string",
-          "description": "Address of the client."
+          "description": "Address of dissected client."
         }
       },
       "required": [
@@ -206,108 +205,39 @@
   "auth": {
     "providers": [
       "password",
-      "anonymous"
+      "google.com"
     ]
   },
   "firestore": {
-    "structure": [
-      {
-        "path": "/users/{userId}",
-        "definition": {
-          "entityName": "User",
-          "schema": {
-            "$ref": "#/backend/entities/User"
-          },
-          "description": "Collection for storing user profiles. Each document represents a user. Includes userId parameter for path-based ownership.",
-          "params": [
-            {
-              "name": "userId",
-              "description": "The unique identifier for the user."
-            }
-          ]
-        }
+    "/users/{userId}": {
+      "schema": {
+        "$ref": "#/entities/User"
       },
-      {
-        "path": "/users/{userId}/tasks/{taskId}",
-        "definition": {
-          "entityName": "Task",
-          "schema": {
-            "$ref": "#/backend/entities/Task"
-          },
-          "description": "Subcollection for storing tasks associated with a specific user.  Path-based ownership is enforced via the /users/{userId} path.",
-          "params": [
-            {
-              "name": "userId",
-              "description": "The unique identifier for the user."
-            },
-            {
-              "name": "taskId",
-              "description": "The unique identifier for the task."
-            }
-          ]
-        }
+      "description": "Stores user profile information."
+    },
+    "/users/{userId}/tasks/{taskId}": {
+      "schema": {
+        "$ref": "#/entities/Task"
       },
-      {
-        "path": "/users/{userId}/invoices/{invoiceId}",
-        "definition": {
-          "entityName": "Invoice",
-          "schema": {
-            "$ref": "#/backend/entities/Invoice"
-          },
-          "description": "Subcollection for storing invoices associated with a specific user. Path-based ownership is enforced via the /users/{userId} path.",
-          "params": [
-            {
-              "name": "userId",
-              "description": "The unique identifier for the user."
-            },
-            {
-              "name": "invoiceId",
-              "description": "The unique identifier for the invoice."
-            }
-          ]
-        }
+      "description": "Subcollection for user tasks."
+    },
+    "/users/{userId}/invoices/{invoiceId}": {
+      "schema": {
+        "$ref": "#/entities/Invoice"
       },
-      {
-        "path": "/users/{userId}/clients/{clientId}",
-        "definition": {
-          "entityName": "Client",
-          "schema": {
-            "$ref": "#/backend/entities/Client"
-          },
-          "description": "Subcollection for storing clients associated with a specific user. Path-based ownership is enforced via the /users/{userId} path.",
-          "params": [
-            {
-              "name": "userId",
-              "description": "The unique identifier for the user."
-            },
-            {
-              "name": "clientId",
-              "description": "The unique identifier for the client."
-            }
-          ]
-        }
+      "description": "Subcollection for user invoices."
+    },
+    "/users/{userId}/clients/{clientId}": {
+      "schema": {
+        "$ref": "#/entities/Client"
       },
-      {
-        "path": "/users/{userId}/settings/{settingsId}",
-        "definition": {
-          "entityName": "Settings",
-          "schema": {
-            "$ref": "#/backend/entities/Settings"
-          },
-          "description": "Subcollection for storing settings associated with a specific user. Path-based ownership is enforced via the /users/{userId} path.",
-          "params": [
-            {
-              "name": "userId",
-              "description": "The unique identifier for the user."
-            },
-            {
-              "name": "settingsId",
-              "description": "The unique identifier for the settings."
-            }
-          ]
-        }
-      }
-    ],
-    "reasoning": "The Firestore structure is designed to ensure authorization independence, clarity, and scalability for the Dulus Business Manager application. It follows the principles of denormalization and structural segregation. Each user will have their own data scope, which simplifies security rules and provides QAPs.\n\nAuthorization Independence:\n\nUser-owned data (Tasks, Invoices, Clients) are stored under the /users/{userId} path, providing implicit ownership.\nNo get() calls are required in security rules to validate ownership.\nQAPs (Rules are not Filters):\nThe structure facilitates secure list operations because each collection holds homogeneous data with the same security requirements. List operations can be scoped to a user's path without the need for filtering based on user ID or other attributes within the rules.\n\nInvariants:\nThe path-based ownership ensures that only the user can access data within their /users/{userId} path, maintaining ownership integrity."
+      "description": "Subcollection for user clients."
+    },
+    "/users/{userId}/settings/{settingsId}": {
+      "schema": {
+        "$ref": "#/entities/Settings"
+      },
+      "description": "Subcollection for user settings."
+    }
   }
 }

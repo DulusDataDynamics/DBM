@@ -4,36 +4,41 @@ import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
 import { Bot } from 'lucide-react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { useAuth } from '@/firebase';
-import { initiateEmailSignIn, initiateGoogleSignIn } from '@/firebase/auth-actions';
+import { initiateEmailSignUp, initiateGoogleSignIn } from '@/firebase/auth-actions';
+import { useRouter } from 'next/navigation';
 
 const formSchema = z.object({
+  businessName: z.string().min(2, { message: 'Business name must be at least 2 characters.' }),
   email: z.string().email({ message: 'Please enter a valid email.' }),
   password: z.string().min(6, { message: 'Password must be at least 6 characters.' }),
 });
 
-export default function LoginPage() {
+export default function SignupPage() {
   const auth = useAuth();
+  const router = useRouter();
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
+      businessName: '',
       email: '',
       password: '',
     },
   });
 
-  function onSubmit(values: z.infer<typeof formSchema>) {
-    initiateEmailSignIn(auth, values.email, values.password);
+  async function onSubmit(values: z.infer<typeof formSchema>) {
+    await initiateEmailSignUp(auth, values.email, values.password, values.businessName);
+    router.push('/dashboard');
   }
 
-  const handleGoogleSignIn = () => {
-    initiateGoogleSignIn(auth);
+  const handleGoogleSignIn = async () => {
+    await initiateGoogleSignIn(auth);
+    router.push('/dashboard');
   };
 
   return (
@@ -44,11 +49,24 @@ export default function LoginPage() {
                 <Bot className="w-8 h-8 text-primary" />
                 <CardTitle className="text-3xl font-headline">Dulus</CardTitle>
             </div>
-          <CardDescription>Enter your email below to login to your account</CardDescription>
+          <CardDescription>Create your account to get started.</CardDescription>
         </CardHeader>
         <CardContent>
           <Form {...form}>
             <form onSubmit={form.handleSubmit(onSubmit)} className="grid gap-4">
+              <FormField
+                control={form.control}
+                name="businessName"
+                render={({ field }) => (
+                  <FormItem className="grid gap-2">
+                    <FormLabel>Business Name</FormLabel>
+                    <FormControl>
+                      <Input placeholder="Your Company" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
               <FormField
                 control={form.control}
                 name="email"
@@ -67,31 +85,26 @@ export default function LoginPage() {
                 name="password"
                 render={({ field }) => (
                   <FormItem className="grid gap-2">
-                    <div className="flex items-center">
-                      <Label htmlFor="password">Password</Label>
-                      <Link href="#" className="ml-auto inline-block text-sm underline">
-                        Forgot your password?
-                      </Link>
-                    </div>
+                    <FormLabel>Password</FormLabel>
                     <FormControl>
-                      <Input id="password" type="password" {...field} />
+                      <Input type="password" {...field} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
                 )}
               />
               <Button type="submit" className="w-full">
-                Login
+                Create Account
               </Button>
               <Button variant="outline" className="w-full" onClick={handleGoogleSignIn} type="button">
-                Login with Google
+                Sign up with Google
               </Button>
             </form>
           </Form>
           <div className="mt-4 text-center text-sm">
-            Don&apos;t have an account?{' '}
-            <Link href="/signup" className="underline">
-              Sign up
+            Already have an account?{' '}
+            <Link href="/" className="underline">
+              Login
             </Link>
           </div>
         </CardContent>

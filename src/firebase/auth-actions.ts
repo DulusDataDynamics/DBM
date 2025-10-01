@@ -1,0 +1,75 @@
+'use client';
+import {
+  Auth,
+  signInAnonymously,
+  createUserWithEmailAndPassword,
+  signInWithEmailAndPassword,
+  GoogleAuthProvider,
+  signInWithPopup,
+  signOut as firebaseSignOut,
+} from 'firebase/auth';
+import { doc, setDoc, getFirestore, serverTimestamp } from 'firebase/firestore';
+import { firebaseApp } from '@/firebase';
+
+export function initiateAnonymousSignIn(authInstance: Auth): void {
+  signInAnonymously(authInstance).catch(error => {
+    console.error("Anonymous sign-in failed", error);
+  });
+}
+
+export async function initiateEmailSignUp(authInstance: Auth, email: string, password: string, businessName: string): Promise<void> {
+  try {
+    const userCredential = await createUserWithEmailAndPassword(authInstance, email, password);
+    const user = userCredential.user;
+    if (user) {
+      const db = getFirestore(firebaseApp);
+      await setDoc(doc(db, 'users', user.uid), {
+        id: user.uid,
+        email: user.email,
+        businessName: businessName,
+        createdAt: serverTimestamp(),
+        settingsId: '', // You can populate this later
+      });
+    }
+  } catch (error) {
+    console.error("Email sign-up failed", error);
+    // Optionally, re-throw or handle the error in the UI
+    throw error;
+  }
+}
+
+export function initiateEmailSignIn(authInstance: Auth, email: string, password: string): void {
+  signInWithEmailAndPassword(authInstance, email, password).catch(error => {
+    console.error("Email sign-in failed", error);
+  });
+}
+
+export async function initiateGoogleSignIn(authInstance: Auth): Promise<void> {
+  const provider = new GoogleAuthProvider();
+  try {
+    const result = await signInWithPopup(authInstance, provider);
+    const user = result.user;
+    if (user) {
+      const db = getFirestore(firebaseApp);
+      await setDoc(doc(db, 'users', user.uid), {
+        id: user.uid,
+        email: user.email,
+        businessName: user.displayName || 'My Business', // Default business name
+        createdAt: serverTimestamp(),
+        settingsId: '',
+      }, { merge: true }); // Merge to avoid overwriting existing data if user signs up differently
+    }
+  } catch (error) {
+    console.error("Google sign-in failed", error);
+    throw error;
+  }
+}
+
+export async function signOut(authInstance: Auth): Promise<void> {
+  try {
+    await firebaseSignOut(authInstance);
+  } catch (error) {
+    console.error("Sign-out failed", error);
+    throw error;
+  }
+}

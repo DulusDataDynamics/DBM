@@ -1,3 +1,5 @@
+'use client';
+
 import Link from 'next/link';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
@@ -14,9 +16,22 @@ import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
 import { Bot, LogOut, Mic, PanelLeft, Search, Settings, User } from 'lucide-react';
 import { MainSidebar } from './sidebar';
 import { PlaceHolderImages } from '@/lib/placeholder-images';
+import { useAuth, useUser } from '@/firebase';
+import { signOut } from '@/firebase/auth-actions';
+import { useRouter } from 'next/navigation';
 
 export function AppHeader() {
-    const userAvatar = PlaceHolderImages.find(p => p.id === '6');
+    const { user } = useUser();
+    const auth = useAuth();
+    const router = useRouter();
+
+    const handleSignOut = async () => {
+      await signOut(auth);
+      router.push('/');
+    };
+
+    const userAvatar = user?.photoURL;
+    const userFallback = user?.displayName?.charAt(0) || user?.email?.charAt(0) || 'U';
 
   return (
     <header className="sticky top-0 z-30 flex h-14 items-center gap-4 border-b bg-card/80 backdrop-blur-sm px-4 sm:static sm:h-auto sm:border-0 sm:bg-transparent sm:px-6 py-4">
@@ -46,8 +61,8 @@ export function AppHeader() {
         <DropdownMenuTrigger asChild>
           <Button variant="outline" size="icon" className="overflow-hidden rounded-full">
             <Avatar>
-                {userAvatar && <AvatarImage src={userAvatar.imageUrl} alt="User Avatar" data-ai-hint={userAvatar.imageHint} />}
-                <AvatarFallback>U</AvatarFallback>
+                {userAvatar && <AvatarImage src={userAvatar} alt="User Avatar" />}
+                <AvatarFallback>{userFallback.toUpperCase()}</AvatarFallback>
             </Avatar>
           </Button>
         </DropdownMenuTrigger>
@@ -57,7 +72,7 @@ export function AppHeader() {
           <DropdownMenuItem asChild><Link href="/dashboard/settings" className="flex items-center gap-2"><Settings /> Settings</Link></DropdownMenuItem>
           <DropdownMenuItem asChild><Link href="#" className="flex items-center gap-2"><User /> Profile</Link></DropdownMenuItem>
           <DropdownMenuSeparator />
-          <DropdownMenuItem asChild><Link href="/" className="flex items-center gap-2"><LogOut /> Logout</Link></DropdownMenuItem>
+          <DropdownMenuItem onClick={handleSignOut} className="flex items-center gap-2"><LogOut /> Logout</DropdownMenuItem>
         </DropdownMenuContent>
       </DropdownMenu>
     </header>
