@@ -12,6 +12,8 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '
 import { useAuth } from '@/firebase';
 import { initiateEmailSignUp, initiateGoogleSignIn } from '@/firebase/auth-actions';
 import { useRouter } from 'next/navigation';
+import { useToast } from '@/hooks/use-toast';
+import { FirebaseError } from 'firebase/app';
 
 const formSchema = z.object({
   businessName: z.string().min(2, { message: 'Business name must be at least 2 characters.' }),
@@ -22,6 +24,7 @@ const formSchema = z.object({
 export default function SignupPage() {
   const auth = useAuth();
   const router = useRouter();
+  const { toast } = useToast();
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
@@ -32,13 +35,37 @@ export default function SignupPage() {
   });
 
   async function onSubmit(values: z.infer<typeof formSchema>) {
-    await initiateEmailSignUp(auth, values.email, values.password, values.businessName);
-    router.push('/dashboard');
+    try {
+      await initiateEmailSignUp(auth, values.email, values.password, values.businessName);
+      router.push('/dashboard');
+    } catch (error) {
+      if (error instanceof FirebaseError && error.code === 'auth/email-already-in-use') {
+        toast({
+            variant: "destructive",
+            title: "Sign-up failed",
+            description: "This email address is already in use. Please try another.",
+        });
+      } else {
+        toast({
+            variant: "destructive",
+            title: "Uh oh! Something went wrong.",
+            description: "There was a problem with your request.",
+        });
+      }
+    }
   }
 
   const handleGoogleSignIn = async () => {
-    await initiateGoogleSignIn(auth);
-    router.push('/dashboard');
+    try {
+      await initiateGoogleSignIn(auth);
+      router.push('/dashboard');
+    } catch (error) {
+        toast({
+            variant: "destructive",
+            title: "Google Sign-in failed",
+            description: "Could not sign in with Google. Please try again.",
+        });
+    }
   };
 
   return (
