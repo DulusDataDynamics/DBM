@@ -1,3 +1,5 @@
+'use client';
+
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
@@ -24,10 +26,21 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { MoreHorizontal, PlusCircle } from "lucide-react";
-import { invoices } from "@/lib/data";
 import { PageHeader } from "@/components/page-header";
+import { useCollection, useFirestore, useUser, useMemoFirebase } from "@/firebase";
+import { collection, query } from "firebase/firestore";
+import type { Invoice } from "@/lib/data";
 
 export default function InvoicesPage() {
+    const { user } = useUser();
+    const firestore = useFirestore();
+    const invoicesQuery = useMemoFirebase(() => {
+        if (!user) return null;
+        return query(collection(firestore, `users/${user.uid}/invoices`));
+    }, [firestore, user]);
+
+    const { data: invoices, isLoading } = useCollection<Invoice>(invoicesQuery);
+
   return (
     <>
       <PageHeader title="Invoices" description="Manage your invoices and billing.">
@@ -51,7 +64,7 @@ export default function InvoicesPage() {
             <TableHeader>
               <TableRow>
                 <TableHead>Invoice ID</TableHead>
-                <TableHead>Client</TableHead>
+                <TableHead>Client Name</TableHead>
                 <TableHead>Status</TableHead>
                 <TableHead>Amount</TableHead>
                 <TableHead>Due Date</TableHead>
@@ -61,20 +74,21 @@ export default function InvoicesPage() {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {invoices.map((invoice) => (
+              {isLoading && <TableRow><TableCell colSpan={6} className="text-center">Loading...</TableCell></TableRow>}
+              {!isLoading && invoices && invoices.map((invoice) => (
                 <TableRow key={invoice.id}>
-                  <TableCell className="font-medium">{invoice.id}</TableCell>
-                  <TableCell>{invoice.clientName}</TableCell>
+                  <TableCell className="font-medium">{invoice.invoiceNumber}</TableCell>
+                  <TableCell>{invoice.clientId}</TableCell>
                   <TableCell>
                     <Badge variant={
-                        invoice.status === 'Paid' ? 'default' : 
-                        invoice.status === 'Overdue' ? 'destructive' : 'secondary'
+                        invoice.status === 'paid' ? 'default' : 
+                        invoice.status === 'overdue' ? 'destructive' : 'secondary'
                     }>
                       {invoice.status}
                     </Badge>
                   </TableCell>
                   <TableCell>${invoice.amount.toFixed(2)}</TableCell>
-                  <TableCell>{invoice.dueDate}</TableCell>
+                  <TableCell>{new Date(invoice.dueDate).toLocaleDateString()}</TableCell>
                   <TableCell>
                     <DropdownMenu>
                       <DropdownMenuTrigger asChild>
@@ -98,7 +112,7 @@ export default function InvoicesPage() {
         </CardContent>
         <CardFooter>
           <div className="text-xs text-muted-foreground">
-            Showing <strong>1-5</strong> of <strong>{invoices.length}</strong> invoices
+            {invoices && `Showing <strong>1-${invoices.length}</strong> of <strong>${invoices.length}</strong> invoices`}
           </div>
         </CardFooter>
       </Card>

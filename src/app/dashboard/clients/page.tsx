@@ -1,3 +1,5 @@
+'use client';
+
 import Image from "next/image";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -25,11 +27,22 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { MoreHorizontal, PlusCircle } from "lucide-react";
-import { clients } from "@/lib/data";
 import { PageHeader } from "@/components/page-header";
 import { PlaceHolderImages } from "@/lib/placeholder-images";
+import { useCollection, useFirestore, useUser, useMemoFirebase } from "@/firebase";
+import { collection, query } from "firebase/firestore";
+import type { Client } from "@/lib/data";
 
 export default function ClientsPage() {
+  const { user } = useUser();
+  const firestore = useFirestore();
+  const clientsQuery = useMemoFirebase(() => {
+    if (!user) return null;
+    return query(collection(firestore, `users/${user.uid}/clients`));
+  }, [firestore, user]);
+
+  const { data: clients, isLoading } = useCollection<Client>(clientsQuery);
+
   return (
     <>
       <PageHeader title="Clients" description="Manage your client relationships.">
@@ -56,17 +69,18 @@ export default function ClientsPage() {
                   <span className="sr-only">Image</span>
                 </TableHead>
                 <TableHead>Name</TableHead>
-                <TableHead>Status</TableHead>
-                <TableHead>Total Revenue</TableHead>
-                <TableHead>Projects</TableHead>
+                <TableHead>Email</TableHead>
+                <TableHead>Phone</TableHead>
+                <TableHead>Address</TableHead>
                 <TableHead>
                   <span className="sr-only">Actions</span>
                 </TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
-              {clients.map((client) => {
-                const avatar = PlaceHolderImages.find(p => p.id === client.avatar);
+              {isLoading && <TableRow><TableCell colSpan={6} className="text-center">Loading...</TableCell></TableRow>}
+              {!isLoading && clients && clients.map((client) => {
+                const avatar = PlaceHolderImages.find(p => p.id === '1');
                 return (
                   <TableRow key={client.id}>
                     <TableCell className="hidden sm:table-cell">
@@ -82,11 +96,9 @@ export default function ClientsPage() {
                       }
                     </TableCell>
                     <TableCell className="font-medium">{client.name}</TableCell>
-                    <TableCell>
-                      <Badge variant={client.status === 'Active' ? 'outline' : 'secondary'}>{client.status}</Badge>
-                    </TableCell>
-                    <TableCell>${client.revenue.toLocaleString()}</TableCell>
-                    <TableCell>{client.projects}</TableCell>
+                    <TableCell>{client.email}</TableCell>
+                    <TableCell>{client.phone}</TableCell>
+                    <TableCell>{client.address}</TableCell>
                     <TableCell>
                       <DropdownMenu>
                         <DropdownMenuTrigger asChild>
@@ -111,7 +123,7 @@ export default function ClientsPage() {
         </CardContent>
         <CardFooter>
           <div className="text-xs text-muted-foreground">
-            Showing <strong>1-5</strong> of <strong>{clients.length}</strong> clients
+            {clients && `Showing <strong>1-${clients.length}</strong> of <strong>${clients.length}</strong> clients`}
           </div>
         </CardFooter>
       </Card>

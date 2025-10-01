@@ -1,3 +1,4 @@
+'use client';
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
@@ -24,10 +25,22 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { MoreHorizontal, PlusCircle } from "lucide-react";
-import { tasks } from "@/lib/data";
 import { PageHeader } from "@/components/page-header";
+import { useCollection, useFirestore, useUser, useMemoFirebase } from "@/firebase";
+import { collection, query } from "firebase/firestore";
+import type { Task } from "@/lib/data";
+
 
 export default function TasksPage() {
+    const { user } = useUser();
+    const firestore = useFirestore();
+    const tasksQuery = useMemoFirebase(() => {
+        if (!user) return null;
+        return query(collection(firestore, `users/${user.uid}/tasks`));
+    }, [firestore, user]);
+
+    const { data: tasks, isLoading } = useCollection<Task>(tasksQuery);
+
   return (
     <>
       <PageHeader title="Tasks" description="Manage your daily tasks and to-do lists.">
@@ -50,9 +63,8 @@ export default function TasksPage() {
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead>Title</TableHead>
+                <TableHead>Description</TableHead>
                 <TableHead>Status</TableHead>
-                <TableHead>Priority</TableHead>
                 <TableHead>Due Date</TableHead>
                 <TableHead>
                   <span className="sr-only">Actions</span>
@@ -60,16 +72,16 @@ export default function TasksPage() {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {tasks.map((task) => (
+              {isLoading && <TableRow><TableCell colSpan={4} className="text-center">Loading...</TableCell></TableRow>}
+              {!isLoading && tasks && tasks.map((task) => (
                 <TableRow key={task.id}>
-                  <TableCell className="font-medium">{task.title}</TableCell>
+                  <TableCell className="font-medium">{task.description}</TableCell>
                   <TableCell>
-                    <Badge variant={task.status === 'Done' ? 'default' : 'secondary'}>
-                      {task.status}
+                    <Badge variant={task.completed ? 'default' : 'secondary'}>
+                      {task.completed ? 'Done' : 'In Progress'}
                     </Badge>
                   </TableCell>
-                  <TableCell>{task.priority}</TableCell>
-                  <TableCell>{task.dueDate}</TableCell>
+                  <TableCell>{new Date(task.dueDate).toLocaleDateString()}</TableCell>
                   <TableCell>
                     <DropdownMenu>
                       <DropdownMenuTrigger asChild>
@@ -92,7 +104,7 @@ export default function TasksPage() {
         </CardContent>
         <CardFooter>
           <div className="text-xs text-muted-foreground">
-            Showing <strong>1-5</strong> of <strong>{tasks.length}</strong> tasks
+             {tasks && `Showing <strong>1-${tasks.length}</strong> of <strong>${tasks.length}</strong> tasks`}
           </div>
         </CardFooter>
       </Card>
