@@ -1,0 +1,313 @@
+{
+  "entities": {
+    "User": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "User",
+      "type": "object",
+      "description": "Represents a user of the Dulus Business Manager application.",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for the user entity."
+        },
+        "email": {
+          "type": "string",
+          "description": "Email address of the user.",
+          "format": "email"
+        },
+        "businessName": {
+          "type": "string",
+          "description": "The name of the user's business."
+        },
+        "createdAt": {
+          "type": "string",
+          "description": "Timestamp indicating when the user account was created.",
+          "format": "date-time"
+        },
+        "settingsId": {
+          "type": "string",
+          "description": "Reference to Settings. (Relationship: User 1:1 Settings)"
+        }
+      },
+      "required": [
+        "id",
+        "email",
+        "businessName",
+        "createdAt",
+        "settingsId"
+      ]
+    },
+    "Task": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "Task",
+      "type": "object",
+      "description": "Represents a task within the Dulus Business Manager application.",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for the task entity."
+        },
+        "userId": {
+          "type": "string",
+          "description": "Reference to User. (Relationship: User 1:N Task)"
+        },
+        "description": {
+          "type": "string",
+          "description": "Description of the task."
+        },
+        "dueDate": {
+          "type": "string",
+          "description": "Due date for the task.",
+          "format": "date-time"
+        },
+        "completed": {
+          "type": "boolean",
+          "description": "Indicates whether the task is completed."
+        }
+      },
+      "required": [
+        "id",
+        "userId",
+        "description",
+        "dueDate",
+        "completed"
+      ]
+    },
+    "Invoice": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "Invoice",
+      "type": "object",
+      "description": "Represents an invoice in the Dulus Business Manager application.",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for the invoice entity."
+        },
+        "userId": {
+          "type": "string",
+          "description": "Reference to User. (Relationship: User 1:N Invoice)"
+        },
+        "clientId": {
+          "type": "string",
+          "description": "Reference to Client. (Relationship: Client 1:N Invoice)"
+        },
+        "invoiceNumber": {
+          "type": "string",
+          "description": "Unique invoice number."
+        },
+        "issueDate": {
+          "type": "string",
+          "description": "Date the invoice was issued.",
+          "format": "date-time"
+        },
+        "dueDate": {
+          "type": "string",
+          "description": "Date the invoice is due.",
+          "format": "date-time"
+        },
+        "amount": {
+          "type": "number",
+          "description": "Total amount of the invoice."
+        },
+        "status": {
+          "type": "string",
+          "description": "Status of the invoice (e.g., paid, unpaid, overdue)."
+        }
+      },
+      "required": [
+        "id",
+        "userId",
+        "clientId",
+        "invoiceNumber",
+        "issueDate",
+        "dueDate",
+        "amount",
+        "status"
+      ]
+    },
+    "Client": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "Client",
+      "type": "object",
+      "description": "Represents a client in the Dulus Business Manager application.",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for the client entity."
+        },
+        "userId": {
+          "type": "string",
+          "description": "Reference to User. (Relationship: User 1:N Client)"
+        },
+        "name": {
+          "type": "string",
+          "description": "Name of the client."
+        },
+        "email": {
+          "type": "string",
+          "description": "Email address of the client.",
+          "format": "email"
+        },
+        "phone": {
+          "type": "string",
+          "description": "Phone number of the client."
+        },
+        "address": {
+          "type": "string",
+          "description": "Address of the client."
+        }
+      },
+      "required": [
+        "id",
+        "userId",
+        "name",
+        "email",
+        "phone",
+        "address"
+      ]
+    },
+    "Settings": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "Settings",
+      "type": "object",
+      "description": "Represents the settings for a user's business within the Dulus Business Manager application.",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for the settings entity."
+        },
+        "businessDetails": {
+          "type": "string",
+          "description": "Details about the user's business."
+        },
+        "logoUrl": {
+          "type": "string",
+          "description": "URL of the business logo.",
+          "format": "uri"
+        },
+        "currency": {
+          "type": "string",
+          "description": "Preferred currency for the business."
+        },
+        "theme": {
+          "type": "string",
+          "description": "Selected theme for the application."
+        }
+      },
+      "required": [
+        "id",
+        "businessDetails",
+        "logoUrl",
+        "currency",
+        "theme"
+      ]
+    }
+  },
+  "auth": {
+    "providers": [
+      "password",
+      "anonymous"
+    ]
+  },
+  "firestore": {
+    "structure": [
+      {
+        "path": "/users/{userId}",
+        "definition": {
+          "entityName": "User",
+          "schema": {
+            "$ref": "#/backend/entities/User"
+          },
+          "description": "Collection for storing user profiles. Each document represents a user. Includes userId parameter for path-based ownership.",
+          "params": [
+            {
+              "name": "userId",
+              "description": "The unique identifier for the user."
+            }
+          ]
+        }
+      },
+      {
+        "path": "/users/{userId}/tasks/{taskId}",
+        "definition": {
+          "entityName": "Task",
+          "schema": {
+            "$ref": "#/backend/entities/Task"
+          },
+          "description": "Subcollection for storing tasks associated with a specific user.  Path-based ownership is enforced via the /users/{userId} path.",
+          "params": [
+            {
+              "name": "userId",
+              "description": "The unique identifier for the user."
+            },
+            {
+              "name": "taskId",
+              "description": "The unique identifier for the task."
+            }
+          ]
+        }
+      },
+      {
+        "path": "/users/{userId}/invoices/{invoiceId}",
+        "definition": {
+          "entityName": "Invoice",
+          "schema": {
+            "$ref": "#/backend/entities/Invoice"
+          },
+          "description": "Subcollection for storing invoices associated with a specific user. Path-based ownership is enforced via the /users/{userId} path.",
+          "params": [
+            {
+              "name": "userId",
+              "description": "The unique identifier for the user."
+            },
+            {
+              "name": "invoiceId",
+              "description": "The unique identifier for the invoice."
+            }
+          ]
+        }
+      },
+      {
+        "path": "/users/{userId}/clients/{clientId}",
+        "definition": {
+          "entityName": "Client",
+          "schema": {
+            "$ref": "#/backend/entities/Client"
+          },
+          "description": "Subcollection for storing clients associated with a specific user. Path-based ownership is enforced via the /users/{userId} path.",
+          "params": [
+            {
+              "name": "userId",
+              "description": "The unique identifier for the user."
+            },
+            {
+              "name": "clientId",
+              "description": "The unique identifier for the client."
+            }
+          ]
+        }
+      },
+      {
+        "path": "/users/{userId}/settings/{settingsId}",
+        "definition": {
+          "entityName": "Settings",
+          "schema": {
+            "$ref": "#/backend/entities/Settings"
+          },
+          "description": "Subcollection for storing settings associated with a specific user. Path-based ownership is enforced via the /users/{userId} path.",
+          "params": [
+            {
+              "name": "userId",
+              "description": "The unique identifier for the user."
+            },
+            {
+              "name": "settingsId",
+              "description": "The unique identifier for the settings."
+            }
+          ]
+        }
+      }
+    ],
+    "reasoning": "The Firestore structure is designed to ensure authorization independence, clarity, and scalability for the Dulus Business Manager application. It follows the principles of denormalization and structural segregation. Each user will have their own data scope, which simplifies security rules and provides QAPs.\n\nAuthorization Independence:\n\nUser-owned data (Tasks, Invoices, Clients) are stored under the /users/{userId} path, providing implicit ownership.\nNo get() calls are required in security rules to validate ownership.\nQAPs (Rules are not Filters):\nThe structure facilitates secure list operations because each collection holds homogeneous data with the same security requirements. List operations can be scoped to a user's path without the need for filtering based on user ID or other attributes within the rules.\n\nInvariants:\nThe path-based ownership ensures that only the user can access data within their /users/{userId} path, maintaining ownership integrity."
+  }
+}
