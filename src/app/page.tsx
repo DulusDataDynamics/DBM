@@ -12,14 +12,19 @@ import * as z from 'zod';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { useAuth } from '@/firebase';
 import { initiateEmailSignIn, initiateGoogleSignIn } from '@/firebase/auth-actions';
+import { useRouter } from 'next/navigation';
+import { useToast } from '@/hooks/use-toast';
+import { FirebaseError } from 'firebase/app';
 
 const formSchema = z.object({
   email: z.string().email({ message: 'Please enter a valid email.' }),
-  password: z.string().min(6, { message: 'Password must be at least 6 characters.' }),
+  password: z.string().min(1, { message: 'Password is required.' }),
 });
 
 export default function LoginPage() {
   const auth = useAuth();
+  const router = useRouter();
+  const { toast } = useToast();
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
@@ -28,12 +33,36 @@ export default function LoginPage() {
     },
   });
 
-  function onSubmit(values: z.infer<typeof formSchema>) {
-    initiateEmailSignIn(auth, values.email, values.password);
+  async function onSubmit(values: z.infer<typeof formSchema>) {
+    try {
+      await initiateEmailSignIn(auth, values.email, values.password);
+      router.push('/dashboard');
+    } catch (error) {
+      let description = "There was a problem with your request.";
+      if (error instanceof FirebaseError) {
+        if (error.code === 'auth/user-not-found' || error.code === 'auth/wrong-password' || error.code === 'auth/invalid-credential') {
+          description = "Invalid email or password. Please try again.";
+        }
+      }
+      toast({
+        variant: "destructive",
+        title: "Login Failed",
+        description,
+      });
+    }
   }
 
-  const handleGoogleSignIn = () => {
-    initiateGoogleSignIn(auth);
+  const handleGoogleSignIn = async () => {
+    try {
+      await initiateGoogleSignIn(auth);
+      router.push('/dashboard');
+    } catch (error) {
+      toast({
+          variant: "destructive",
+          title: "Google Sign-in failed",
+          description: "Could not sign in with Google. Please try again.",
+      });
+    }
   };
 
   return (
