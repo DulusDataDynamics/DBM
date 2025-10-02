@@ -15,19 +15,45 @@ import { Input } from '@/components/ui/input';
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
 import { Bot, LogOut, Mic, PanelLeft, Search, Settings, User } from 'lucide-react';
 import { MainSidebar } from './sidebar';
-import { PlaceHolderImages } from '@/lib/placeholder-images';
 import { useAuth, useUser } from '@/firebase';
 import { signOut } from '@/firebase/auth-actions';
 import { useRouter } from 'next/navigation';
+import { useState, useRef } from 'react';
+import { textToSpeech } from '@/ai/flows/text-to-speech';
+import { cn } from '@/lib/utils';
 
 export function AppHeader() {
     const { user } = useUser();
     const auth = useAuth();
     const router = useRouter();
+    const [isRecording, setIsRecording] = useState(false);
+    const [audioUrl, setAudioUrl] = useState<string | null>(null);
+    const audioRef = useRef<HTMLAudioElement>(null);
 
     const handleSignOut = async () => {
       await signOut(auth);
       router.push('/');
+    };
+
+    const handleMicClick = async () => {
+        if (isRecording) {
+            setIsRecording(false);
+            // In a real app, you would stop recording and process the audio.
+            // For now, we'll simulate processing and generate a voice response.
+            try {
+                const response = await textToSpeech("I'm sorry, I can't do that yet, but I'm learning!");
+                setAudioUrl(response.media);
+                if (audioRef.current) {
+                    audioRef.current.play();
+                }
+            } catch (error) {
+                console.error("Error generating speech:", error);
+            }
+
+        } else {
+            setIsRecording(true);
+            // In a real app, you'd start recording user's voice here.
+        }
     };
 
     const userAvatar = user?.photoURL;
@@ -53,9 +79,10 @@ export function AppHeader() {
           placeholder="Send invoice to John for R1200..."
           className="w-full rounded-lg bg-background pl-8 md:w-[200px] lg:w-[320px]"
         />
-        <Button size="icon" variant="ghost" className="absolute right-1 top-1 h-8 w-8">
+        <Button size="icon" variant="ghost" className={cn("absolute right-1 top-1 h-8 w-8", isRecording && "bg-red-500/20 text-red-500")} onClick={handleMicClick}>
             <Mic className="h-4 w-4" />
         </Button>
+        {audioUrl && <audio ref={audioRef} src={audioUrl} />}
       </div>
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
