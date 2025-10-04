@@ -25,7 +25,7 @@ import {
   DropdownMenuLabel,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { MoreHorizontal, PlusCircle } from "lucide-react";
+import { KeyRound, MoreHorizontal, PlusCircle } from "lucide-react";
 import { PageHeader } from "@/components/page-header";
 import { useCollection, useFirestore, useUser, useMemoFirebase } from "@/firebase";
 import { collection, query, doc } from "firebase/firestore";
@@ -46,13 +46,33 @@ import {
 } from "@/components/ui/alert-dialog";
 import { deleteDocumentNonBlocking } from "@/firebase/non-blocking-updates";
 import { getCurrencySymbol } from "@/lib/utils";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+  DialogClose,
+} from "@/components/ui/dialog";
+import {
+  InputOTP,
+  InputOTPGroup,
+  InputOTPSeparator,
+  InputOTPSlot,
+} from "@/components/ui/input-otp";
+import { useToast } from "@/hooks/use-toast";
 
 
 export default function InvoicesPage() {
     const { user } = useUser();
     const firestore = useFirestore();
+    const { toast } = useToast();
     const [isDialogOpen, setIsDialogOpen] = useState(false);
     const [editingInvoice, setEditingInvoice] = useState<Invoice | undefined>(undefined);
+    const [isPageLocked, setIsPageLocked] = useState(true);
+    const [unlockPin, setUnlockPin] = useState('');
     
     const invoicesQuery = useMemoFirebase(() => {
         if (!user) return null;
@@ -92,8 +112,23 @@ export default function InvoicesPage() {
       const invoiceRef = doc(firestore, `users/${user.uid}/invoices/${invoiceId}`);
       deleteDocumentNonBlocking(invoiceRef);
     }
-
-    const isPageLocked = settings?.invoicePageLocked;
+    
+    const handleUnlockPage = () => {
+      if(unlockPin === settings?.invoiceLockPin) {
+        setIsPageLocked(false);
+        toast({ title: "Page Unlocked", description: "You can now manage invoices." });
+        setUnlockPin('');
+        document.getElementById('close-unlock-dialog')?.click();
+      } else {
+        toast({ variant: "destructive", title: "Incorrect PIN", description: "The PIN you entered is incorrect." });
+        setUnlockPin('');
+      }
+    }
+    
+    // Determine if the page should be initially locked
+    useState(() => {
+        setIsPageLocked(!!settings?.invoiceLockPin);
+    });
 
 
   return (
@@ -114,12 +149,45 @@ export default function InvoicesPage() {
         clients={clients || []}
         settings={settings}
       />
+
+       {isPageLocked && settings?.invoiceLockPin && (
+          <Dialog>
+            <div className="fixed inset-0 z-40 bg-background/80 backdrop-blur-sm"></div>
+            <DialogContent className="fixed left-1/2 top-1/2 z-50 w-full max-w-md -translate-x-1/2 -translate-y-1/2" onInteractOutside={(e) => e.preventDefault()}>
+                <DialogHeader>
+                    <DialogTitle className="flex items-center gap-2"><KeyRound/> Page Locked</DialogTitle>
+                    <DialogDescription>
+                        Enter the 6-digit PIN to unlock the invoicing page.
+                    </DialogDescription>
+                </DialogHeader>
+                 <div className="flex items-center justify-center py-4">
+                    <InputOTP maxLength={6} value={unlockPin} onChange={setUnlockPin}>
+                        <InputOTPGroup>
+                            <InputOTPSlot index={0} />
+                            <InputOTPSlot index={1} />
+                            <InputOTPSlot index={2} />
+                        </InputOTPGroup>
+                        <InputOTPSeparator />
+                        <InputOTPGroup>
+                            <InputOTPSlot index={3} />
+                            <InputOTPSlot index={4} />
+                            <InputOTPSlot index={5} />
+                        </InputOTPGroup>
+                    </InputOTP>
+                </div>
+                <DialogFooter>
+                    <Button type="button" onClick={handleUnlockPage}>Unlock</Button>
+                </DialogFooter>
+            </DialogContent>
+        </Dialog>
+      )}
+
       
       <Card>
         <CardHeader>
           <CardTitle>Invoice History</CardTitle>
           <CardDescription>
-            A record of all your sent invoices. {isPageLocked && <span className="text-red-500 font-semibold">(Locked)</span>}
+            A record of all your sent invoices. {isPageLocked && settings?.invoiceLockPin && <span className="text-destructive font-semibold">(Locked)</span>}
           </CardDescription>
         </CardHeader>
         <CardContent>

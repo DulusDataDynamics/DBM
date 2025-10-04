@@ -41,5 +41,5 @@ export type Settings = {
   logoUrl?: string;
   currency?: string;
   theme?: string;
-  invoicePageLocked?: boolean;
+  invoiceLockPin?: string;
 }

@@ -13,19 +13,38 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select"
-import { Switch } from "@/components/ui/switch";
-import { Textarea } from "@/components/ui/textarea";
 import { useDoc, useFirestore, useUser, useMemoFirebase } from "@/firebase";
 import type { Settings } from "@/lib/data";
 import { doc } from "firebase/firestore";
 import { updateDocumentNonBlocking } from "@/firebase/non-blocking-updates";
 import { useEffect, useState } from "react";
+import { useToast } from "@/hooks/use-toast";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+  DialogClose,
+} from "@/components/ui/dialog";
+import {
+  InputOTP,
+  InputOTPGroup,
+  InputOTPSeparator,
+  InputOTPSlot,
+} from "@/components/ui/input-otp";
+
 
 export default function SettingsPage() {
     const { user } = useUser();
     const firestore = useFirestore();
+    const { toast } = useToast();
     const [selectedCurrency, setSelectedCurrency] = useState<string | undefined>(undefined);
-
+    const [pin, setPin] = useState('');
+    const [confirmPin, setConfirmPin] = useState('');
+    const [unlockPin, setUnlockPin] = useState('');
 
     const settingsDocRef = useMemoFirebase(() => {
         if (!user) return null;
@@ -44,20 +63,46 @@ export default function SettingsPage() {
 
     
     const logo = PlaceHolderImages.find(p => p.id === '7');
-
-    const handleLockToggle = (isLocked: boolean) => {
-        if (!settingsDocRef) return;
-        updateDocumentNonBlocking(settingsDocRef, { invoicePageLocked: isLocked });
-    }
     
     const handleSaveChanges = () => {
         if (!settingsDocRef) return;
         updateDocumentNonBlocking(settingsDocRef, { currency: selectedCurrency });
+        toast({ title: "Settings Saved", description: "Your currency settings have been updated." });
     }
 
     const handleCurrencyChange = (value: string) => {
         setSelectedCurrency(value);
     }
+    
+    const handleSetPin = () => {
+        if (pin.length !== 6) {
+            toast({ variant: "destructive", title: "Invalid PIN", description: "PIN must be 6 digits." });
+            return;
+        }
+        if (pin !== confirmPin) {
+            toast({ variant: "destructive", title: "PINs do not match", description: "Please ensure both PINs are the same." });
+            return;
+        }
+        if (!settingsDocRef) return;
+        updateDocumentNonBlocking(settingsDocRef, { invoiceLockPin: pin });
+        toast({ title: "PIN Set", description: "Invoicing page is now locked." });
+        setPin('');
+        setConfirmPin('');
+        document.getElementById('close-set-pin-dialog')?.click();
+    }
+
+    const handleRemovePin = () => {
+        if (unlockPin !== settings?.invoiceLockPin) {
+            toast({ variant: "destructive", title: "Incorrect PIN", description: "The PIN you entered is incorrect." });
+            return;
+        }
+        if (!settingsDocRef) return;
+        updateDocumentNonBlocking(settingsDocRef, { invoiceLockPin: "" });
+        toast({ title: "PIN Removed", description: "Invoicing page is now unlocked." });
+        setUnlockPin('');
+        document.getElementById('close-remove-pin-dialog')?.click();
+    }
+
 
     return (
         <>
@@ -140,14 +185,89 @@ export default function SettingsPage() {
                             <div className="space-y-0.5">
                                 <Label htmlFor="lock-invoices" className="text-base">Lock Invoicing Page</Label>
                                 <p className="text-sm text-muted-foreground">
-                                    Prevent any edits or creation of new invoices.
+                                    {settings?.invoiceLockPin ? "Invoicing page is locked. " : "Set a 6-digit PIN to prevent unauthorized access to invoices."}
                                 </p>
                             </div>
-                            <Switch
-                                id="lock-invoices"
-                                checked={settings?.invoicePageLocked || false}
-                                onCheckedChange={handleLockToggle}
-                            />
+                             {settings?.invoiceLockPin ? (
+                                <Dialog>
+                                    <DialogTrigger asChild>
+                                        <Button variant="destructive">Disable Lock</Button>
+                                    </DialogTrigger>
+                                    <DialogContent className="sm:max-w-md">
+                                        <DialogHeader>
+                                            <DialogTitle>Disable Invoice Lock</DialogTitle>
+                                            <DialogDescription>Enter your 6-digit PIN to unlock the invoicing page.</DialogDescription>
+                                        </DialogHeader>
+                                        <div className="flex items-center space-x-2">
+                                            <InputOTP maxLength={6} value={unlockPin} onChange={setUnlockPin}>
+                                                <InputOTPGroup>
+                                                    <InputOTPSlot index={0} />
+                                                    <InputOTPSlot index={1} />
+                                                    <InputOTPSlot index={2} />
+                                                </InputOTPGroup>
+                                                <InputOTPSeparator />
+                                                <InputOTPGroup>
+                                                    <InputOTPSlot index={3} />
+                                                    <InputOTPSlot index={4} />
+                                                    <InputOTPSlot index={5} />
+                                                </InputOTPGroup>
+                                            </InputOTP>
+                                        </div>
+                                        <DialogFooter>
+                                            <DialogClose asChild>
+                                                <Button type="button" variant="secondary" id="close-remove-pin-dialog">Cancel</Button>
+                                            </DialogClose>
+                                            <Button type="button" onClick={handleRemovePin}>Confirm</Button>
+                                        </DialogFooter>
+                                    </DialogContent>
+                                </Dialog>
+                             ) : (
+                                <Dialog>
+                                    <DialogTrigger asChild>
+                                        <Button>Enable Lock</Button>
+                                    </DialogTrigger>
+                                    <DialogContent className="sm:max-w-md">
+                                        <DialogHeader>
+                                            <DialogTitle>Set Invoice Lock PIN</DialogTitle>
+                                            <DialogDescription>Create a 6-digit PIN to lock the invoicing page.</DialogDescription>
+                                        </DialogHeader>
+                                        <div className="space-y-4">
+                                            <div className="space-y-2">
+                                                <Label>Enter PIN</Label>
+                                                <InputOTP maxLength={6} value={pin} onChange={setPin}>
+                                                    <InputOTPGroup>
+                                                        <InputOTPSlot index={0} />
+                                                        <InputOTPSlot index={1} />
+                                                        <InputOTPSlot index={2} />
+                                                        <InputOTPSlot index={3} />
+                                                        <InputOTPSlot index={4} />
+                                                        <InputOTPSlot index={5} />
+                                                    </InputOTPGroup>
+                                                </InputOTP>
+                                            </div>
+                                            <div className="space-y-2">
+                                                <Label>Confirm PIN</Label>
+                                                <InputOTP maxLength={6} value={confirmPin} onChange={setConfirmPin}>
+                                                    <InputOTPGroup>
+                                                        <InputOTPSlot index={0} />
+                                                        <InputOTPSlot index={1} />
+                                                        <InputOTPSlot index={2} />
+                                                        <InputOTPSlot index={3} />
+                                                        <InputOTPSlot index={4} />
+                                                        <InputOTPSlot index={5} />
+                                                    </InputOTPGroup>
+                                                </InputOTP>
+                                            </div>
+                                        </div>
+                                        <DialogFooter>
+                                            <DialogClose asChild>
+                                                <Button type="button" variant="secondary" id="close-set-pin-dialog">Cancel</Button>
+                                            </DialogClose>
+                                            <Button type="button" onClick={handleSetPin}>Set PIN</Button>
+                                        </DialogFooter>
+                                    </DialogContent>
+                                </Dialog>
+                             )}
                         </div>
                     </CardContent>
                 </Card>
