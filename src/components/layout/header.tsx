@@ -13,47 +13,83 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { Input } from '@/components/ui/input';
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
-import { Bot, LogOut, Mic, PanelLeft, Search, Settings, User } from 'lucide-react';
+import { Bot, LogOut, Mic, PanelLeft, Search, Settings, User, Send } from 'lucide-react';
 import { MainSidebar } from './sidebar';
 import { useAuth, useUser } from '@/firebase';
 import { signOut } from '@/firebase/auth-actions';
 import { useRouter } from 'next/navigation';
-import { useState, useRef } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { textToSpeech } from '@/ai/flows/text-to-speech';
 import { cn } from '@/lib/utils';
+import { useToast } from '@/hooks/use-toast';
 
 export function AppHeader() {
     const { user } = useUser();
     const auth = useAuth();
     const router = useRouter();
+    const { toast } = useToast();
+
     const [isRecording, setIsRecording] = useState(false);
     const [audioUrl, setAudioUrl] = useState<string | null>(null);
     const audioRef = useRef<HTMLAudioElement>(null);
+    const [inputValue, setInputValue] = useState('');
 
     const handleSignOut = async () => {
       await signOut(auth);
       router.push('/');
     };
-
+    
     const handleMicClick = async () => {
-        if (isRecording) {
-            setIsRecording(false);
-            // In a real app, you would stop recording and process the audio.
-            // For now, we'll simulate processing and generate a voice response.
-            try {
-                const response = await textToSpeech("I'm sorry, I can't do that yet, but I'm learning!");
-                setAudioUrl(response.media);
-                if (audioRef.current) {
-                    audioRef.current.play();
-                }
-            } catch (error) {
-                console.error("Error generating speech:", error);
-            }
+      if (!('webkitSpeechRecognition' in window)) {
+        toast({ title: "Voice recognition not supported", description: "Please use Google Chrome for voice commands.", variant: "destructive" });
+        return;
+      }
 
-        } else {
-            setIsRecording(true);
-            // In a real app, you'd start recording user's voice here.
+      const recognition = new (window as any).webkitSpeechRecognition();
+      recognition.continuous = false;
+      recognition.interimResults = false;
+      recognition.lang = 'en-US';
+
+      recognition.onstart = () => {
+        setIsRecording(true);
+      };
+
+      recognition.onend = () => {
+        setIsRecording(false);
+      };
+
+      recognition.onerror = (event: any) => {
+        toast({ title: "Voice recognition error", description: event.error, variant: "destructive" });
+      };
+      
+      recognition.onresult = (event: any) => {
+        const transcript = event.results[0][0].transcript;
+        setInputValue(transcript);
+        // Here you would send the transcript to your AI
+        // For now, we'll just log it and play a simulated response
+        console.log("Transcript:", transcript);
+        handleSend();
+      };
+
+      recognition.start();
+    };
+
+    const handleSend = async () => {
+        if (!inputValue.trim()) return;
+
+        // In a real app, you would send the inputValue to your AI for processing.
+        console.log("Sending to AI:", inputValue);
+        try {
+            const response = await textToSpeech(`You said: ${inputValue}. I am processing your request.`);
+            setAudioUrl(response.media);
+            if (audioRef.current) {
+                audioRef.current.play();
+            }
+        } catch (error) {
+            console.error("Error generating speech:", error);
+            toast({ title: "AI Response Error", description: "Could not generate audio response.", variant: "destructive" });
         }
+        setInputValue(''); // Clear input after sending
     };
 
     const userAvatar = user?.photoURL;
@@ -77,11 +113,20 @@ export function AppHeader() {
         <Input
           type="search"
           placeholder="Send invoice to John for R1200..."
-          className="w-full rounded-lg bg-background pl-8 md:w-[200px] lg:w-[320px]"
+          className="w-full rounded-lg bg-background pl-8 md:w-[200px] lg:w-[320px] pr-10"
+          value={inputValue}
+          onChange={(e) => setInputValue(e.target.value)}
+          onKeyDown={(e) => e.key === 'Enter' && handleSend()}
         />
-        <Button size="icon" variant="ghost" className={cn("absolute right-1 top-1 h-8 w-8", isRecording && "bg-red-500/20 text-red-500")} onClick={handleMicClick}>
-            <Mic className="h-4 w-4" />
-        </Button>
+        {inputValue ? (
+             <Button size="icon" variant="ghost" className="absolute right-1 top-1 h-8 w-8" onClick={handleSend}>
+                <Send className="h-4 w-4" />
+             </Button>
+        ) : (
+            <Button size="icon" variant="ghost" className={cn("absolute right-1 top-1 h-8 w-8", isRecording && "bg-red-500/20 text-red-500")} onClick={handleMicClick}>
+                <Mic className="h-4 w-4" />
+            </Button>
+        )}
         {audioUrl && <audio ref={audioRef} src={audioUrl} />}
       </div>
       <DropdownMenu>

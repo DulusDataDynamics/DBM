@@ -22,29 +22,69 @@ import {
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuLabel,
+  DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { MoreHorizontal, PlusCircle } from "lucide-react";
 import { PageHeader } from "@/components/page-header";
 import { useCollection, useFirestore, useUser, useMemoFirebase } from "@/firebase";
-import { collection, query } from "firebase/firestore";
+import { collection, query, doc } from "firebase/firestore";
 import type { Task } from "@/lib/data";
+import { useState } from "react";
+import { AddEditTaskDialog } from "@/components/tasks/add-edit-task-dialog";
+import { deleteDocumentNonBlocking, updateDocumentNonBlocking } from "@/firebase/non-blocking-updates";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog"
 
 
 export default function TasksPage() {
     const { user } = useUser();
     const firestore = useFirestore();
+    const [isDialogOpen, setIsDialogOpen] = useState(false);
+    const [editingTask, setEditingTask] = useState<Task | undefined>(undefined);
+
     const tasksQuery = useMemoFirebase(() => {
         if (!user) return null;
         return query(collection(firestore, `users/${user.uid}/tasks`));
     }, [firestore, user]);
 
     const { data: tasks, isLoading } = useCollection<Task>(tasksQuery);
+    
+    const handleAddTask = () => {
+      setEditingTask(undefined);
+      setIsDialogOpen(true);
+    }
+    
+    const handleEditTask = (task: Task) => {
+        setEditingTask(task);
+        setIsDialogOpen(true);
+    }
+
+    const handleDeleteTask = (taskId: string) => {
+      if(!user) return;
+      const taskRef = doc(firestore, `users/${user.uid}/tasks/${taskId}`);
+      deleteDocumentNonBlocking(taskRef);
+    }
+
+    const handleToggleComplete = (task: Task) => {
+      if(!user) return;
+      const taskRef = doc(firestore, `users/${user.uid}/tasks/${task.id}`);
+      updateDocumentNonBlocking(taskRef, { completed: !task.completed });
+    }
 
   return (
     <>
       <PageHeader title="Tasks" description="Manage your daily tasks and to-do lists.">
-        <Button size="sm" className="gap-1">
+        <Button size="sm" className="gap-1" onClick={handleAddTask}>
           <PlusCircle className="h-3.5 w-3.5" />
           <span className="sr-only sm:not-sr-only sm:whitespace-nowrap">
             Add Task
@@ -52,6 +92,12 @@ export default function TasksPage() {
         </Button>
       </PageHeader>
       
+      <AddEditTaskDialog 
+        isOpen={isDialogOpen}
+        onOpenChange={setIsDialogOpen}
+        task={editingTask}
+      />
+
       <Card>
         <CardHeader>
           <CardTitle>Task List</CardTitle>
@@ -97,8 +143,28 @@ export default function TasksPage() {
                       </DropdownMenuTrigger>
                       <DropdownMenuContent align="end">
                         <DropdownMenuLabel>Actions</DropdownMenuLabel>
-                        <DropdownMenuItem>Edit</DropdownMenuItem>
-                        <DropdownMenuItem>Delete</DropdownMenuItem>
+                        <DropdownMenuItem onClick={() => handleEditTask(task)}>Edit</DropdownMenuItem>
+                        <DropdownMenuItem onClick={() => handleToggleComplete(task)}>
+                            {task.completed ? 'Mark as Incomplete' : 'Mark as Complete'}
+                        </DropdownMenuItem>
+                        <DropdownMenuSeparator />
+                         <AlertDialog>
+                          <AlertDialogTrigger asChild>
+                            <DropdownMenuItem onSelect={(e) => e.preventDefault()}>Delete</DropdownMenuItem>
+                          </AlertDialogTrigger>
+                          <AlertDialogContent>
+                            <AlertDialogHeader>
+                              <AlertDialogTitle>Are you sure?</AlertDialogTitle>
+                              <AlertDialogDescription>
+                                This action cannot be undone. This will permanently delete this task.
+                              </AlertDialogDescription>
+                            </AlertDialogHeader>
+                            <AlertDialogFooter>
+                              <AlertDialogCancel>Cancel</AlertDialogCancel>
+                              <AlertDialogAction onClick={() => handleDeleteTask(task.id)}>Delete</AlertDialogAction>
+                            </AlertDialogFooter>
+                          </AlertDialogContent>
+                        </AlertDialog>
                       </DropdownMenuContent>
                     </DropdownMenu>
                   </TableCell>
