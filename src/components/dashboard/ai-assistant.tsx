@@ -71,10 +71,17 @@ export function AiAssistant() {
                     financialData: JSON.stringify(financialData),
                 });
                 setInsights(insightsResult.insights);
-            } catch (error) {
+            } catch (error: any) {
                 console.error("Failed to fetch AI data:", error);
-                setSummary("Could not load daily summary.");
-                setInsights("Could not load smart suggestions.");
+                const errorMessage = error.message || '';
+
+                if (errorMessage.includes('503')) {
+                    setSummary("The AI is currently busy. Please try again in a moment.");
+                    setInsights("The AI model for insights is overloaded. Please try again later.");
+                } else {
+                    setSummary("Could not load daily summary.");
+                    setInsights("Could not load smart suggestions.");
+                }
             } finally {
                 setIsLoading(false);
             }
