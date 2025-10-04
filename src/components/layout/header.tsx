@@ -22,7 +22,12 @@ import { useState, useRef, useEffect, useCallback } from 'react';
 import { cn } from '@/lib/utils';
 import { useToast } from '@/hooks/use-toast';
 
-export function AppHeader() {
+interface AppHeaderProps {
+  onToggleSidebar: () => void;
+  isSidebarOpen: boolean;
+}
+
+export function AppHeader({ onToggleSidebar, isSidebarOpen }: AppHeaderProps) {
     const { user } = useUser();
     const auth = useAuth();
     const router = useRouter();
@@ -125,9 +130,13 @@ export function AppHeader() {
           </Button>
         </SheetTrigger>
         <SheetContent side="left" className="sm:max-w-xs bg-sidebar text-sidebar-foreground p-0">
-          <MainSidebar />
+          <MainSidebar isOpen={true} />
         </SheetContent>
       </Sheet>
+      <Button size="icon" variant="outline" className="hidden md:flex" onClick={onToggleSidebar}>
+        <PanelLeft className={cn("h-5 w-5 transition-transform", !isSidebarOpen && "rotate-180")} />
+        <span className="sr-only">Toggle Menu</span>
+      </Button>
       <div className="relative flex-1 ml-auto md:grow-0">
         <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
         <Input

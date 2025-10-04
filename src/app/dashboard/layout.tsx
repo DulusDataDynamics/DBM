@@ -4,9 +4,10 @@ import { AppHeader } from '@/components/layout/header';
 import { MainSidebar } from '@/components/layout/sidebar';
 import { useFirestore, useUser, useDoc, useMemoFirebase } from '@/firebase';
 import { useRouter } from 'next/navigation';
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { doc } from 'firebase/firestore';
 import type { Settings } from '@/lib/data';
+import { cn } from '@/lib/utils';
 
 export default function DashboardLayout({
   children,
@@ -15,6 +16,11 @@ export default function DashboardLayout({
 }) {
   const { user, isUserLoading } = useUser();
   const router = useRouter();
+  const [isSidebarOpen, setSidebarOpen] = useState(true);
+
+  const toggleSidebar = () => {
+    setSidebarOpen(!isSidebarOpen);
+  }
 
   if (isUserLoading) {
     return (
@@ -37,12 +43,15 @@ export default function DashboardLayout({
 
 
   return (
-    <div className="grid min-h-screen w-full md:grid-cols-[220px_1fr] lg:grid-cols-[280px_1fr]">
-      <div className="hidden border-r bg-muted/40 md:block">
-        <MainSidebar />
+    <div className={cn(
+        "grid min-h-screen w-full transition-[grid-template-columns]",
+        isSidebarOpen ? "md:grid-cols-[220px_1fr] lg:grid-cols-[280px_1fr]" : "md:grid-cols-[68px_1fr]"
+    )}>
+      <div className="hidden border-r bg-sidebar md:block">
+        <MainSidebar isOpen={isSidebarOpen} />
       </div>
       <div className="flex flex-col">
-        <AppHeader />
+        <AppHeader onToggleSidebar={toggleSidebar} isSidebarOpen={isSidebarOpen} />
         <main className="flex flex-1 flex-col gap-4 p-4 lg:gap-6 lg:p-6 bg-background">
           {children}
         </main>
