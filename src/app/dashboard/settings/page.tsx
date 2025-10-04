@@ -35,6 +35,7 @@ import {
   InputOTPSeparator,
   InputOTPSlot,
 } from "@/components/ui/input-otp";
+import { Textarea } from "@/components/ui/textarea";
 
 
 export default function SettingsPage() {
@@ -278,3 +279,5 @@ export default function SettingsPage() {
         </>
     );
 }
+
+    
