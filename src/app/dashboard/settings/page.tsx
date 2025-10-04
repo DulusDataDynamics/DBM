@@ -19,10 +19,13 @@ import { useDoc, useFirestore, useUser, useMemoFirebase } from "@/firebase";
 import type { Settings } from "@/lib/data";
 import { doc } from "firebase/firestore";
 import { updateDocumentNonBlocking } from "@/firebase/non-blocking-updates";
+import { useEffect, useState } from "react";
 
 export default function SettingsPage() {
     const { user } = useUser();
     const firestore = useFirestore();
+    const [selectedCurrency, setSelectedCurrency] = useState<string | undefined>(undefined);
+
 
     const settingsDocRef = useMemoFirebase(() => {
         if (!user) return null;
@@ -31,11 +34,29 @@ export default function SettingsPage() {
 
     const { data: settings } = useDoc<Settings>(settingsDocRef);
     
+    useEffect(() => {
+        if(settings?.currency) {
+            setSelectedCurrency(settings.currency);
+        } else {
+            setSelectedCurrency('zar'); // Default to ZAR
+        }
+    }, [settings]);
+
+    
     const logo = PlaceHolderImages.find(p => p.id === '7');
 
     const handleLockToggle = (isLocked: boolean) => {
         if (!settingsDocRef) return;
         updateDocumentNonBlocking(settingsDocRef, { invoicePageLocked: isLocked });
+    }
+    
+    const handleSaveChanges = () => {
+        if (!settingsDocRef) return;
+        updateDocumentNonBlocking(settingsDocRef, { currency: selectedCurrency });
+    }
+
+    const handleCurrencyChange = (value: string) => {
+        setSelectedCurrency(value);
     }
 
     return (
@@ -92,16 +113,16 @@ export default function SettingsPage() {
                     <CardContent>
                         <form className="grid gap-6">
                              <div className="grid gap-2">
-                                <Label htmlFor="currency">Currency</Label>
-                                <Select defaultValue="usd">
+                                <Label htmlFor="currency">Default Currency</Label>
+                                <Select value={selectedCurrency} onValueChange={handleCurrencyChange}>
                                     <SelectTrigger className="w-[180px]">
                                         <SelectValue placeholder="Select currency" />
                                     </SelectTrigger>
                                     <SelectContent>
+                                        <SelectItem value="zar">ZAR (R)</SelectItem>
                                         <SelectItem value="usd">USD ($)</SelectItem>
                                         <SelectItem value="eur">EUR (€)</SelectItem>
                                         <SelectItem value="gbp">GBP (£)</SelectItem>
-                                        <SelectItem value="zar">ZAR (R)</SelectItem>
                                     </SelectContent>
                                 </Select>
                             </div>
@@ -132,7 +153,7 @@ export default function SettingsPage() {
                 </Card>
 
 
-                <Button>Save Changes</Button>
+                <Button onClick={handleSaveChanges}>Save Changes</Button>
             </div>
         </>
     );

@@ -45,6 +45,7 @@ import {
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
 import { deleteDocumentNonBlocking } from "@/firebase/non-blocking-updates";
+import { getCurrencySymbol } from "@/lib/utils";
 
 
 export default function InvoicesPage() {
@@ -111,6 +112,7 @@ export default function InvoicesPage() {
         onOpenChange={setIsDialogOpen}
         invoice={editingInvoice}
         clients={clients || []}
+        settings={settings}
       />
       
       <Card>
@@ -153,7 +155,7 @@ export default function InvoicesPage() {
                       {invoice.status}
                     </Badge>
                   </TableCell>
-                  <TableCell>${invoice.amount.toFixed(2)}</TableCell>
+                  <TableCell>{getCurrencySymbol(invoice.currency)}{invoice.amount.toFixed(2)}</TableCell>
                   <TableCell>{new Date(invoice.dueDate).toLocaleDateString()}</TableCell>
                   <TableCell>
                     <DropdownMenu>

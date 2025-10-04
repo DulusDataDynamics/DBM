@@ -111,6 +111,10 @@
         "status": {
           "type": "string",
           "description": "Status of the invoice (e.g., paid, unpaid, overdue)."
+        },
+        "currency": {
+          "type": "string",
+          "description": "The currency of the invoice amount."
         }
       },
       "required": [
@@ -121,7 +125,8 @@
         "issueDate",
         "dueDate",
         "amount",
-        "status"
+        "status",
+        "currency"
       ]
     },
     "Client": {

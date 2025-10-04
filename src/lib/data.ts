@@ -16,6 +16,7 @@ export type Invoice = {
   dueDate: string;
   amount: number;
   status: 'paid' | 'unpaid' | 'overdue';
+  currency: string;
 };
 
 export type Task = {

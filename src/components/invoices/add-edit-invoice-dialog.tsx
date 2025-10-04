@@ -17,7 +17,7 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
-import { Invoice, Client } from '@/lib/data';
+import { Invoice, Client, Settings } from '@/lib/data';
 import { useEffect } from 'react';
 import { useFirestore, useUser } from '@/firebase';
 import { addDocumentNonBlocking, updateDocumentNonBlocking } from '@/firebase/non-blocking-updates';
@@ -32,6 +32,7 @@ const formSchema = z.object({
   invoiceNumber: z.string().min(1, { message: 'Invoice number is required.' }),
   amount: z.coerce.number().min(0.01, { message: 'Amount must be greater than 0.' }),
   status: z.enum(['paid', 'unpaid', 'overdue']),
+  currency: z.string().min(1, { message: 'Currency is required.' }),
   issueDate: z.date({ required_error: 'An issue date is required.' }),
   dueDate: z.date({ required_error: 'A due date is required.' }),
 });
@@ -41,9 +42,10 @@ interface AddEditInvoiceDialogProps {
   onOpenChange: (isOpen: boolean) => void;
   invoice?: Invoice;
   clients: Client[];
+  settings?: Settings | null;
 }
 
-export function AddEditInvoiceDialog({ isOpen, onOpenChange, invoice, clients }: AddEditInvoiceDialogProps) {
+export function AddEditInvoiceDialog({ isOpen, onOpenChange, invoice, clients, settings }: AddEditInvoiceDialogProps) {
   const { user } = useUser();
   const firestore = useFirestore();
 
@@ -52,12 +54,14 @@ export function AddEditInvoiceDialog({ isOpen, onOpenChange, invoice, clients }:
   });
   
   useEffect(() => {
+    const defaultCurrency = settings?.currency || 'zar';
     if (invoice) {
       form.reset({
         clientId: invoice.clientId,
         invoiceNumber: invoice.invoiceNumber,
         amount: invoice.amount,
         status: invoice.status,
+        currency: invoice.currency || defaultCurrency,
         issueDate: new Date(invoice.issueDate),
         dueDate: new Date(invoice.dueDate),
       });
@@ -67,11 +71,12 @@ export function AddEditInvoiceDialog({ isOpen, onOpenChange, invoice, clients }:
             invoiceNumber: `INV-${Math.floor(Math.random() * 9000) + 1000}`,
             amount: 0,
             status: 'unpaid',
+            currency: defaultCurrency,
             issueDate: new Date(),
             dueDate: new Date(),
         })
     }
-  }, [invoice, form, isOpen]);
+  }, [invoice, form, isOpen, settings]);
 
   const onSubmit = (values: z.infer<typeof formSchema>) => {
     if (!user) return;
@@ -153,6 +158,31 @@ export function AddEditInvoiceDialog({ isOpen, onOpenChange, invoice, clients }:
                     </FormItem>
                   )}
                 />
+                 <FormField
+                  control={form.control}
+                  name="currency"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Currency</FormLabel>
+                       <Select onValueChange={field.onChange} defaultValue={field.value}>
+                        <FormControl>
+                            <SelectTrigger>
+                                <SelectValue placeholder="Select currency" />
+                            </SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                           <SelectItem value="zar">ZAR</SelectItem>
+                           <SelectItem value="usd">USD</SelectItem>
+                           <SelectItem value="eur">EUR</SelectItem>
+                           <SelectItem value="gbp">GBP</SelectItem>
+                        </SelectContent>
+                    </Select>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+            </div>
+            <div className="grid grid-cols-2 gap-4">
                  <FormField
                   control={form.control}
                   name="status"
