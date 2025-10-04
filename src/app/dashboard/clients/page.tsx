@@ -1,6 +1,5 @@
 'use client';
 
-import Image from "next/image";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -27,7 +26,6 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { MoreHorizontal, PlusCircle } from "lucide-react";
 import { PageHeader } from "@/components/page-header";
-import { PlaceHolderImages } from "@/lib/placeholder-images";
 import { useCollection, useFirestore, useUser, useMemoFirebase } from "@/firebase";
 import { collection, query } from "firebase/firestore";
 import type { Client } from "@/lib/data";
@@ -64,9 +62,6 @@ export default function ClientsPage() {
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead className="hidden w-[100px] sm:table-cell">
-                  <span className="sr-only">Image</span>
-                </TableHead>
                 <TableHead>Name</TableHead>
                 <TableHead>Email</TableHead>
                 <TableHead>Phone</TableHead>
@@ -77,28 +72,15 @@ export default function ClientsPage() {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {isLoading && <TableRow><TableCell colSpan={6} className="text-center">Loading...</TableCell></TableRow>}
+              {isLoading && <TableRow><TableCell colSpan={5} className="text-center">Loading...</TableCell></TableRow>}
               {!isLoading && clients && clients.length === 0 && (
                 <TableRow>
-                  <TableCell colSpan={6} className="text-center">No clients found. Add one to get started.</TableCell>
+                  <TableCell colSpan={5} className="text-center">No clients found. Add one to get started.</TableCell>
                 </TableRow>
               )}
               {!isLoading && clients && clients.map((client) => {
-                const avatar = PlaceHolderImages.find(p => p.id === '1');
                 return (
                   <TableRow key={client.id}>
-                    <TableCell className="hidden sm:table-cell">
-                      {avatar && 
-                        <Image
-                          alt="Client avatar"
-                          className="aspect-square rounded-md object-cover"
-                          height="64"
-                          src={avatar.imageUrl}
-                          width="64"
-                          data-ai-hint={avatar.imageHint}
-                        />
-                      }
-                    </TableCell>
                     <TableCell className="font-medium">{client.name}</TableCell>
                     <TableCell>{client.email}</TableCell>
                     <TableCell>{client.phone}</TableCell>
