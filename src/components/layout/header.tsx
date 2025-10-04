@@ -13,7 +13,7 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { Input } from '@/components/ui/input';
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
-import { Bot, LogOut, Mic, PanelLeft, Search, Settings, User, Send } from 'lucide-react';
+import { LogOut, Mic, PanelLeft, Search, Settings, User, Send } from 'lucide-react';
 import { MainSidebar } from './sidebar';
 import { useAuth, useUser } from '@/firebase';
 import { signOut } from '@/firebase/auth-actions';
@@ -30,52 +30,66 @@ export function AppHeader() {
 
     const [isRecording, setIsRecording] = useState(false);
     const [inputValue, setInputValue] = useState('');
+    const recognitionRef = useRef<any>(null);
 
-    const handleSignOut = async () => {
-      await signOut(auth);
-      router.push('/');
-    };
+    useEffect(() => {
+        const SpeechRecognition = (window as any).webkitSpeechRecognition || (window as any).SpeechRecognition;
+        if (SpeechRecognition) {
+            const recognition = new SpeechRecognition();
+            recognition.continuous = false;
+            recognition.interimResults = false;
+            recognition.lang = 'en-US';
+
+            recognition.onstart = () => {
+                setIsRecording(true);
+            };
+
+            recognition.onend = () => {
+                setIsRecording(false);
+                recognitionRef.current = null;
+            };
+
+            recognition.onerror = (event: any) => {
+                let errorMessage = event.error;
+                if (event.error === 'not-allowed' || event.error === 'service-not-allowed') {
+                  errorMessage = 'Microphone permission denied. Please enable it in your browser settings.';
+                }
+                toast({ title: "Voice recognition error", description: errorMessage, variant: "destructive" });
+                setIsRecording(false);
+            };
+            
+            recognition.onresult = (event: any) => {
+                const transcript = event.results[0][0].transcript;
+                setInputValue(transcript);
+                // Automatically send after successful recognition
+                handleSend(transcript);
+            };
+            recognitionRef.current = recognition;
+        }
+    }, [toast]);
     
-    const handleMicClick = async () => {
-      if (!('webkitSpeechRecognition' in window)) {
-        toast({ title: "Voice recognition not supported", description: "Please use Google Chrome for voice commands.", variant: "destructive" });
-        return;
+    const handleMicClick = () => {
+      const recognition = recognitionRef.current;
+      if (recognition && !isRecording) {
+        try {
+          recognition.start();
+        } catch (e) {
+          toast({ title: "Voice recognition error", description: "Could not start voice recognition.", variant: "destructive" });
+        }
+      } else if (!recognition) {
+         toast({ title: "Voice recognition not supported", description: "Please use Google Chrome for voice commands.", variant: "destructive" });
       }
-
-      const recognition = new (window as any).webkitSpeechRecognition();
-      recognition.continuous = false;
-      recognition.interimResults = false;
-      recognition.lang = 'en-US';
-
-      recognition.onstart = () => {
-        setIsRecording(true);
-      };
-
-      recognition.onend = () => {
-        setIsRecording(false);
-      };
-
-      recognition.onerror = (event: any) => {
-        toast({ title: "Voice recognition error", description: event.error, variant: "destructive" });
-      };
-      
-      recognition.onresult = (event: any) => {
-        const transcript = event.results[0][0].transcript;
-        setInputValue(transcript);
-        handleSend();
-      };
-
-      recognition.start();
     };
 
-    const handleSend = async () => {
-        if (!inputValue.trim()) return;
+    const handleSend = async (text?: string) => {
+        const command = text || inputValue;
+        if (!command.trim()) return;
 
-        // In a real app, you would send the inputValue to your AI for processing.
-        console.log("Sending to AI:", inputValue);
+        // In a real app, you would send the command to your AI for processing.
+        console.log("Sending to AI:", command);
         toast({
           title: "Command Sent",
-          description: `Your command "${inputValue}" is being processed.`
+          description: `Your command "${command}" is being processed.`
         });
         setInputValue(''); // Clear input after sending
     };
@@ -107,7 +121,7 @@ export function AppHeader() {
           onKeyDown={(e) => e.key === 'Enter' && handleSend()}
         />
         {inputValue ? (
-             <Button size="icon" variant="ghost" className="absolute right-1 top-1 h-8 w-8" onClick={handleSend}>
+             <Button size="icon" variant="ghost" className="absolute right-1 top-1 h-8 w-8" onClick={() => handleSend()}>
                 <Send className="h-4 w-4" />
              </Button>
         ) : (
@@ -131,7 +145,7 @@ export function AppHeader() {
           <DropdownMenuItem asChild><Link href="/dashboard/settings" className="flex items-center gap-2"><Settings /> Settings</Link></DropdownMenuItem>
           <DropdownMenuItem asChild><Link href="#" className="flex items-center gap-2"><User /> Profile</Link></DropdownMenuItem>
           <DropdownMenuSeparator />
-          <DropdownMenuItem onClick={handleSignOut} className="flex items-center gap-2"><LogOut /> Logout</DropdownMenuItem>
+          <DropdownMenuItem onClick={signOut} className="flex items-center gap-2"><LogOut /> Logout</DropdownMenuItem>
         </DropdownMenuContent>
       </DropdownMenu>
     </header>
