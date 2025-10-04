@@ -20,7 +20,7 @@ export default function ChatbotPage() {
     const [messages, setMessages] = useState<Message[]>([]);
     const [input, setInput] = useState('');
     const [isLoading, setIsLoading] = useState(false);
-    const scrollAreaRef = useRef<HTMLDivElement>(null);
+    const scrollViewportRef = useRef<HTMLDivElement>(null);
 
     const handleSend = async () => {
         if (input.trim() === '') return;
@@ -44,9 +44,9 @@ export default function ChatbotPage() {
     };
 
     useEffect(() => {
-        if (scrollAreaRef.current) {
-            scrollAreaRef.current.scrollTo({
-                top: scrollAreaRef.current.scrollHeight,
+        if (scrollViewportRef.current) {
+            scrollViewportRef.current.scrollTo({
+                top: scrollViewportRef.current.scrollHeight,
                 behavior: 'smooth'
             });
         }
@@ -57,9 +57,9 @@ export default function ChatbotPage() {
 
     return (
         <div className="flex flex-col h-[calc(100vh-8rem)]">
-            <PageHeader title="AI Chatbot" description="Ask me anything about your business." />
-            <div className="flex-1 flex flex-col bg-card border rounded-lg shadow-sm">
-                <ScrollArea className="flex-1 p-6 space-y-4" ref={scrollAreaRef}>
+            <PageHeader title="Chat with Sparky" description="Your friendly AI business assistant." />
+            <div className="flex-1 flex flex-col bg-card border rounded-lg shadow-sm overflow-hidden">
+                <ScrollArea className="flex-1 p-6" viewportRef={scrollViewportRef}>
                      <div className="space-y-6">
                         {messages.map((message, index) => (
                             <div key={index} className={cn("flex items-start gap-4", message.isUser ? "justify-end" : "")}>
@@ -89,13 +89,13 @@ export default function ChatbotPage() {
                                     </div>
                                 </Avatar>
                                 <div className="max-w-md rounded-lg p-3 bg-muted">
-                                    <p className="text-sm animate-pulse">Dulus is thinking...</p>
+                                    <p className="text-sm animate-pulse">Sparky is thinking...</p>
                                 </div>
                             </div>
                          )}
                     </div>
                 </ScrollArea>
-                <div className="p-4 border-t">
+                <div className="p-4 border-t bg-background">
                     <div className="relative">
                         <Input
                             placeholder="Type your message..."

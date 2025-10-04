@@ -27,10 +27,10 @@ const prompt = ai.definePrompt({
   name: 'chatPrompt',
   input: {schema: ChatInputSchema},
   output: {schema: ChatOutputSchema},
-  prompt: `You are Dulus, a friendly and helpful AI business assistant. Your goal is to assist users with managing their business tasks, invoices, and clients. Keep your responses concise and helpful.
+  prompt: `You are Sparky, a friendly and helpful AI business assistant. Your goal is to assist users with managing their business tasks, invoices, and clients. Keep your responses concise and helpful.
 
 User: {{{input}}}
-Dulus:
+Sparky:
 `,
 });
 
