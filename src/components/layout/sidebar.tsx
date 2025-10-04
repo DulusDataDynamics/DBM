@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { Bot, BarChart2, CheckSquare, FileText, LayoutDashboard, Settings, Users, LifeBuoy, MessageSquare, User } from 'lucide-react';
+import { Bot, BarChart2, CheckSquare, FileText, LayoutDashboard, Settings, Users, LifeBuoy, MessageSquare, User, Sparkles } from 'lucide-react';
 import { TooltipProvider, Tooltip, TooltipTrigger, TooltipContent } from '../ui/tooltip';
 import { cn } from '@/lib/utils';
 import { Separator } from '../ui/separator';
@@ -98,15 +98,14 @@ export function MainSidebar({ isOpen }: { isOpen: boolean }) {
             </ul>
         </nav>
          <Separator className="my-2 bg-sidebar-border" />
-          <div className={cn("flex items-center gap-3 p-2 rounded-lg transition-all", !isOpen && "justify-center")}>
-              <Avatar className="h-8 w-8">
-                  {userAvatar && <AvatarImage src={userAvatar} alt="User Avatar" />}
-                  <AvatarFallback>{userFallback.toUpperCase()}</AvatarFallback>
-              </Avatar>
-              <div className={cn("flex flex-col transition-opacity", !isOpen && "opacity-0 hidden")}>
-                 <span className="text-sm font-semibold text-sidebar-foreground animate-caret-blink">{user?.displayName || user?.email}</span>
-              </div>
-          </div>
+        <div className={cn("flex items-center justify-center p-2 rounded-lg transition-all", !isOpen ? "h-10" : "h-20")}>
+            {isOpen && (
+                 <div className="relative animate-sparkle-bot">
+                    <Bot className="h-10 w-10 text-accent" />
+                    <Sparkles className="absolute -top-1 -right-1 h-4 w-4 text-accent animate-sparkle-star" />
+                </div>
+            )}
+        </div>
       </div>
     </div>
   );

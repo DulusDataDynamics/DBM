@@ -92,6 +92,14 @@ body {
   .animate-caret-blink {
     animation: caret-blink 1.25s ease-out infinite;
   }
+
+  .animate-sparkle-bot {
+    animation: bot-eye-blink 4s infinite;
+  }
+  
+  .animate-sparkle-star {
+    animation: sparkle-effect 4s infinite;
+  }
 }
 
 @keyframes caret-blink {
@@ -100,5 +108,29 @@ body {
   }
   20%, 50% {
     opacity: 0;
+  }
+}
+
+@keyframes bot-eye-blink {
+  0%, 90%, 100% {
+    transform: scaleY(1);
+  }
+  95% {
+    transform: scaleY(0.1);
+  }
+}
+
+@keyframes sparkle-effect {
+  0%, 80% {
+    opacity: 0;
+    transform: scale(0.5);
+  }
+  85% {
+    opacity: 1;
+    transform: scale(1.2);
+  }
+  90%, 100% {
+    opacity: 0;
+    transform: scale(0.5) rotate(90deg);
   }
 }
