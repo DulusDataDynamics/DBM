@@ -73,6 +73,11 @@ export default function TasksPage() {
             </TableHeader>
             <TableBody>
               {isLoading && <TableRow><TableCell colSpan={4} className="text-center">Loading...</TableCell></TableRow>}
+               {!isLoading && tasks && tasks.length === 0 && (
+                <TableRow>
+                  <TableCell colSpan={4} className="text-center">No tasks found. Add one to get started.</TableCell>
+                </TableRow>
+              )}
               {!isLoading && tasks && tasks.map((task) => (
                 <TableRow key={task.id}>
                   <TableCell className="font-medium">{task.description}</TableCell>
@@ -103,9 +108,11 @@ export default function TasksPage() {
           </Table>
         </CardContent>
         <CardFooter>
-          <div className="text-xs text-muted-foreground">
-             {tasks && `Showing <strong>1-${tasks.length}</strong> of <strong>${tasks.length}</strong> tasks`}
-          </div>
+            {tasks && tasks.length > 0 && (
+              <div className="text-xs text-muted-foreground">
+                Showing <strong>1-{tasks.length}</strong> of <strong>{tasks.length}</strong> tasks
+              </div>
+            )}
         </CardFooter>
       </Card>
     </>

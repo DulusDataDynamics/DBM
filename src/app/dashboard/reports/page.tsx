@@ -66,7 +66,7 @@ export default function ReportsPage() {
                         </CardDescription>
                     </CardHeader>
                     <CardContent>
-                        {isLoadingClients ? <p>Loading chart data...</p> : (
+                        {isLoadingClients || isLoadingInvoices ? <p>Loading chart data...</p> : (
                             <ResponsiveContainer width="100%" height={300}>
                                 <BarChart data={revenueByClientData} layout="vertical" margin={{ left: 20 }}>
                                     <XAxis type="number" hide />

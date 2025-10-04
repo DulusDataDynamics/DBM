@@ -1,7 +1,6 @@
 'use client';
 
 import Image from "next/image";
-import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -79,6 +78,11 @@ export default function ClientsPage() {
             </TableHeader>
             <TableBody>
               {isLoading && <TableRow><TableCell colSpan={6} className="text-center">Loading...</TableCell></TableRow>}
+              {!isLoading && clients && clients.length === 0 && (
+                <TableRow>
+                  <TableCell colSpan={6} className="text-center">No clients found. Add one to get started.</TableCell>
+                </TableRow>
+              )}
               {!isLoading && clients && clients.map((client) => {
                 const avatar = PlaceHolderImages.find(p => p.id === '1');
                 return (
@@ -122,9 +126,11 @@ export default function ClientsPage() {
           </Table>
         </CardContent>
         <CardFooter>
-          <div className="text-xs text-muted-foreground">
-            {clients && `Showing <strong>1-${clients.length}</strong> of <strong>${clients.length}</strong> clients`}
-          </div>
+            {clients && clients.length > 0 && (
+              <div className="text-xs text-muted-foreground">
+                Showing <strong>1-{clients.length}</strong> of <strong>{clients.length}</strong> clients
+              </div>
+            )}
         </CardFooter>
       </Card>
     </>

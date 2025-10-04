@@ -4,7 +4,7 @@ import type { LucideIcon } from "lucide-react";
 
 type StatsCardProps = {
     title: string;
-    value: string;
+    value: string | number;
     icon: LucideIcon;
     change?: string;
     changeType?: 'positive' | 'negative';

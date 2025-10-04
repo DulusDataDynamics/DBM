@@ -29,17 +29,28 @@ import { MoreHorizontal, PlusCircle } from "lucide-react";
 import { PageHeader } from "@/components/page-header";
 import { useCollection, useFirestore, useUser, useMemoFirebase } from "@/firebase";
 import { collection, query } from "firebase/firestore";
-import type { Invoice } from "@/lib/data";
+import type { Invoice, Client } from "@/lib/data";
 
 export default function InvoicesPage() {
     const { user } = useUser();
     const firestore = useFirestore();
+    
     const invoicesQuery = useMemoFirebase(() => {
         if (!user) return null;
         return query(collection(firestore, `users/${user.uid}/invoices`));
     }, [firestore, user]);
+    const { data: invoices, isLoading: isLoadingInvoices } = useCollection<Invoice>(invoicesQuery);
 
-    const { data: invoices, isLoading } = useCollection<Invoice>(invoicesQuery);
+    const clientsQuery = useMemoFirebase(() => {
+        if (!user) return null;
+        return query(collection(firestore, `users/${user.uid}/clients`));
+    }, [firestore, user]);
+    const { data: clients, isLoading: isLoadingClients } = useCollection<Client>(clientsQuery);
+
+    const getClientName = (clientId: string) => {
+        return clients?.find(c => c.id === clientId)?.name || 'Unknown Client';
+    }
+
 
   return (
     <>
@@ -74,11 +85,16 @@ export default function InvoicesPage() {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {isLoading && <TableRow><TableCell colSpan={6} className="text-center">Loading...</TableCell></TableRow>}
-              {!isLoading && invoices && invoices.map((invoice) => (
+              {(isLoadingInvoices || isLoadingClients) && <TableRow><TableCell colSpan={6} className="text-center">Loading...</TableCell></TableRow>}
+              {!isLoadingInvoices && invoices && invoices.length === 0 && (
+                <TableRow>
+                  <TableCell colSpan={6} className="text-center">No invoices found. Create one to get started.</TableCell>
+                </TableRow>
+              )}
+              {!isLoadingInvoices && !isLoadingClients && invoices && invoices.map((invoice) => (
                 <TableRow key={invoice.id}>
                   <TableCell className="font-medium">{invoice.invoiceNumber}</TableCell>
-                  <TableCell>{invoice.clientId}</TableCell>
+                  <TableCell>{getClientName(invoice.clientId)}</TableCell>
                   <TableCell>
                     <Badge variant={
                         invoice.status === 'paid' ? 'default' : 
@@ -111,9 +127,11 @@ export default function InvoicesPage() {
           </Table>
         </CardContent>
         <CardFooter>
-          <div className="text-xs text-muted-foreground">
-            {invoices && `Showing <strong>1-${invoices.length}</strong> of <strong>${invoices.length}</strong> invoices`}
-          </div>
+            {invoices && invoices.length > 0 && (
+              <div className="text-xs text-muted-foreground">
+                Showing <strong>1-{invoices.length}</strong> of <strong>{invoices.length}</strong> invoices
+              </div>
+            )}
         </CardFooter>
       </Card>
     </>
