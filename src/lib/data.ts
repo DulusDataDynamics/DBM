@@ -33,3 +33,12 @@ export type RecentActivity = {
     user: string;
     avatar: string;
 }
+
+export type Settings = {
+  id: string;
+  businessDetails?: string;
+  logoUrl?: string;
+  currency?: string;
+  theme?: string;
+  invoicePageLocked?: boolean;
+}

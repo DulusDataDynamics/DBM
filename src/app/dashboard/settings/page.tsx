@@ -1,3 +1,4 @@
+'use client';
 import Image from "next/image";
 import { PageHeader } from "@/components/page-header";
 import { Button } from "@/components/ui/button";
@@ -12,10 +13,31 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select"
+import { Switch } from "@/components/ui/switch";
 import { Textarea } from "@/components/ui/textarea";
+import { useDoc, useFirestore, useUser, useMemoFirebase } from "@/firebase";
+import type { Settings } from "@/lib/data";
+import { doc } from "firebase/firestore";
+import { updateDocumentNonBlocking } from "@/firebase/non-blocking-updates";
 
 export default function SettingsPage() {
+    const { user } = useUser();
+    const firestore = useFirestore();
+
+    const settingsDocRef = useMemoFirebase(() => {
+        if (!user) return null;
+        return doc(firestore, `users/${user.uid}/settings/invoiceSettings`);
+    }, [firestore, user]);
+
+    const { data: settings } = useDoc<Settings>(settingsDocRef);
+    
     const logo = PlaceHolderImages.find(p => p.id === '7');
+
+    const handleLockToggle = (isLocked: boolean) => {
+        if (!settingsDocRef) return;
+        updateDocumentNonBlocking(settingsDocRef, { invoicePageLocked: isLocked });
+    }
+
     return (
         <>
             <PageHeader title="Settings" description="Manage your account and business preferences." />
@@ -86,6 +108,29 @@ export default function SettingsPage() {
                         </form>
                     </CardContent>
                 </Card>
+                
+                 <Card>
+                    <CardHeader>
+                        <CardTitle>Security Settings</CardTitle>
+                        <CardDescription>Manage access and security for your app.</CardDescription>
+                    </CardHeader>
+                    <CardContent>
+                        <div className="flex items-center justify-between rounded-lg border p-4">
+                            <div className="space-y-0.5">
+                                <Label htmlFor="lock-invoices" className="text-base">Lock Invoicing Page</Label>
+                                <p className="text-sm text-muted-foreground">
+                                    Prevent any edits or creation of new invoices.
+                                </p>
+                            </div>
+                            <Switch
+                                id="lock-invoices"
+                                checked={settings?.invoicePageLocked || false}
+                                onCheckedChange={handleLockToggle}
+                            />
+                        </div>
+                    </CardContent>
+                </Card>
+
 
                 <Button>Save Changes</Button>
             </div>
