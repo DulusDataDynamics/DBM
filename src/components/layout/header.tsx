@@ -19,7 +19,6 @@ import { useAuth, useUser } from '@/firebase';
 import { signOut } from '@/firebase/auth-actions';
 import { useRouter } from 'next/navigation';
 import { useState, useRef, useEffect } from 'react';
-import { textToSpeech } from '@/ai/flows/text-to-speech';
 import { cn } from '@/lib/utils';
 import { useToast } from '@/hooks/use-toast';
 
@@ -30,8 +29,6 @@ export function AppHeader() {
     const { toast } = useToast();
 
     const [isRecording, setIsRecording] = useState(false);
-    const [audioUrl, setAudioUrl] = useState<string | null>(null);
-    const audioRef = useRef<HTMLAudioElement>(null);
     const [inputValue, setInputValue] = useState('');
 
     const handleSignOut = async () => {
@@ -65,9 +62,6 @@ export function AppHeader() {
       recognition.onresult = (event: any) => {
         const transcript = event.results[0][0].transcript;
         setInputValue(transcript);
-        // Here you would send the transcript to your AI
-        // For now, we'll just log it and play a simulated response
-        console.log("Transcript:", transcript);
         handleSend();
       };
 
@@ -79,16 +73,10 @@ export function AppHeader() {
 
         // In a real app, you would send the inputValue to your AI for processing.
         console.log("Sending to AI:", inputValue);
-        try {
-            const response = await textToSpeech(`You said: ${inputValue}. I am processing your request.`);
-            setAudioUrl(response.media);
-            if (audioRef.current) {
-                audioRef.current.play();
-            }
-        } catch (error) {
-            console.error("Error generating speech:", error);
-            toast({ title: "AI Response Error", description: "Could not generate audio response.", variant: "destructive" });
-        }
+        toast({
+          title: "Command Sent",
+          description: `Your command "${inputValue}" is being processed.`
+        });
         setInputValue(''); // Clear input after sending
     };
 
@@ -127,7 +115,6 @@ export function AppHeader() {
                 <Mic className="h-4 w-4" />
             </Button>
         )}
-        {audioUrl && <audio ref={audioRef} src={audioUrl} />}
       </div>
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
