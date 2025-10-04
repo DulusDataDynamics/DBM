@@ -2,9 +2,12 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { Bot, BarChart2, CheckSquare, FileText, LayoutDashboard, Settings, Users, LifeBuoy, MessageSquare } from 'lucide-react';
+import { Bot, BarChart2, CheckSquare, FileText, LayoutDashboard, Settings, Users, LifeBuoy, MessageSquare, User } from 'lucide-react';
 import { TooltipProvider, Tooltip, TooltipTrigger, TooltipContent } from '../ui/tooltip';
 import { cn } from '@/lib/utils';
+import { Separator } from '../ui/separator';
+import { useUser } from '@/firebase';
+import { Avatar, AvatarFallback, AvatarImage } from '../ui/avatar';
 
 const navItems = [
   { href: '/dashboard', icon: LayoutDashboard, label: 'Dashboard' },
@@ -22,6 +25,10 @@ const bottomNavItems = [
 
 export function MainSidebar({ isOpen }: { isOpen: boolean }) {
   const pathname = usePathname();
+  const { user } = useUser();
+  const userAvatar = user?.photoURL;
+  const userFallback = user?.displayName?.charAt(0) || user?.email?.charAt(0) || 'U';
+
 
   const renderNavItem = ({ href, icon: Icon, label }: typeof navItems[0]) => {
     const isActive = pathname === href;
@@ -84,11 +91,22 @@ export function MainSidebar({ isOpen }: { isOpen: boolean }) {
         </nav>
       </div>
       <div className={cn("mt-auto p-4 transition-all", !isOpen && "px-2")}>
+         <Separator className="my-2 bg-sidebar-border" />
         <nav className="grid items-start text-sm font-medium">
             <ul className="space-y-1">
                 {bottomNavItems.map(renderNavItem)}
             </ul>
         </nav>
+         <Separator className="my-2 bg-sidebar-border" />
+          <div className={cn("flex items-center gap-3 p-2 rounded-lg transition-all", !isOpen && "justify-center")}>
+              <Avatar className="h-8 w-8">
+                  {userAvatar && <AvatarImage src={userAvatar} alt="User Avatar" />}
+                  <AvatarFallback>{userFallback.toUpperCase()}</AvatarFallback>
+              </Avatar>
+              <div className={cn("flex flex-col transition-opacity", !isOpen && "opacity-0 hidden")}>
+                 <span className="text-sm font-semibold text-sidebar-foreground animate-caret-blink">{user?.displayName || user?.email}</span>
+              </div>
+          </div>
       </div>
     </div>
   );
