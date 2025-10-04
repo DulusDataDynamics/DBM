@@ -12,9 +12,9 @@ import { useEffect, useState } from 'react';
 export function AiAssistant() {
   const { user } = useUser();
   const firestore = useFirestore();
-  const [loading, setLoading] = useState(true);
   const [summary, setSummary] = useState<string | null>(null);
   const [insights, setInsights] = useState<string | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
 
   const tasksQuery = useMemoFirebase(() => user ? collection(firestore, `users/${user.uid}/tasks`) : null, [firestore, user]);
   const { data: tasks, isLoading: loadingTasks } = useCollection<Task>(tasksQuery);
@@ -27,49 +27,57 @@ export function AiAssistant() {
   
   useEffect(() => {
     const isDataLoading = loadingTasks || loadingInvoices || loadingClients;
-    setLoading(isDataLoading);
-
+    
     if (!isDataLoading && tasks && invoices && clients) {
+        setIsLoading(true);
         const fetchAiData = async () => {
-            // Fetch Summary
-            const completedTasks = tasks.filter(t => t.completed).map(t => t.description).join(', ');
-            const sentInvoices = invoices.map(i => `Invoice ${i.invoiceNumber} for $${i.amount}`).join(', ');
-            const newClients = clients.map(c => c.name).join(', ');
+            try {
+                // Fetch Summary
+                const completedTasks = tasks.filter(t => t.completed).map(t => t.description).join(', ');
+                const sentInvoices = invoices.map(i => `Invoice ${i.invoiceNumber} for $${i.amount}`).join(', ');
+                const newClients = clients.map(c => c.name).join(', ');
 
-            const summaryResult = await summarizeDailyActivity({
-                completedTasks: completedTasks || "None",
-                sentInvoices: sentInvoices || "None",
-                newClients: newClients || "None",
-                financialMetrics: "Not available"
-            });
-            setSummary(summaryResult.summary);
+                const summaryResult = await summarizeDailyActivity({
+                    completedTasks: completedTasks || "None",
+                    sentInvoices: sentInvoices || "None",
+                    newClients: newClients || "None",
+                    financialMetrics: "Not available"
+                });
+                setSummary(summaryResult.summary);
 
-            // Fetch Insights
-            const salesData = {
-                monthlySales: invoices.reduce((acc, inv) => {
-                    if (inv.status === 'paid') {
-                        const month = new Date(inv.issueDate).toLocaleString('default', { month: 'short' });
-                        const existing = acc.find(item => item.month === month);
-                        if (existing) {
-                            existing.sales += inv.amount;
-                        } else {
-                            acc.push({ month, sales: inv.amount });
+                // Fetch Insights
+                const salesData = {
+                    monthlySales: invoices.reduce((acc, inv) => {
+                        if (inv.status === 'paid') {
+                            const month = new Date(inv.issueDate).toLocaleString('default', { month: 'short' });
+                            const existing = acc.find(item => item.month === month);
+                            if (existing) {
+                                existing.sales += inv.amount;
+                            } else {
+                                acc.push({ month, sales: inv.amount });
+                            }
                         }
-                    }
-                    return acc;
-                }, [] as { month: string, sales: number }[])
-            };
-            
-            const financialData = {
-                revenue: invoices.filter(i => i.status === 'paid').reduce((sum, i) => sum + i.amount, 0),
-                pending: invoices.filter(i => i.status !== 'paid').reduce((sum, i) => sum + i.amount, 0)
-            };
+                        return acc;
+                    }, [] as { month: string, sales: number }[])
+                };
+                
+                const financialData = {
+                    revenue: invoices.filter(i => i.status === 'paid').reduce((sum, i) => sum + i.amount, 0),
+                    pending: invoices.filter(i => i.status !== 'paid').reduce((sum, i) => sum + i.amount, 0)
+                };
 
-            const insightsResult = await generateBusinessInsights({
-                salesData: JSON.stringify(salesData),
-                financialData: JSON.stringify(financialData),
-            });
-            setInsights(insightsResult.insights);
+                const insightsResult = await generateBusinessInsights({
+                    salesData: JSON.stringify(salesData),
+                    financialData: JSON.stringify(financialData),
+                });
+                setInsights(insightsResult.insights);
+            } catch (error) {
+                console.error("Failed to fetch AI data:", error);
+                setSummary("Could not load daily summary.");
+                setInsights("Could not load smart suggestions.");
+            } finally {
+                setIsLoading(false);
+            }
         };
 
         fetchAiData();
@@ -84,7 +92,7 @@ export function AiAssistant() {
             <CardDescription>Your AI-powered business insights.</CardDescription>
         </CardHeader>
         <CardContent className="space-y-6">
-            {loading ? <p>Analyzing your data...</p> : (
+            {isLoading ? <p>Analyzing your data...</p> : (
               <>
                 {summary && (
                     <div className="flex items-start gap-4">
