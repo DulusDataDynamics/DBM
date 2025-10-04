@@ -196,6 +196,10 @@
         "theme": {
           "type": "string",
           "description": "Selected theme for the application."
+        },
+        "invoiceLockPin": {
+          "type": "string",
+          "description": "A 6-digit PIN to lock the invoicing page."
         }
       },
       "required": [
@@ -242,7 +246,7 @@
       "schema": {
         "$ref": "#/entities/Settings"
       },
-      "description": "Subcollection for user settings."
+      "description": "Subcollection for user settings. Users can manage their own settings."
     }
   }
 }
