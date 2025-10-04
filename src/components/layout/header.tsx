@@ -37,51 +37,45 @@ export function AppHeader() {
         const SpeechRecognition = (window as any).webkitSpeechRecognition || (window as any).SpeechRecognition;
         if (!SpeechRecognition) {
             setIsMicSupported(false);
-        } else {
-            setIsMicSupported(true);
-            const recognition = new SpeechRecognition();
-            recognition.continuous = false;
-            recognition.interimResults = false;
-            recognition.lang = 'en-US';
-
-            recognition.onstart = () => {
-                setIsRecording(true);
-            };
-
-            recognition.onend = () => {
-                setIsRecording(false);
-            };
-
-            recognition.onerror = (event: any) => {
-                let errorMessage = 'An unknown voice recognition error occurred.';
-                switch (event.error) {
-                    case 'not-allowed':
-                    case 'service-not-allowed':
-                        errorMessage = 'Microphone permission denied. Please enable it in your browser settings.';
-                        break;
-                    case 'no-speech':
-                        errorMessage = "No speech was detected. Please try again.";
-                        break;
-                    case 'audio-capture':
-                        errorMessage = "Audio capture failed. Please check if your microphone is working and not in use by another application.";
-                        break;
-                    case 'network':
-                        errorMessage = 'A network error occurred during speech recognition.';
-                        break;
-                }
-                toast({ title: "Voice recognition error", description: errorMessage, variant: "destructive" });
-                setIsRecording(false);
-            };
-            
-            recognition.onresult = (event: any) => {
-                const transcript = event.results[0][0].transcript;
-                setInputValue(transcript);
-                // Automatically send after successful recognition
-                handleSend(transcript);
-            };
-
-            recognitionRef.current = recognition;
+            return;
         }
+
+        const recognition = new SpeechRecognition();
+        recognition.continuous = false;
+        recognition.interimResults = false;
+        recognition.lang = 'en-US';
+
+        recognition.onstart = () => setIsRecording(true);
+        recognition.onend = () => setIsRecording(false);
+        
+        recognition.onerror = (event: any) => {
+            let errorMessage = 'An unknown voice recognition error occurred.';
+            switch (event.error) {
+                case 'not-allowed':
+                case 'service-not-allowed':
+                    errorMessage = 'Microphone permission denied. Please enable it in your browser settings.';
+                    break;
+                case 'no-speech':
+                    errorMessage = "No speech was detected. Please try again.";
+                    break;
+                case 'audio-capture':
+                    errorMessage = "Audio capture failed. Check if your microphone is working and not used by another app.";
+                    break;
+                case 'network':
+                    errorMessage = 'A network error occurred during speech recognition.';
+                    break;
+            }
+            toast({ title: "Voice recognition error", description: errorMessage, variant: "destructive" });
+            setIsRecording(false);
+        };
+        
+        recognition.onresult = (event: any) => {
+            const transcript = event.results[0][0].transcript;
+            setInputValue(transcript);
+            handleSend(transcript);
+        };
+
+        recognitionRef.current = recognition;
     }, [toast]);
     
     const handleMicClick = () => {
@@ -99,7 +93,7 @@ export function AppHeader() {
                     recognition.start();
                 } catch (e) {
                     console.error("Error starting speech recognition:", e);
-                    toast({ title: "Voice recognition error", description: "Could not start voice recognition. Please ensure microphone permissions are granted and the microphone is not in use.", variant: "destructive" });
+                    toast({ title: "Voice recognition error", description: "Could not start voice recognition. Please ensure microphone permissions are granted.", variant: "destructive" });
                 }
             }
         }
