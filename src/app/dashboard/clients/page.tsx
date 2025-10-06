@@ -27,12 +27,29 @@ import {
 import { MoreHorizontal, PlusCircle } from "lucide-react";
 import { PageHeader } from "@/components/page-header";
 import { useCollection, useFirestore, useUser, useMemoFirebase } from "@/firebase";
-import { collection, query } from "firebase/firestore";
+import { collection, query, doc } from "firebase/firestore";
 import type { Client } from "@/lib/data";
+import { useState } from "react";
+import { AddEditClientDialog } from "@/components/clients/add-edit-client-dialog";
+import { deleteDocumentNonBlocking } from "@/firebase/non-blocking-updates";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
 
 export default function ClientsPage() {
   const { user } = useUser();
   const firestore = useFirestore();
+  const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [editingClient, setEditingClient] = useState<Client | undefined>(undefined);
+
   const clientsQuery = useMemoFirebase(() => {
     if (!user) return null;
     return query(collection(firestore, `users/${user.uid}/clients`));
@@ -40,10 +57,26 @@ export default function ClientsPage() {
 
   const { data: clients, isLoading } = useCollection<Client>(clientsQuery);
 
+  const handleAddClient = () => {
+    setEditingClient(undefined);
+    setIsDialogOpen(true);
+  }
+
+  const handleEditClient = (client: Client) => {
+    setEditingClient(client);
+    setIsDialogOpen(true);
+  }
+
+  const handleDeleteClient = (clientId: string) => {
+    if (!user) return;
+    const clientRef = doc(firestore, `users/${user.uid}/clients/${clientId}`);
+    deleteDocumentNonBlocking(clientRef);
+  }
+
   return (
     <>
       <PageHeader title="Clients" description="Manage your client relationships.">
-        <Button size="sm" className="gap-1">
+        <Button size="sm" className="gap-1" onClick={handleAddClient}>
           <PlusCircle className="h-3.5 w-3.5" />
           <span className="sr-only sm:not-sr-only sm:whitespace-nowrap">
             Add Client
@@ -51,6 +84,12 @@ export default function ClientsPage() {
         </Button>
       </PageHeader>
       
+      <AddEditClientDialog 
+        isOpen={isDialogOpen}
+        onOpenChange={setIsDialogOpen}
+        client={editingClient}
+      />
+
       <Card>
         <CardHeader>
           <CardTitle>Client Directory</CardTitle>
@@ -95,9 +134,24 @@ export default function ClientsPage() {
                         </DropdownMenuTrigger>
                         <DropdownMenuContent align="end">
                           <DropdownMenuLabel>Actions</DropdownMenuLabel>
-                          <DropdownMenuItem>Edit</DropdownMenuItem>
-                          <DropdownMenuItem>View Details</DropdownMenuItem>
-                          <DropdownMenuItem>Delete</DropdownMenuItem>
+                          <DropdownMenuItem onClick={() => handleEditClient(client)}>Edit</DropdownMenuItem>
+                           <AlertDialog>
+                              <AlertDialogTrigger asChild>
+                                <DropdownMenuItem onSelect={(e) => e.preventDefault()}>Delete</DropdownMenuItem>
+                              </AlertDialogTrigger>
+                              <AlertDialogContent>
+                                <AlertDialogHeader>
+                                  <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
+                                  <AlertDialogDescription>
+                                    This action cannot be undone. This will permanently delete this client and all associated data.
+                                  </AlertDialogDescription>
+                                </AlertDialogHeader>
+                                <AlertDialogFooter>
+                                  <AlertDialogCancel>Cancel</AlertDialogCancel>
+                                  <AlertDialogAction onClick={() => handleDeleteClient(client.id)}>Delete</AlertDialogAction>
+                                </AlertDialogFooter>
+                              </AlertDialogContent>
+                            </AlertDialog>
                         </DropdownMenuContent>
                       </DropdownMenu>
                     </TableCell>
