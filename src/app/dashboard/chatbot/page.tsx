@@ -9,6 +9,7 @@ import { useUser } from '@/firebase';
 import { cn } from '@/lib/utils';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Separator } from '@/components/ui/separator';
+import { useToast } from '@/hooks/use-toast';
 
 type Message = {
     text: string;
@@ -17,6 +18,7 @@ type Message = {
 
 export default function ChatbotPage() {
     const { user } = useUser();
+    const { toast } = useToast();
     const [messages, setMessages] = useState<Message[]>([]);
     const [input, setInput] = useState('');
     const [isLoading, setIsLoading] = useState(false);
@@ -42,6 +44,27 @@ export default function ChatbotPage() {
             setIsLoading(false);
         }
     };
+    
+    const handleNewChat = () => {
+        setMessages([]);
+    }
+
+    const handleHistoryClick = (topic: string) => {
+        setMessages([
+            { text: `This is a past conversation about ${topic}.`, isUser: false }
+        ]);
+        toast({
+            title: "History Loaded",
+            description: "Full chat history coming soon!",
+        });
+    }
+
+    const handleFutureFeatureClick = (featureName: string) => {
+        toast({
+            title: "Coming Soon!",
+            description: `${featureName} functionality is currently under development.`,
+        });
+    }
 
     useEffect(() => {
         if (scrollViewportRef.current) {
@@ -61,31 +84,30 @@ export default function ChatbotPage() {
         <div className="grid grid-cols-1 md:grid-cols-[280px_1fr] h-[calc(100vh-8rem)] gap-6">
             {/* Sidebar */}
             <div className="hidden md:flex flex-col gap-4 border-r pr-6">
-                <Button variant="outline" className="w-full justify-start gap-2">
+                <Button variant="outline" className="w-full justify-start gap-2" onClick={handleNewChat}>
                     <MessageSquarePlus className="h-4 w-4" /> New Chat
                 </Button>
                 <Separator />
                 <h3 className="text-sm font-semibold text-muted-foreground px-2">History</h3>
                 <ScrollArea className="flex-1">
                     <div className="space-y-2 pr-2">
-                        {/* Placeholder for chat history items */}
-                        <Button variant="ghost" className="w-full justify-start gap-2 truncate">
+                        <Button variant="ghost" className="w-full justify-start gap-2 truncate" onClick={() => handleHistoryClick('sales')}>
                             <History className="h-4 w-4" /> Initial chat about sales
                         </Button>
-                        <Button variant="ghost" className="w-full justify-start gap-2 truncate">
+                        <Button variant="ghost" className="w-full justify-start gap-2 truncate" onClick={() => handleHistoryClick('invoicing')}>
                             <History className="h-4 w-4" /> Invoicing questions
                         </Button>
                     </div>
                 </ScrollArea>
                 <Separator />
                 <div className="space-y-2">
-                    <Button variant="ghost" className="w-full justify-start gap-2">
+                    <Button variant="ghost" className="w-full justify-start gap-2" onClick={() => handleFutureFeatureClick('Image analysis')}>
                         <ImageIcon className="h-4 w-4" /> Images
                     </Button>
-                     <Button variant="ghost" className="w-full justify-start gap-2">
+                     <Button variant="ghost" className="w-full justify-start gap-2" onClick={() => handleFutureFeatureClick('Client review generation')}>
                         <Star className="h-4 w-4" /> Client Reviews
                     </Button>
-                     <Button variant="ghost" className="w-full justify-start gap-2">
+                     <Button variant="ghost" className="w-full justify-start gap-2" onClick={() => handleFutureFeatureClick('Chatbot settings')}>
                         <Settings className="h-4 w-4" /> Chatbot Settings
                     </Button>
                 </div>
@@ -99,6 +121,15 @@ export default function ChatbotPage() {
                 </div>
                 <ScrollArea className="flex-1 p-6" viewportRef={scrollViewportRef}>
                      <div className="space-y-6">
+                        {messages.length === 0 && (
+                             <div className="flex flex-col items-center justify-center h-full text-center">
+                                <div className="bg-primary/10 p-4 rounded-full mb-4">
+                                     <Bot className="h-10 w-10 text-primary" />
+                                </div>
+                                <h3 className="text-lg font-semibold">Start a conversation</h3>
+                                <p className="text-muted-foreground">Ask me anything about your business or give me a command!</p>
+                            </div>
+                        )}
                         {messages.map((message, index) => (
                             <div key={index} className={cn("flex items-start gap-4", message.isUser ? "justify-end" : "")}>
                                 {!message.isUser && (
