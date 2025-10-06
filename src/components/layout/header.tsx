@@ -118,17 +118,17 @@ export function AppHeader({ onToggleSidebar, isSidebarOpen }: AppHeaderProps) {
         }
 
         setCommandIsLoading(true);
-        addMessage({ text: command, isUser: true });
+        addMessage({ text: command, isUser: true }, true);
         setInputValue('');
 
         startTransition(async () => {
             try {
                 const response = await runCommand({ command, userId: user.uid });
-                addMessage({ text: response.reply, isUser: false });
+                addMessage({ text: response.reply, isUser: false }, true);
             } catch (error) {
                 console.error("AI command error:", error);
                 const errorMessage = "Sorry, I encountered an issue processing your command. Please try again.";
-                addMessage({ text: errorMessage, isUser: false });
+                addMessage({ text: errorMessage, isUser: false }, true);
             } finally {
                 setCommandIsLoading(false);
             }

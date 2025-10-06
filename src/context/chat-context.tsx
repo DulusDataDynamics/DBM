@@ -12,7 +12,7 @@ interface ChatContextType {
     messages: Message[];
     isLoading: boolean;
     commandIsLoading: boolean;
-    addMessage: (message: Message) => Promise<void>;
+    addMessage: (message: Message, isCommand?: boolean) => Promise<void>;
     clearMessages: () => void;
     setCommandIsLoading: (isLoading: boolean) => void;
 }
@@ -24,10 +24,10 @@ export const ChatProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     const [isLoading, setIsLoading] = useState(false);
     const [commandIsLoading, setCommandIsLoading] = useState(false);
 
-    const addMessage = useCallback(async (message: Message) => {
+    const addMessage = useCallback(async (message: Message, isCommand: boolean = false) => {
         setMessages(prev => [...prev, message]);
 
-        if (message.isUser) {
+        if (message.isUser && !isCommand) {
             setIsLoading(true);
             try {
                 const response = await chat(message.text);
