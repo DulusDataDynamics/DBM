@@ -17,11 +17,12 @@ import { LogOut, Mic, PanelLeft, Search, Settings, User, Send } from 'lucide-rea
 import { MainSidebar } from './sidebar';
 import { useAuth, useUser } from '@/firebase';
 import { signOut } from '@/firebase/auth-actions';
-import { useRouter } from 'next/navigation';
+import { useRouter, usePathname } from 'next/navigation';
 import { useState, useRef, useEffect, useCallback, useTransition } from 'react';
 import { cn } from '@/lib/utils';
 import { useToast } from '@/hooks/use-toast';
 import { runCommand } from '@/ai/flows/command-flow';
+import { useChat } from '@/context/chat-context';
 
 interface AppHeaderProps {
   onToggleSidebar: () => void;
@@ -32,7 +33,9 @@ export function AppHeader({ onToggleSidebar, isSidebarOpen }: AppHeaderProps) {
     const { user } = useUser();
     const auth = useAuth();
     const router = useRouter();
+    const pathname = usePathname();
     const { toast } = useToast();
+    const { addMessage, setCommandIsLoading } = useChat();
     const [isPending, startTransition] = useTransition();
 
     const [isRecording, setIsRecording] = useState(false);
@@ -110,24 +113,26 @@ export function AppHeader({ onToggleSidebar, isSidebarOpen }: AppHeaderProps) {
         const command = text || inputValue;
         if (!command.trim() || !user) return;
 
+        if (pathname !== '/dashboard/chatbot') {
+            router.push('/dashboard/chatbot');
+        }
+
+        setCommandIsLoading(true);
+        addMessage({ text: command, isUser: true });
+        setInputValue('');
+
         startTransition(async () => {
             try {
                 const response = await runCommand({ command, userId: user.uid });
-                toast({
-                    title: "AI Assistant",
-                    description: response.reply,
-                });
+                addMessage({ text: response.reply, isUser: false });
             } catch (error) {
                 console.error("AI command error:", error);
-                toast({
-                    title: "AI Error",
-                    description: "There was an issue processing your command.",
-                    variant: "destructive",
-                });
+                const errorMessage = "Sorry, I encountered an issue processing your command. Please try again.";
+                addMessage({ text: errorMessage, isUser: false });
+            } finally {
+                setCommandIsLoading(false);
             }
         });
-        
-        setInputValue(''); // Clear input after sending
     };
 
     const userAvatar = user?.photoURL;
@@ -183,10 +188,10 @@ export function AppHeader({ onToggleSidebar, isSidebarOpen }: AppHeaderProps) {
         <DropdownMenuContent align="end">
           <DropdownMenuLabel>My Account</DropdownMenuLabel>
           <DropdownMenuSeparator />
-          <DropdownMenuItem asChild><Link href="/dashboard/settings" className="flex items-center gap-2"><Settings /> Settings</Link></DropdownMenuItem>
-          <DropdownMenuItem asChild><Link href="/dashboard/settings" className="flex items-center gap-2"><User /> Profile</Link></DropdownMenuItem>
+          <DropdownMenuItem asChild><Link href="/dashboard/settings" className="flex items-center gap-2"><Settings className="h-4 w-4" /> Settings</Link></DropdownMenuItem>
+          <DropdownMenuItem asChild><Link href="/dashboard/settings" className="flex items-center gap-2"><User className="h-4 w-4" /> Profile</Link></DropdownMenuItem>
           <DropdownMenuSeparator />
-          <DropdownMenuItem onClick={() => signOut(auth)} className="flex items-center gap-2"><LogOut /> Logout</DropdownMenuItem>
+          <DropdownMenuItem onClick={() => signOut(auth)} className="flex items-center gap-2"><LogOut className="h-4 w-4" /> Logout</DropdownMenuItem>
         </DropdownMenuContent>
       </DropdownMenu>
     </header>

@@ -4,55 +4,38 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Bot, Send, User as UserIcon, Settings, MessageSquarePlus, History, ImageIcon, Star } from "lucide-react";
-import { chat } from '@/ai/flows/chat';
 import { useUser } from '@/firebase';
 import { cn } from '@/lib/utils';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Separator } from '@/components/ui/separator';
 import { useToast } from '@/hooks/use-toast';
-
-type Message = {
-    text: string;
-    isUser: boolean;
-};
+import { useChat, type Message } from '@/context/chat-context';
 
 export default function ChatbotPage() {
     const { user } = useUser();
     const { toast } = useToast();
-    const [messages, setMessages] = useState<Message[]>([]);
+    const { messages, isLoading, addMessage, clearMessages, commandIsLoading } = useChat();
     const [input, setInput] = useState('');
-    const [isLoading, setIsLoading] = useState(false);
     const scrollViewportRef = useRef<HTMLDivElement>(null);
 
     const handleSend = async () => {
         if (input.trim() === '') return;
-
-        const userMessage: Message = { text: input, isUser: true };
-        setMessages(prev => [...prev, userMessage]);
+        const text = input;
         setInput('');
-        setIsLoading(true);
-
-        try {
-            const response = await chat(input);
-            const botMessage: Message = { text: response.reply, isUser: false };
-            setMessages(prev => [...prev, botMessage]);
-        } catch (error) {
-            console.error("Chatbot error:", error);
-            const errorMessage: Message = { text: "Sorry, I'm having trouble connecting. Please try again.", isUser: false };
-            setMessages(prev => [...prev, errorMessage]);
-        } finally {
-            setIsLoading(false);
-        }
+        await addMessage({ text, isUser: true });
     };
     
     const handleNewChat = () => {
-        setMessages([]);
+        clearMessages();
+        toast({
+            title: "New Chat",
+            description: "Conversation history has been cleared.",
+        });
     }
 
     const handleHistoryClick = (topic: string) => {
-        setMessages([
-            { text: `This is a past conversation about ${topic}.`, isUser: false }
-        ]);
+        clearMessages();
+        addMessage({ text: `This is a past conversation about ${topic}.`, isUser: false });
         toast({
             title: "History Loaded",
             description: "Full chat history coming soon!",
@@ -79,6 +62,8 @@ export default function ChatbotPage() {
 
     const userAvatar = user?.photoURL;
     const userFallback = user?.displayName?.charAt(0) || user?.email?.charAt(0) || 'U';
+
+    const isProcessing = isLoading || commandIsLoading;
 
     return (
         <div className="grid grid-cols-1 md:grid-cols-[280px_1fr] h-[calc(100vh-8rem)] gap-6">
@@ -150,7 +135,7 @@ export default function ChatbotPage() {
                                 )}
                             </div>
                         ))}
-                         {isLoading && (
+                         {isProcessing && (
                              <div className="flex items-start gap-4">
                                 <Avatar className="h-9 w-9 border">
                                     <div className="bg-primary aspect-square h-full w-full flex items-center justify-center rounded-full text-primary-foreground">
@@ -171,15 +156,15 @@ export default function ChatbotPage() {
                             className="pr-12"
                             value={input}
                             onChange={(e) => setInput(e.target.value)}
-                            onKeyDown={(e) => e.key === 'Enter' && !isLoading && handleSend()}
-                            disabled={isLoading}
+                            onKeyDown={(e) => e.key === 'Enter' && !isProcessing && handleSend()}
+                            disabled={isProcessing}
                         />
                         <Button
                             size="icon"
                             variant="ghost"
                             className="absolute right-1 top-1/2 -translate-y-1/2 h-8 w-8"
                             onClick={handleSend}
-                            disabled={isLoading || !input.trim()}
+                            disabled={isProcessing || !input.trim()}
                         >
                             <Send className="h-4 w-4" />
                         </Button>
