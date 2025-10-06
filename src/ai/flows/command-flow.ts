@@ -96,6 +96,7 @@ export async function runCommand(
     const toolResult = await toolRequest.run();
 
     // Send the tool result back to the AI to continue the conversation
+    // CRITICAL: We must pass the context again in the follow-up call.
     const nextResponse = await ai.generate({
       history: [message, toolResult],
       tools: tools,
@@ -105,5 +106,6 @@ export async function runCommand(
   }
 
   // Once the AI is done calling tools, it will generate a final text response.
-  return { reply: message.content[0].text || "I've completed the action." };
+  const finalReply = message.content.find(part => part.text)?.text || "I've completed the action.";
+  return { reply: finalReply };
 }
