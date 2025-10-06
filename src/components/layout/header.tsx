@@ -184,7 +184,7 @@ export function AppHeader({ onToggleSidebar, isSidebarOpen }: AppHeaderProps) {
           <DropdownMenuLabel>My Account</DropdownMenuLabel>
           <DropdownMenuSeparator />
           <DropdownMenuItem asChild><Link href="/dashboard/settings" className="flex items-center gap-2"><Settings /> Settings</Link></DropdownMenuItem>
-          <DropdownMenuItem asChild><Link href="#" className="flex items-center gap-2"><User /> Profile</Link></DropdownMenuItem>
+          <DropdownMenuItem asChild><Link href="/dashboard/settings" className="flex items-center gap-2"><User /> Profile</Link></DropdownMenuItem>
           <DropdownMenuSeparator />
           <DropdownMenuItem onClick={() => signOut(auth)} className="flex items-center gap-2"><LogOut /> Logout</DropdownMenuItem>
         </DropdownMenuContent>
