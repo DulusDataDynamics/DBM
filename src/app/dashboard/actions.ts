@@ -1,3 +1,4 @@
+
 'use server';
 
 import {
@@ -5,18 +6,19 @@ import {
   addDoc,
   getDocs,
   getFirestore,
+  doc,
 } from 'firebase/firestore';
 import { firebaseApp } from '@/firebase';
 import { z } from 'zod';
-import { InvoiceSchema } from '@/lib/data';
+import { InvoiceSchema, TaskSchema, ClientSchema } from '@/lib/data';
 import { errorEmitter } from '@/firebase/error-emitter';
 import { FirestorePermissionError } from '@/firebase/errors';
 
-export function createTask(
+export async function createTask(
   userId: string,
   description: string,
   dueDate?: string
-) {
+): Promise<z.infer<typeof TaskSchema>> {
   const db = getFirestore(firebaseApp);
   const tasksCollection = collection(db, 'users', userId, 'tasks');
   const taskData = {
@@ -26,28 +28,27 @@ export function createTask(
     completed: false,
   };
   
-  // Return the promise so the caller can still get the result if needed,
-  // but handle the error here.
-  return addDoc(tasksCollection, taskData)
-    .then(docRef => ({ ...taskData, id: docRef.id }))
-    .catch(serverError => {
-      const contextualError = new FirestorePermissionError({
-        path: tasksCollection.path,
-        operation: 'create',
-        requestResourceData: taskData
-      });
-      errorEmitter.emit('permission-error', contextualError);
-      // Re-throw or handle as appropriate for the flow
-      throw serverError;
+  try {
+    const docRef = await addDoc(tasksCollection, taskData);
+    return { ...taskData, id: docRef.id };
+  } catch (serverError) {
+    const contextualError = new FirestorePermissionError({
+      path: tasksCollection.path,
+      operation: 'create',
+      requestResourceData: taskData
     });
+    errorEmitter.emit('permission-error', contextualError);
+    // Re-throw or handle as appropriate for the flow
+    throw serverError;
+  }
 }
 
-export async function listClients(userId: string) {
+export async function listClients(userId: string): Promise<z.infer<typeof ClientSchema>[]> {
   const db = getFirestore(firebaseApp);
   const clientsCollection = collection(db, 'users', userId, 'clients');
   try {
     const snapshot = await getDocs(clientsCollection);
-    return snapshot.docs.map((doc) => ({ ...doc.data(), id: doc.id }));
+    return snapshot.docs.map((doc) => ({ ...(doc.data() as any), id: doc.id }));
   } catch (serverError) {
       const contextualError = new FirestorePermissionError({
         path: clientsCollection.path,
@@ -58,7 +59,7 @@ export async function listClients(userId: string) {
   }
 }
 
-export function createInvoice(
+export async function createInvoice(
     userId: string,
     clientId: string,
     amount: number,
@@ -78,15 +79,16 @@ export function createInvoice(
     currency: 'zar', // Default currency, can be changed later
   };
   
-  return addDoc(invoicesCollection, invoiceData)
-    .then(docRef => ({ ...invoiceData, id: docRef.id }))
-    .catch(serverError => {
-       const contextualError = new FirestorePermissionError({
-        path: invoicesCollection.path,
-        operation: 'create',
-        requestResourceData: invoiceData
-      });
-      errorEmitter.emit('permission-error', contextualError);
-      throw serverError;
+  try {
+    const docRef = await addDoc(invoicesCollection, invoiceData);
+    return { ...invoiceData, id: docRef.id };
+  } catch (serverError) {
+     const contextualError = new FirestorePermissionError({
+      path: invoicesCollection.path,
+      operation: 'create',
+      requestResourceData: invoiceData
     });
+    errorEmitter.emit('permission-error', contextualError);
+    throw serverError;
+  }
 }
