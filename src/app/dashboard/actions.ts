@@ -6,25 +6,7 @@ import {
   getDocs,
   getFirestore,
 } from 'firebase/firestore';
-import { z } from 'zod';
 import { firebaseApp } from '@/firebase';
-
-export const TaskSchema = z.object({
-  id: z.string(),
-  userId: z.string(),
-  description: z.string(),
-  dueDate: z.string(),
-  completed: z.boolean(),
-});
-
-export const ClientSchema = z.object({
-  id: z.string(),
-  userId: z.string(),
-  name: z.string(),
-  email: z.string(),
-  phone: z.string(),
-  address: z.string(),
-});
 
 export async function createTask(
   userId: string,

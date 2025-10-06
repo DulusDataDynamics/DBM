@@ -8,9 +8,9 @@ import { z } from 'genkit';
 import {
   createTask,
   listClients,
-  TaskSchema,
-  ClientSchema,
 } from '@/app/dashboard/actions';
+import { TaskSchema, ClientSchema } from '@/lib/data';
+
 
 const CommandInputSchema = z.object({
   command: z.string().describe('The user\'s command.'),

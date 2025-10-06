@@ -1,3 +1,5 @@
+import { z } from 'zod';
+
 export type Client = {
   id: string;
   name: string;
@@ -6,6 +8,15 @@ export type Client = {
   address: string;
   userId: string;
 };
+
+export const ClientSchema = z.object({
+  id: z.string(),
+  userId: z.string(),
+  name: z.string(),
+  email: z.string(),
+  phone: z.string(),
+  address: z.string(),
+});
 
 export type Invoice = {
   id: string;
@@ -26,6 +37,15 @@ export type Task = {
   dueDate: string;
   completed: boolean;
 };
+
+export const TaskSchema = z.object({
+  id: z.string(),
+  userId: z.string(),
+  description: z.string(),
+  dueDate: z.string(),
+  completed: z.boolean(),
+});
+
 
 export type RecentActivity = {
     id: string;
