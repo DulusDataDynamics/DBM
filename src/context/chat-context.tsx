@@ -2,7 +2,7 @@
 
 import { chat } from '@/ai/flows/chat';
 import React, { createContext, useContext, useState, ReactNode, useCallback, useEffect } from 'react';
-import { useUser, useFirestore, useMemoFirebase } from '@/firebase';
+import { useUser, useFirestore } from '@/firebase';
 import { collection, query, orderBy, onSnapshot, addDoc, serverTimestamp, doc, getDoc, updateDoc } from 'firebase/firestore';
 import { FirestorePermissionError } from '@/firebase/errors';
 import { errorEmitter } from '@/firebase/error-emitter';
@@ -40,44 +40,7 @@ export const ChatProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     const [activeSession, setActiveSession] = useState<ChatSession | null>(null);
     const [isLoading, setIsLoading] = useState(false);
     const [commandIsLoading, setCommandIsLoading] = useState(false);
-    
-    // Subscribe to user's chat sessions
-    useEffect(() => {
-        if (!user || !firestore) return;
 
-        const sessionsQuery = query(
-            collection(firestore, `users/${user.uid}/chatSessions`),
-            orderBy('createdAt', 'desc')
-        );
-
-        const unsubscribe = onSnapshot(sessionsQuery, (snapshot) => {
-            const userSessions = snapshot.docs.map(doc => {
-                const data = doc.data();
-                return {
-                    id: doc.id,
-                    title: data.title,
-                    createdAt: data.createdAt.toDate(),
-                };
-            });
-            setSessions(userSessions);
-            
-            // If there's no active session, load the latest one or create a new one
-            if (!activeSession && userSessions.length > 0) {
-                loadSession(userSessions[0].id);
-            } else if (!activeSession && userSessions.length === 0) {
-                createNewSession();
-            }
-        }, (error) => {
-            const contextualError = new FirestorePermissionError({
-              operation: 'list',
-              path: `users/${user.uid}/chatSessions`,
-            });
-            errorEmitter.emit('permission-error', contextualError);
-        });
-
-        return () => unsubscribe();
-    }, [user, firestore, activeSession, createNewSession, loadSession]);
-    
     const loadSession = useCallback(async (sessionId: string) => {
         if(!user || !firestore) return;
         setIsLoading(true);
@@ -135,6 +98,43 @@ export const ChatProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
             setIsLoading(false);
         }
     }, [user, firestore]);
+    
+    // Subscribe to user's chat sessions
+    useEffect(() => {
+        if (!user || !firestore) return;
+
+        const sessionsQuery = query(
+            collection(firestore, `users/${user.uid}/chatSessions`),
+            orderBy('createdAt', 'desc')
+        );
+
+        const unsubscribe = onSnapshot(sessionsQuery, (snapshot) => {
+            const userSessions = snapshot.docs.map(doc => {
+                const data = doc.data();
+                return {
+                    id: doc.id,
+                    title: data.title,
+                    createdAt: data.createdAt.toDate(),
+                };
+            });
+            setSessions(userSessions);
+            
+            // If there's no active session, load the latest one or create a new one
+            if (!activeSession && userSessions.length > 0) {
+                loadSession(userSessions[0].id);
+            } else if (!activeSession && userSessions.length === 0) {
+                createNewSession();
+            }
+        }, (error) => {
+            const contextualError = new FirestorePermissionError({
+              operation: 'list',
+              path: `users/${user.uid}/chatSessions`,
+            });
+            errorEmitter.emit('permission-error', contextualError);
+        });
+
+        return () => unsubscribe();
+    }, [user, firestore, activeSession, createNewSession, loadSession]);
 
     const addMessage = useCallback(async (message: Message, isCommand: boolean = false) => {
         if (!activeSession || !user || !firestore) return;
