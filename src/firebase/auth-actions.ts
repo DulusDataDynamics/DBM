@@ -10,6 +10,8 @@ import {
 } from 'firebase/auth';
 import { doc, setDoc, getFirestore, serverTimestamp } from 'firebase/firestore';
 import { firebaseApp } from '@/firebase';
+import { errorEmitter } from './error-emitter';
+import { FirestorePermissionError } from './errors';
 
 export function initiateAnonymousSignIn(authInstance: Auth): void {
   signInAnonymously(authInstance).catch(error => {
@@ -22,12 +24,21 @@ export async function initiateEmailSignUp(authInstance: Auth, email: string, pas
   const user = userCredential.user;
   if (user) {
     const db = getFirestore(firebaseApp);
-    await setDoc(doc(db, 'users', user.uid), {
+    const userDocRef = doc(db, 'users', user.uid);
+    const userData = {
       id: user.uid,
       email: user.email,
       businessName: businessName,
       createdAt: serverTimestamp(),
-      settingsId: '', // You can populate this later
+    };
+    
+    setDoc(userDocRef, userData).catch(error => {
+        const contextualError = new FirestorePermissionError({
+            path: userDocRef.path,
+            operation: 'create',
+            requestResourceData: userData,
+        });
+        errorEmitter.emit('permission-error', contextualError);
     });
   }
 }
@@ -42,13 +53,22 @@ export async function initiateGoogleSignIn(authInstance: Auth): Promise<void> {
   const user = result.user;
   if (user) {
     const db = getFirestore(firebaseApp);
-    await setDoc(doc(db, 'users', user.uid), {
+    const userDocRef = doc(db, 'users', user.uid);
+    const userData = {
       id: user.uid,
       email: user.email,
       businessName: user.displayName || 'My Business', // Default business name
       createdAt: serverTimestamp(),
-      settingsId: '',
-    }, { merge: true }); // Merge to avoid overwriting existing data if user signs up differently
+    };
+
+    setDoc(userDocRef, userData, { merge: true }).catch(error => {
+        const contextualError = new FirestorePermissionError({
+            path: userDocRef.path,
+            operation: 'write',
+            requestResourceData: userData,
+        });
+        errorEmitter.emit('permission-error', contextualError);
+    });
   }
 }
 

@@ -4,6 +4,8 @@ import { chat } from '@/ai/flows/chat';
 import React, { createContext, useContext, useState, ReactNode, useCallback, useEffect } from 'react';
 import { useUser, useFirestore, useMemoFirebase } from '@/firebase';
 import { collection, query, orderBy, onSnapshot, addDoc, serverTimestamp, doc, getDoc, updateDoc } from 'firebase/firestore';
+import { FirestorePermissionError } from '@/firebase/errors';
+import { errorEmitter } from '@/firebase/error-emitter';
 
 export type Message = {
     text: string;
@@ -65,27 +67,43 @@ export const ChatProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
             } else if (!activeSession && userSessions.length === 0) {
                 createNewSession();
             }
+        }, (error) => {
+            const contextualError = new FirestorePermissionError({
+              operation: 'list',
+              path: `users/${user.uid}/chatSessions`,
+            });
+            errorEmitter.emit('permission-error', contextualError);
         });
 
         return () => unsubscribe();
-    }, [user, firestore]);
+    }, [user, firestore, activeSession, createNewSession, loadSession]);
     
     const loadSession = useCallback(async (sessionId: string) => {
         if(!user || !firestore) return;
         setIsLoading(true);
         const sessionRef = doc(firestore, `users/${user.uid}/chatSessions`, sessionId);
-        const sessionSnap = await getDoc(sessionRef);
+        
+        try {
+            const sessionSnap = await getDoc(sessionRef);
 
-        if(sessionSnap.exists()) {
-            const data = sessionSnap.data();
-            setActiveSession({
-                id: sessionSnap.id,
-                title: data.title,
-                createdAt: data.createdAt.toDate(),
-                messages: data.messages || []
+            if(sessionSnap.exists()) {
+                const data = sessionSnap.data();
+                setActiveSession({
+                    id: sessionSnap.id,
+                    title: data.title,
+                    createdAt: data.createdAt.toDate(),
+                    messages: data.messages || []
+                });
+            }
+        } catch (error) {
+             const contextualError = new FirestorePermissionError({
+              operation: 'get',
+              path: sessionRef.path,
             });
+            errorEmitter.emit('permission-error', contextualError);
+        } finally {
+            setIsLoading(false);
         }
-        setIsLoading(false);
     }, [user, firestore]);
 
     const createNewSession = useCallback(async () => {
@@ -98,16 +116,24 @@ export const ChatProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
             messages: [],
         };
         const sessionsCollection = collection(firestore, `users/${user.uid}/chatSessions`);
-        const docRef = await addDoc(sessionsCollection, newSessionData);
-        
-        setActiveSession({
-            id: docRef.id,
-            title: newSessionData.title,
-            createdAt: new Date(), // Approximate
-            messages: [],
-        });
-        setIsLoading(false);
-
+        try {
+            const docRef = await addDoc(sessionsCollection, newSessionData);
+            setActiveSession({
+                id: docRef.id,
+                title: newSessionData.title,
+                createdAt: new Date(), // Approximate
+                messages: [],
+            });
+        } catch (error) {
+            const contextualError = new FirestorePermissionError({
+                operation: 'create',
+                path: sessionsCollection.path,
+                requestResourceData: newSessionData,
+            });
+            errorEmitter.emit('permission-error', contextualError);
+        } finally {
+            setIsLoading(false);
+        }
     }, [user, firestore]);
 
     const addMessage = useCallback(async (message: Message, isCommand: boolean = false) => {
@@ -115,11 +141,17 @@ export const ChatProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
 
         const sessionRef = doc(firestore, `users/${user.uid}/chatSessions`, activeSession.id);
 
-        // Add user message immediately
         const updatedMessages = [...activeSession.messages, message];
         setActiveSession(prev => prev ? { ...prev, messages: updatedMessages } : null);
-        await updateDoc(sessionRef, { messages: updatedMessages });
-
+        
+        updateDoc(sessionRef, { messages: updatedMessages }).catch(error => {
+            const contextualError = new FirestorePermissionError({
+                path: sessionRef.path,
+                operation: 'update',
+                requestResourceData: { messages: updatedMessages },
+            });
+            errorEmitter.emit('permission-error', contextualError);
+        });
 
         if (message.isUser && !isCommand) {
             setIsLoading(true);
@@ -127,23 +159,37 @@ export const ChatProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
                 const response = await chat(message.text);
                 const botMessage = { text: response.reply, isUser: false };
                 
-                // Fetch the latest messages again before updating
                 const currentSessionSnap = await getDoc(sessionRef);
                 const currentMessages = currentSessionSnap.data()?.messages || [];
                 const finalMessages = [...currentMessages, botMessage];
 
                 setActiveSession(prev => prev ? { ...prev, messages: finalMessages } : null);
-                await updateDoc(sessionRef, { messages: finalMessages });
+                updateDoc(sessionRef, { messages: finalMessages }).catch(error => {
+                     const contextualError = new FirestorePermissionError({
+                        path: sessionRef.path,
+                        operation: 'update',
+                        requestResourceData: { messages: finalMessages },
+                    });
+                    errorEmitter.emit('permission-error', contextualError);
+                });
 
             } catch (error) {
                 console.error("Chatbot error:", error);
                 const errorMessage = { text: "Sorry, I'm having trouble connecting. Please try again.", isUser: false };
+                
                 const currentSessionSnap = await getDoc(sessionRef);
                 const currentMessages = currentSessionSnap.data()?.messages || [];
                 const finalMessages = [...currentMessages, errorMessage];
 
                 setActiveSession(prev => prev ? { ...prev, messages: finalMessages } : null);
-                await updateDoc(sessionRef, { messages: finalMessages });
+                updateDoc(sessionRef, { messages: finalMessages }).catch(error => {
+                     const contextualError = new FirestorePermissionError({
+                        path: sessionRef.path,
+                        operation: 'update',
+                        requestResourceData: { messages: finalMessages },
+                    });
+                    errorEmitter.emit('permission-error', contextualError);
+                });
             } finally {
                 setIsLoading(false);
             }
