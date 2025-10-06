@@ -10,11 +10,13 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { Separator } from '@/components/ui/separator';
 import { useToast } from '@/hooks/use-toast';
 import { useChat, type Message } from '@/context/chat-context';
+import { formatDistanceToNow } from 'date-fns';
+
 
 export default function ChatbotPage() {
     const { user } = useUser();
     const { toast } = useToast();
-    const { messages, isLoading, addMessage, clearMessages, commandIsLoading } = useChat();
+    const { sessions, activeSession, isLoading, addMessage, createNewSession, loadSession, commandIsLoading } = useChat();
     const [input, setInput] = useState('');
     const scrollViewportRef = useRef<HTMLDivElement>(null);
 
@@ -26,19 +28,18 @@ export default function ChatbotPage() {
     };
     
     const handleNewChat = () => {
-        clearMessages();
+        createNewSession();
         toast({
-            title: "New Chat",
-            description: "Conversation history has been cleared.",
+            title: "New Chat Started",
+            description: "You can find your old chat in the history.",
         });
     }
 
-    const handleHistoryClick = (topic: string) => {
-        clearMessages();
-        addMessage({ text: `This is a past conversation about ${topic}.`, isUser: false });
+    const handleHistoryClick = (sessionId: string) => {
+        loadSession(sessionId);
         toast({
-            title: "History Loaded",
-            description: "Full chat history coming soon!",
+            title: "Chat History Loaded",
+            description: "You are now viewing a past conversation.",
         });
     }
 
@@ -58,12 +59,13 @@ export default function ChatbotPage() {
                 });
             }, 100);
         }
-    }, [messages]);
+    }, [activeSession?.messages]);
 
     const userAvatar = user?.photoURL;
     const userFallback = user?.displayName?.charAt(0) || user?.email?.charAt(0) || 'U';
 
     const isProcessing = isLoading || commandIsLoading;
+    const messages = activeSession?.messages || [];
 
     return (
         <div className="grid grid-cols-1 md:grid-cols-[280px_1fr] h-[calc(100vh-8rem)] gap-6">
@@ -76,12 +78,17 @@ export default function ChatbotPage() {
                 <h3 className="text-sm font-semibold text-muted-foreground px-2">History</h3>
                 <ScrollArea className="flex-1">
                     <div className="space-y-2 pr-2">
-                        <Button variant="ghost" className="w-full justify-start gap-2 truncate" onClick={() => handleHistoryClick('sales')}>
-                            <History className="h-4 w-4" /> Initial chat about sales
-                        </Button>
-                        <Button variant="ghost" className="w-full justify-start gap-2 truncate" onClick={() => handleHistoryClick('invoicing')}>
-                            <History className="h-4 w-4" /> Invoicing questions
-                        </Button>
+                        {sessions.map(session => (
+                             <Button
+                                key={session.id}
+                                variant={activeSession?.id === session.id ? 'secondary' : 'ghost'}
+                                className="w-full justify-between gap-2 truncate"
+                                onClick={() => handleHistoryClick(session.id)}
+                            >
+                                <span className='truncate'>{session.title}</span>
+                                <span className='text-xs text-muted-foreground shrink-0'>{formatDistanceToNow(session.createdAt, { addSuffix: true })}</span>
+                            </Button>
+                        ))}
                     </div>
                 </ScrollArea>
                 <Separator />
@@ -106,7 +113,7 @@ export default function ChatbotPage() {
                 </div>
                 <ScrollArea className="flex-1 p-6" viewportRef={scrollViewportRef}>
                      <div className="space-y-6">
-                        {messages.length === 0 && (
+                        {messages.length === 0 && !isLoading && (
                              <div className="flex flex-col items-center justify-center h-full text-center">
                                 <div className="bg-primary/10 p-4 rounded-full mb-4">
                                      <Bot className="h-10 w-10 text-primary" />

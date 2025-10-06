@@ -209,6 +209,44 @@
       "required": [
         "id"
       ]
+    },
+    "ChatSession": {
+        "$schema": "http://json-schema.org/draft-07/schema#",
+        "title": "Chat Session",
+        "type": "object",
+        "description": "Represents a single chat conversation with the AI assistant.",
+        "properties": {
+            "id": {
+                "type": "string",
+                "description": "Unique identifier for the chat session."
+            },
+            "userId": {
+                "type": "string",
+                "description": "Reference to User."
+            },
+            "title": {
+                "type": "string",
+                "description": "A title for the chat session, e.g., the first user message."
+            },
+            "createdAt": {
+                "type": "string",
+                "description": "Timestamp indicating when the session was created.",
+                "format": "date-time"
+            },
+            "messages": {
+                "type": "array",
+                "description": "An array of messages in the conversation.",
+                "items": {
+                    "type": "object",
+                    "properties": {
+                        "text": { "type": "string" },
+                        "isUser": { "type": "boolean" }
+                    },
+                    "required": ["text", "isUser"]
+                }
+            }
+        },
+        "required": ["id", "userId", "title", "createdAt", "messages"]
     }
   },
   "auth": {
@@ -247,6 +285,12 @@
         "$ref": "#/entities/Settings"
       },
       "description": "Subcollection for user settings. A single document (e.g., 'appSettings') stores all preferences."
+    },
+    "/users/{userId}/chatSessions/{sessionId}": {
+        "schema": {
+            "$ref": "#/entities/ChatSession"
+        },
+        "description": "Subcollection for user chat conversations."
     }
   }
 }
