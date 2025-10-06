@@ -18,9 +18,10 @@ import { MainSidebar } from './sidebar';
 import { useAuth, useUser } from '@/firebase';
 import { signOut } from '@/firebase/auth-actions';
 import { useRouter } from 'next/navigation';
-import { useState, useRef, useEffect, useCallback } from 'react';
+import { useState, useRef, useEffect, useCallback, useTransition } from 'react';
 import { cn } from '@/lib/utils';
 import { useToast } from '@/hooks/use-toast';
+import { runCommand } from '@/ai/flows/command-flow';
 
 interface AppHeaderProps {
   onToggleSidebar: () => void;
@@ -32,6 +33,7 @@ export function AppHeader({ onToggleSidebar, isSidebarOpen }: AppHeaderProps) {
     const auth = useAuth();
     const router = useRouter();
     const { toast } = useToast();
+    const [isPending, startTransition] = useTransition();
 
     const [isRecording, setIsRecording] = useState(false);
     const [inputValue, setInputValue] = useState('');
@@ -104,16 +106,27 @@ export function AppHeader({ onToggleSidebar, isSidebarOpen }: AppHeaderProps) {
         }
     };
 
-    const handleSend = async (text?: string) => {
+    const handleSend = (text?: string) => {
         const command = text || inputValue;
-        if (!command.trim()) return;
+        if (!command.trim() || !user) return;
 
-        // In a real app, you would send the command to your AI for processing.
-        console.log("Sending to AI:", command);
-        toast({
-          title: "Command Sent",
-          description: `Your command "${command}" is being processed.`
+        startTransition(async () => {
+            try {
+                const response = await runCommand({ command, userId: user.uid });
+                toast({
+                    title: "AI Assistant",
+                    description: response.reply,
+                });
+            } catch (error) {
+                console.error("AI command error:", error);
+                toast({
+                    title: "AI Error",
+                    description: "There was an issue processing your command.",
+                    variant: "destructive",
+                });
+            }
         });
+        
         setInputValue(''); // Clear input after sending
     };
 
@@ -146,13 +159,14 @@ export function AppHeader({ onToggleSidebar, isSidebarOpen }: AppHeaderProps) {
           value={inputValue}
           onChange={(e) => setInputValue(e.target.value)}
           onKeyDown={(e) => e.key === 'Enter' && handleSend()}
+          disabled={isPending}
         />
         {inputValue ? (
-             <Button size="icon" variant="ghost" className="absolute right-1 top-1 h-8 w-8" onClick={() => handleSend()}>
+             <Button size="icon" variant="ghost" className="absolute right-1 top-1 h-8 w-8" onClick={() => handleSend()} disabled={isPending}>
                 <Send className="h-4 w-4" />
              </Button>
         ) : (
-            <Button size="icon" variant="ghost" className={cn("absolute right-1 top-1 h-8 w-8", isRecording && "bg-red-500/20 text-red-500")} onClick={handleMicClick} disabled={!isMicSupported}>
+            <Button size="icon" variant="ghost" className={cn("absolute right-1 top-1 h-8 w-8", isRecording && "bg-red-500/20 text-red-500")} onClick={handleMicClick} disabled={!isMicSupported || isPending}>
                 <Mic className={cn("h-4 w-4", isRecording && "animate-pulse")} />
             </Button>
         )}
