@@ -25,7 +25,7 @@ import {
   DropdownMenuLabel,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { KeyRound, MoreHorizontal, PlusCircle } from "lucide-react";
+import { KeyRound, MoreHorizontal, PlusCircle, Download } from "lucide-react";
 import { PageHeader } from "@/components/page-header";
 import { useCollection, useFirestore, useUser, useMemoFirebase } from "@/firebase";
 import { collection, query, doc } from "firebase/firestore";
@@ -152,6 +152,41 @@ export default function InvoicesPage() {
       }
     }
     
+    const handleExportToCsv = () => {
+      if (!invoices || invoices.length === 0) {
+        toast({
+          variant: 'destructive',
+          title: 'No Invoices',
+          description: 'There are no invoices to export.',
+        });
+        return;
+      }
+
+      const headers = ['Invoice ID', 'Client Name', 'Status', 'Amount', 'Currency', 'Issue Date', 'Due Date'];
+      const rows = invoices.map(invoice => [
+        invoice.invoiceNumber,
+        getClient(invoice.clientId)?.name || 'Unknown',
+        new Date(invoice.dueDate) < new Date() && invoice.status === 'unpaid' ? 'overdue' : invoice.status,
+        invoice.amount.toFixed(2),
+        invoice.currency,
+        new Date(invoice.issueDate).toLocaleDateString(),
+        new Date(invoice.dueDate).toLocaleDateString(),
+      ]);
+
+      let csvContent = "data:text/csv;charset=utf-8," 
+        + headers.join(",") + "\n" 
+        + rows.map(e => e.join(",")).join("\n");
+
+      const encodedUri = encodeURI(csvContent);
+      const link = document.createElement("a");
+      link.setAttribute("href", encodedUri);
+      link.setAttribute("download", "invoices.csv");
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+       toast({ title: "Export Successful", description: "Your invoices have been downloaded as a CSV file." });
+    };
+    
     useEffect(() => {
         if (settings) {
             setIsPageLocked(!!settings.invoiceLockPin);
@@ -162,6 +197,12 @@ export default function InvoicesPage() {
   return (
     <>
       <PageHeader title="Invoices" description="Manage your invoices and billing.">
+         <Button size="sm" variant="outline" className="gap-1" onClick={handleExportToCsv}>
+            <Download className="h-3.5 w-3.5" />
+            <span className="sr-only sm:not-sr-only sm:whitespace-nowrap">
+              Download CSV
+            </span>
+          </Button>
         <Button size="sm" className="gap-1" onClick={handleAddInvoice} disabled={isPageLocked}>
           <PlusCircle className="h-3.5 w-3.5" />
           <span className="sr-only sm:not-sr-only sm:whitespace-nowrap">

@@ -30,6 +30,19 @@ export type Invoice = {
   currency: string;
 };
 
+export const InvoiceSchema = z.object({
+  id: z.string(),
+  userId: z.string(),
+  clientId: z.string(),
+  invoiceNumber: z.string(),
+  issueDate: z.string(),
+  dueDate: z.string(),
+  amount: z.number(),
+  status: z.enum(['paid', 'unpaid', 'overdue']),
+  currency: z.string(),
+});
+
+
 export type Task = {
   id: string;
   userId: string;

@@ -8,8 +8,9 @@ import { z } from 'genkit';
 import {
   createTask,
   listClients,
+  createInvoice,
 } from '@/app/dashboard/actions';
-import { TaskSchema, ClientSchema } from '@/lib/data';
+import { TaskSchema, ClientSchema, InvoiceSchema } from '@/lib/data';
 
 
 const CommandInputSchema = z.object({
@@ -42,7 +43,7 @@ const createTaskTool = ai.defineTool(
 const listClientsTool = ai.defineTool(
   {
     name: 'listClients',
-    description: 'Lists all clients for the user.',
+    description: 'Lists all clients for the user. Use this to get the client ID before creating an invoice if the client name is provided.',
     inputSchema: z.object({}),
     outputSchema: z.array(ClientSchema),
   },
@@ -52,14 +53,32 @@ const listClientsTool = ai.defineTool(
   }
 );
 
+const createInvoiceTool = ai.defineTool(
+  {
+    name: 'createInvoice',
+    description: 'Creates a new invoice for a client.',
+    inputSchema: z.object({
+        clientId: z.string().describe('The ID of the client this invoice belongs to.'),
+        amount: z.number().describe('The total amount of the invoice.'),
+        dueDate: z.string().optional().describe('The due date in YYYY-MM-DD format. Defaults to today if not provided.'),
+    }),
+    outputSchema: InvoiceSchema,
+  },
+  async (input, context) => {
+    const { userId } = context as { userId: string };
+    return createInvoice(userId, input.clientId, input.amount, input.dueDate);
+  }
+);
+
+
 export async function runCommand(
   input: CommandInput
 ): Promise<CommandOutput> {
   const { command, userId } = input;
 
   const llmResponse = await ai.generate({
-    prompt: `You are an AI assistant. The user's request is: "${command}". Respond conversationally and helpfully.`,
-    tools: [createTaskTool, listClientsTool],
+    prompt: `You are an AI assistant that can perform actions. The user's request is: "${command}". Respond conversationally. If you need to find a client's ID before creating an invoice, use the listClients tool first.`,
+    tools: [createTaskTool, listClientsTool, createInvoiceTool],
     context: { userId },
   });
 
@@ -68,7 +87,7 @@ export async function runCommand(
      const toolResult = await toolResponse.run();
      const secondResponse = await ai.generate({
        history: [llmResponse.message, toolResult],
-       tools: [createTaskTool, listClientsTool],
+       tools: [createTaskTool, listClientsTool, createInvoiceTool],
        context: { userId },
      });
      return { reply: secondResponse.text() };
