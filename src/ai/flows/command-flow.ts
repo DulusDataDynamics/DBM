@@ -60,7 +60,7 @@ const createInvoiceTool = ai.defineTool(
     inputSchema: z.object({
         clientId: z.string().describe('The ID of the client this invoice belongs to.'),
         amount: z.number().describe('The total amount of the invoice.'),
-        dueDate: z.string().optional().describe('The due date in YYYY-MM-DD format. Defaults to today if not provided.'),
+        dueDate: z.string().optional().describe('The due date in Y1111-MM-DD format. Defaults to today if not provided.'),
     }),
     outputSchema: InvoiceSchema,
   },
@@ -82,16 +82,27 @@ export async function runCommand(
     context: { userId },
   });
 
-  const toolResponse = llmResponse.toolRequest();
-  if (toolResponse) {
-     const toolResult = await toolResponse.run();
+  const toolRequest = llmResponse.toolRequest();
+  if (toolRequest) {
+     const toolResult = await toolRequest.run();
      const secondResponse = await ai.generate({
        history: [llmResponse.message, toolResult],
        tools: [createTaskTool, listClientsTool, createInvoiceTool],
        context: { userId },
      });
-     return { reply: secondResponse.text() };
+      // Check if the second response also wants to call a tool (e.g., createInvoice after listClients)
+      const secondToolRequest = secondResponse.toolRequest();
+      if(secondToolRequest) {
+        const secondToolResult = await secondToolRequest.run();
+        const thirdResponse = await ai.generate({
+            history: [llmResponse.message, toolResult, secondResponse.message, secondToolResult],
+            tools: [createTaskTool, listClientsTool, createInvoiceTool],
+            context: { userId },
+        });
+        return { reply: thirdResponse.text };
+      }
+     return { reply: secondResponse.text };
   }
 
-  return { reply: llmResponse.text() };
+  return { reply: llmResponse.text };
 }
