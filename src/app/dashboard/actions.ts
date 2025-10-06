@@ -9,8 +9,10 @@ import {
 import { firebaseApp } from '@/firebase';
 import { z } from 'zod';
 import { InvoiceSchema } from '@/lib/data';
+import { errorEmitter } from '@/firebase/error-emitter';
+import { FirestorePermissionError } from '@/firebase/errors';
 
-export async function createTask(
+export function createTask(
   userId: string,
   description: string,
   dueDate?: string
@@ -23,18 +25,40 @@ export async function createTask(
     dueDate: dueDate || new Date().toISOString(),
     completed: false,
   };
-  const docRef = await addDoc(tasksCollection, taskData);
-  return { ...taskData, id: docRef.id };
+  
+  // Return the promise so the caller can still get the result if needed,
+  // but handle the error here.
+  return addDoc(tasksCollection, taskData)
+    .then(docRef => ({ ...taskData, id: docRef.id }))
+    .catch(serverError => {
+      const contextualError = new FirestorePermissionError({
+        path: tasksCollection.path,
+        operation: 'create',
+        requestResourceData: taskData
+      });
+      errorEmitter.emit('permission-error', contextualError);
+      // Re-throw or handle as appropriate for the flow
+      throw serverError;
+    });
 }
 
 export async function listClients(userId: string) {
   const db = getFirestore(firebaseApp);
   const clientsCollection = collection(db, 'users', userId, 'clients');
-  const snapshot = await getDocs(clientsCollection);
-  return snapshot.docs.map((doc) => ({ ...doc.data(), id: doc.id }));
+  try {
+    const snapshot = await getDocs(clientsCollection);
+    return snapshot.docs.map((doc) => ({ ...doc.data(), id: doc.id }));
+  } catch (serverError) {
+      const contextualError = new FirestorePermissionError({
+        path: clientsCollection.path,
+        operation: 'list',
+      });
+      errorEmitter.emit('permission-error', contextualError);
+      throw serverError;
+  }
 }
 
-export async function createInvoice(
+export function createInvoice(
     userId: string,
     clientId: string,
     amount: number,
@@ -54,7 +78,15 @@ export async function createInvoice(
     currency: 'zar', // Default currency, can be changed later
   };
   
-  const docRef = await addDoc(invoicesCollection, invoiceData);
-  
-  return { ...invoiceData, id: docRef.id };
+  return addDoc(invoicesCollection, invoiceData)
+    .then(docRef => ({ ...invoiceData, id: docRef.id }))
+    .catch(serverError => {
+       const contextualError = new FirestorePermissionError({
+        path: invoicesCollection.path,
+        operation: 'create',
+        requestResourceData: invoiceData
+      });
+      errorEmitter.emit('permission-error', contextualError);
+      throw serverError;
+    });
 }
