@@ -60,7 +60,7 @@ const createInvoiceTool = ai.defineTool(
     inputSchema: z.object({
         clientId: z.string().describe('The ID of the client this invoice belongs to.'),
         amount: z.number().describe('The total amount of the invoice.'),
-        dueDate: z.string().optional().describe('The due date in Y1111-MM-DD format. Defaults to today if not provided.'),
+        dueDate: z.string().optional().describe('The due date in YYYY-MM-DD format. Defaults to today if not provided.'),
     }),
     outputSchema: InvoiceSchema,
   },
@@ -76,33 +76,34 @@ export async function runCommand(
 ): Promise<CommandOutput> {
   const { command, userId } = input;
 
+  const tools = [createTaskTool, listClientsTool, createInvoiceTool];
+
   const llmResponse = await ai.generate({
-    prompt: `You are an AI assistant that can perform actions. The user's request is: "${command}". Respond conversationally. If you need to find a client's ID before creating an invoice, use the listClients tool first.`,
-    tools: [createTaskTool, listClientsTool, createInvoiceTool],
+    prompt: `You are an AI assistant that can perform actions based on the user's request. The user's request is: "${command}".
+1.  Figure out which tool to use.
+2.  If you need to create an invoice and only have a client's name, you MUST use the \`listClients\` tool first to find their ID.
+3.  Once the action is complete, respond in a conversational and friendly tone.`,
+    tools: tools,
     context: { userId },
   });
 
-  const toolRequest = llmResponse.toolRequest();
-  if (toolRequest) {
-     const toolResult = await toolRequest.run();
-     const secondResponse = await ai.generate({
-       history: [llmResponse.message, toolResult],
-       tools: [createTaskTool, listClientsTool, createInvoiceTool],
-       context: { userId },
-     });
-      // Check if the second response also wants to call a tool (e.g., createInvoice after listClients)
-      const secondToolRequest = secondResponse.toolRequest();
-      if(secondToolRequest) {
-        const secondToolResult = await secondToolRequest.run();
-        const thirdResponse = await ai.generate({
-            history: [llmResponse.message, toolResult, secondResponse.message, secondToolResult],
-            tools: [createTaskTool, listClientsTool, createInvoiceTool],
-            context: { userId },
-        });
-        return { reply: thirdResponse.text };
-      }
-     return { reply: secondResponse.text };
+  let message = llmResponse.message;
+
+  // This loop will continue as long as the AI wants to call a tool.
+  // It allows for multi-step operations (e.g., listClients -> createInvoice).
+  while (message.toolRequest) {
+    const toolRequest = message.toolRequest;
+    const toolResult = await toolRequest.run();
+
+    // Send the tool result back to the AI to continue the conversation
+    const nextResponse = await ai.generate({
+      history: [message, toolResult],
+      tools: tools,
+      context: { userId },
+    });
+    message = nextResponse.message;
   }
 
-  return { reply: llmResponse.text };
+  // Once the AI is done calling tools, it will generate a final text response.
+  return { reply: message.content[0].text || "I've completed the action." };
 }
