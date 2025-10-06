@@ -246,7 +246,7 @@
       "schema": {
         "$ref": "#/entities/Settings"
       },
-      "description": "Subcollection for user settings. Users can manage their own settings."
+      "description": "Subcollection for user settings. Users can manage their own settings and preferences."
     }
   }
 }
