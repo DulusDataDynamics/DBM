@@ -6,10 +6,11 @@ import { TasksOverview } from "@/components/dashboard/tasks-overview";
 import { RecentActivity } from "@/components/dashboard/recent-activity";
 import { AiAssistant } from "@/components/dashboard/ai-assistant";
 import { DollarSign, Users, CreditCard, Activity } from "lucide-react";
-import { useCollection, useFirestore, useUser, useMemoFirebase } from "@/firebase";
-import { collection, query, where } from "firebase/firestore";
-import type { Invoice, Client, Task } from "@/lib/data";
+import { useCollection, useDoc, useFirestore, useUser, useMemoFirebase } from "@/firebase";
+import { collection, query, where, doc } from "firebase/firestore";
+import type { Invoice, Client, Task, Settings } from "@/lib/data";
 import { useMemo } from "react";
+import { getCurrencySymbol } from "@/lib/utils";
 
 export default function DashboardPage() {
     const { user } = useUser();
@@ -33,6 +34,12 @@ export default function DashboardPage() {
     }, [firestore, user]);
     const { data: tasks, isLoading: isLoadingTasks } = useCollection<Task>(tasksQuery);
 
+    const settingsDocRef = useMemoFirebase(() => {
+        if (!user) return null;
+        return doc(firestore, `users/${user.uid}/settings/invoiceSettings`);
+    }, [firestore, user]);
+    const { data: settings, isLoading: isLoadingSettings } = useDoc<Settings>(settingsDocRef);
+
     const totalRevenue = useMemo(() => {
         return invoices?.filter(inv => inv.status === 'paid').reduce((sum, inv) => sum + inv.amount, 0) || 0;
     }, [invoices]);
@@ -45,7 +52,9 @@ export default function DashboardPage() {
         return tasks?.filter(t => t.completed).length || 0;
     }, [tasks]);
 
-    const isLoading = isLoadingInvoices || isLoadingClients || isLoadingTasks;
+    const currencySymbol = useMemo(() => getCurrencySymbol(settings?.currency || 'zar'), [settings]);
+
+    const isLoading = isLoadingInvoices || isLoadingClients || isLoadingTasks || isLoadingSettings;
 
     return (
         <>
@@ -54,7 +63,7 @@ export default function DashboardPage() {
             <div className="grid gap-4 md:grid-cols-2 md:gap-8 lg:grid-cols-4 mt-6">
                 <StatsCard 
                     title="Total Revenue" 
-                    value={isLoading ? '...' : `$${totalRevenue.toFixed(2)}`} 
+                    value={isLoading ? '...' : `${currencySymbol}${totalRevenue.toFixed(2)}`} 
                     icon={DollarSign} 
                 />
                 <StatsCard 
