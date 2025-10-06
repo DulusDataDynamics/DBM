@@ -31,7 +31,7 @@ import { useCollection, useFirestore, useUser, useMemoFirebase } from "@/firebas
 import { collection, query, doc } from "firebase/firestore";
 import type { Invoice, Client, Settings } from "@/lib/data";
 import { AddEditInvoiceDialog } from "@/components/invoices/add-edit-invoice-dialog";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useDoc } from "@/firebase/firestore/use-doc";
 import {
   AlertDialog,
@@ -53,8 +53,6 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-  DialogTrigger,
-  DialogClose,
 } from "@/components/ui/dialog";
 import {
   InputOTP,
@@ -88,7 +86,7 @@ export default function InvoicesPage() {
     
     const settingsDocRef = useMemoFirebase(() => {
       if (!user) return null;
-      return doc(firestore, `users/${user.uid}/settings/invoiceSettings`);
+      return doc(firestore, `users/${user.uid}/settings/appSettings`);
     }, [firestore, user]);
     const { data: settings } = useDoc<Settings>(settingsDocRef);
 
@@ -124,7 +122,7 @@ export default function InvoicesPage() {
         return;
       }
 
-      const subject = `Invoice ${invoice.invoiceNumber} from ${user?.displayName || 'Dulus Inc.'}`;
+      const subject = `Invoice ${invoice.invoiceNumber} from ${settings?.businessName || 'Dulus Inc.'}`;
       const body = `
         Dear ${client.name},
 
@@ -137,7 +135,7 @@ export default function InvoicesPage() {
         Thank you for your business!
 
         Best regards,
-        ${user?.displayName || 'Dulus Inc.'}
+        ${settings?.businessName || 'Dulus Inc.'}
       `.trim().replace(/\n/g, '%0D%0A').replace(/ /g, '%20');
 
       window.location.href = `mailto:${client.email}?subject=${subject}&body=${body}`;
@@ -148,17 +146,17 @@ export default function InvoicesPage() {
         setIsPageLocked(false);
         toast({ title: "Page Unlocked", description: "You can now manage invoices." });
         setUnlockPin('');
-        document.getElementById('close-unlock-dialog')?.click();
       } else {
         toast({ variant: "destructive", title: "Incorrect PIN", description: "The PIN you entered is incorrect." });
         setUnlockPin('');
       }
     }
     
-    // Determine if the page should be initially locked
-    useState(() => {
-        setIsPageLocked(!!settings?.invoiceLockPin);
-    });
+    useEffect(() => {
+        if (settings) {
+            setIsPageLocked(!!settings.invoiceLockPin);
+        }
+    }, [settings]);
 
 
   return (
@@ -181,7 +179,7 @@ export default function InvoicesPage() {
       />
 
        {isPageLocked && settings?.invoiceLockPin && (
-          <Dialog>
+          <Dialog open={isPageLocked} onOpenChange={(open) => !open && setIsPageLocked(false)}>
             <div className="fixed inset-0 z-40 bg-background/80 backdrop-blur-sm"></div>
             <DialogContent className="fixed left-1/2 top-1/2 z-50 w-full max-w-md -translate-x-1/2 -translate-y-1/2" onInteractOutside={(e) => e.preventDefault()}>
                 <DialogHeader>
@@ -248,9 +246,9 @@ export default function InvoicesPage() {
                   <TableCell>
                     <Badge variant={
                         invoice.status === 'paid' ? 'default' : 
-                        invoice.status === 'overdue' ? 'destructive' : 'secondary'
+                        new Date(invoice.dueDate) < new Date() && invoice.status === 'unpaid' ? 'destructive' : 'secondary'
                     }>
-                      {invoice.status}
+                      {new Date(invoice.dueDate) < new Date() && invoice.status === 'unpaid' ? 'overdue' : invoice.status}
                     </Badge>
                   </TableCell>
                   <TableCell>{getCurrencySymbol(invoice.currency)}{invoice.amount.toFixed(2)}</TableCell>

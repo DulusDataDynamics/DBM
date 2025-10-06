@@ -10,7 +10,6 @@ import {
 } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
 import { Calendar } from '@/components/ui/calendar';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
@@ -31,7 +30,7 @@ const formSchema = z.object({
   clientId: z.string().min(1, { message: 'Please select a client.' }),
   invoiceNumber: z.string().min(1, { message: 'Invoice number is required.' }),
   amount: z.coerce.number().min(0.01, { message: 'Amount must be greater than 0.' }),
-  status: z.enum(['paid', 'unpaid', 'overdue']),
+  status: z.enum(['paid', 'unpaid']),
   currency: z.string().min(1, { message: 'Currency is required.' }),
   issueDate: z.date({ required_error: 'An issue date is required.' }),
   dueDate: z.date({ required_error: 'A due date is required.' }),
@@ -60,7 +59,7 @@ export function AddEditInvoiceDialog({ isOpen, onOpenChange, invoice, clients, s
         clientId: invoice.clientId,
         invoiceNumber: invoice.invoiceNumber,
         amount: invoice.amount,
-        status: invoice.status,
+        status: invoice.status === 'overdue' ? 'unpaid' : invoice.status,
         currency: invoice.currency || defaultCurrency,
         issueDate: new Date(invoice.issueDate),
         dueDate: new Date(invoice.dueDate),
@@ -198,7 +197,6 @@ export function AddEditInvoiceDialog({ isOpen, onOpenChange, invoice, clients, s
                         <SelectContent>
                            <SelectItem value="paid">Paid</SelectItem>
                            <SelectItem value="unpaid">Unpaid</SelectItem>
-                           <SelectItem value="overdue">Overdue</SelectItem>
                         </SelectContent>
                     </Select>
                       <FormMessage />

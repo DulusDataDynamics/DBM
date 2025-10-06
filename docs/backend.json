@@ -23,10 +23,6 @@
           "type": "string",
           "description": "Timestamp indicating when the user account was created.",
           "format": "date-time"
-        },
-        "settingsId": {
-          "type": "string",
-          "description": "Reference to Settings. (Relationship: User 1:1 Settings)"
         }
       },
       "required": [
@@ -174,15 +170,23 @@
       "$schema": "http://json-schema.org/draft-07/schema#",
       "title": "Settings",
       "type": "object",
-      "description": "Represents the settings for a user's business within the Dulus Business Manager application. This includes user-specific preferences.",
+      "description": "Represents the application settings for a user's business. This is a single document per user.",
       "properties": {
         "id": {
           "type": "string",
-          "description": "Unique identifier for the settings entity."
+          "description": "Unique identifier for the settings entity, typically 'appSettings'."
         },
-        "businessDetails": {
-          "type": "string",
-          "description": "Details about the user's business."
+        "businessName": {
+            "type": "string",
+            "description": "The name of the user's business."
+        },
+        "businessAddress": {
+            "type": "string",
+            "description": "The physical address of the user's business."
+        },
+        "contactEmail": {
+            "type": "string",
+            "description": "The contact email for the user's business."
         },
         "logoUrl": {
           "type": "string",
@@ -191,11 +195,11 @@
         },
         "currency": {
           "type": "string",
-          "description": "Preferred currency for the business."
+          "description": "Preferred currency for the business (e.g., 'zar', 'usd')."
         },
         "theme": {
           "type": "string",
-          "description": "Selected theme for the application."
+          "description": "Selected theme for the application (e.g., 'light', 'dark')."
         },
         "invoiceLockPin": {
           "type": "string",
@@ -203,11 +207,7 @@
         }
       },
       "required": [
-        "id",
-        "businessDetails",
-        "logoUrl",
-        "currency",
-        "theme"
+        "id"
       ]
     }
   },
@@ -246,7 +246,7 @@
       "schema": {
         "$ref": "#/entities/Settings"
       },
-      "description": "Subcollection for user settings. Users can manage their own settings and preferences."
+      "description": "Subcollection for user settings. A single document (e.g., 'appSettings') stores all preferences."
     }
   }
 }

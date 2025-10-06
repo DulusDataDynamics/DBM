@@ -37,7 +37,9 @@ export type RecentActivity = {
 
 export type Settings = {
   id: string;
-  businessDetails?: string;
+  businessName?: string;
+  businessAddress?: string;
+  contactEmail?: string;
   logoUrl?: string;
   currency?: string;
   theme?: string;

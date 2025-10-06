@@ -16,7 +16,7 @@ import {
 import { useDoc, useFirestore, useUser, useMemoFirebase } from "@/firebase";
 import type { Settings } from "@/lib/data";
 import { doc } from "firebase/firestore";
-import { updateDocumentNonBlocking } from "@/firebase/non-blocking-updates";
+import { updateDocumentNonBlocking, setDocumentNonBlocking } from "@/firebase/non-blocking-updates";
 import { useEffect, useState } from "react";
 import { useToast } from "@/hooks/use-toast";
 import {
@@ -42,23 +42,31 @@ export default function SettingsPage() {
     const { user } = useUser();
     const firestore = useFirestore();
     const { toast } = useToast();
+    
+    const [businessName, setBusinessName] = useState('');
+    const [contactEmail, setContactEmail] = useState('');
+    const [businessAddress, setBusinessAddress] = useState('');
     const [selectedCurrency, setSelectedCurrency] = useState<string | undefined>(undefined);
+    
     const [pin, setPin] = useState('');
     const [confirmPin, setConfirmPin] = useState('');
     const [unlockPin, setUnlockPin] = useState('');
 
     const settingsDocRef = useMemoFirebase(() => {
         if (!user) return null;
-        return doc(firestore, `users/${user.uid}/settings/invoiceSettings`);
+        return doc(firestore, `users/${user.uid}/settings/appSettings`);
     }, [firestore, user]);
 
-    const { data: settings } = useDoc<Settings>(settingsDocRef);
+    const { data: settings, isLoading } = useDoc<Settings>(settingsDocRef);
     
     useEffect(() => {
-        if(settings?.currency) {
-            setSelectedCurrency(settings.currency);
+        if(settings) {
+            setBusinessName(settings.businessName || '');
+            setContactEmail(settings.contactEmail || '');
+            setBusinessAddress(settings.businessAddress || '');
+            setSelectedCurrency(settings.currency || 'zar');
         } else {
-            setSelectedCurrency('zar'); // Default to ZAR
+            setSelectedCurrency('zar');
         }
     }, [settings]);
 
@@ -67,12 +75,15 @@ export default function SettingsPage() {
     
     const handleSaveChanges = () => {
         if (!settingsDocRef) return;
-        updateDocumentNonBlocking(settingsDocRef, { currency: selectedCurrency });
-        toast({ title: "Settings Saved", description: "Your currency settings have been updated." });
-    }
-
-    const handleCurrencyChange = (value: string) => {
-        setSelectedCurrency(value);
+        const settingsData = {
+          businessName,
+          contactEmail,
+          businessAddress,
+          currency: selectedCurrency
+        };
+        // Use set with merge to create the document if it doesn't exist
+        setDocumentNonBlocking(settingsDocRef, settingsData, { merge: true });
+        toast({ title: "Settings Saved", description: "Your business and currency settings have been updated." });
     }
     
     const handleSetPin = () => {
@@ -120,16 +131,16 @@ export default function SettingsPage() {
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                 <div className="grid gap-2">
                                     <Label htmlFor="name">Business Name</Label>
-                                    <Input id="name" defaultValue="Dulus Inc." />
+                                    <Input id="name" value={businessName} onChange={(e) => setBusinessName(e.target.value)} placeholder="Dulus Inc." disabled={isLoading} />
                                 </div>
                                 <div className="grid gap-2">
                                     <Label htmlFor="email">Contact Email</Label>
-                                    <Input id="email" type="email" defaultValue="contact@dulus.com" />
+                                    <Input id="email" type="email" value={contactEmail} onChange={(e) => setContactEmail(e.target.value)} placeholder="contact@dulus.com" disabled={isLoading}/>
                                 </div>
                             </div>
                             <div className="grid gap-2">
                                 <Label htmlFor="address">Business Address</Label>
-                                <Textarea id="address" defaultValue="123 Innovation Drive, Tech City, 12345" />
+                                <Textarea id="address" value={businessAddress} onChange={(e) => setBusinessAddress(e.target.value)} placeholder="123 Innovation Drive, Tech City, 12345" disabled={isLoading} />
                             </div>
                              <div className="grid gap-2">
                                 <Label htmlFor="logo">Business Logo</Label>
@@ -160,7 +171,7 @@ export default function SettingsPage() {
                         <form className="grid gap-6">
                              <div className="grid gap-2">
                                 <Label htmlFor="currency">Default Currency</Label>
-                                <Select value={selectedCurrency} onValueChange={handleCurrencyChange}>
+                                <Select value={selectedCurrency} onValueChange={setSelectedCurrency} disabled={isLoading}>
                                     <SelectTrigger className="w-[180px]">
                                         <SelectValue placeholder="Select currency" />
                                     </SelectTrigger>
@@ -192,7 +203,7 @@ export default function SettingsPage() {
                              {settings?.invoiceLockPin ? (
                                 <Dialog>
                                     <DialogTrigger asChild>
-                                        <Button variant="destructive">Disable Lock</Button>
+                                        <Button variant="destructive" disabled={isLoading}>Disable Lock</Button>
                                     </DialogTrigger>
                                     <DialogContent className="sm:max-w-md">
                                         <DialogHeader>
@@ -225,7 +236,7 @@ export default function SettingsPage() {
                              ) : (
                                 <Dialog>
                                     <DialogTrigger asChild>
-                                        <Button>Enable Lock</Button>
+                                        <Button disabled={isLoading}>Enable Lock</Button>
                                     </DialogTrigger>
                                     <DialogContent className="sm:max-w-md">
                                         <DialogHeader>
@@ -273,11 +284,8 @@ export default function SettingsPage() {
                     </CardContent>
                 </Card>
 
-
-                <Button onClick={handleSaveChanges}>Save Changes</Button>
+                <Button onClick={handleSaveChanges} disabled={isLoading}>Save Changes</Button>
             </div>
         </>
     );
 }
-
-    

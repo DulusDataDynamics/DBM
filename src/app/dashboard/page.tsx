@@ -36,7 +36,7 @@ export default function DashboardPage() {
 
     const settingsDocRef = useMemoFirebase(() => {
         if (!user) return null;
-        return doc(firestore, `users/${user.uid}/settings/invoiceSettings`);
+        return doc(firestore, `users/${user.uid}/settings/appSettings`);
     }, [firestore, user]);
     const { data: settings, isLoading: isLoadingSettings } = useDoc<Settings>(settingsDocRef);
 
@@ -45,7 +45,7 @@ export default function DashboardPage() {
     }, [invoices]);
 
     const pendingInvoices = useMemo(() => {
-        return invoices?.filter(inv => inv.status === 'unpaid' || inv.status === 'overdue').length || 0;
+        return invoices?.filter(inv => inv.status === 'unpaid').length || 0;
     }, [invoices]);
 
     const tasksDone = useMemo(() => {
