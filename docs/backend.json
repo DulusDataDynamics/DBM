@@ -174,7 +174,7 @@
       "$schema": "http://json-schema.org/draft-07/schema#",
       "title": "Settings",
       "type": "object",
-      "description": "Represents the settings for a user's business within the Dulus Business Manager application.",
+      "description": "Represents the settings for a user's business within the Dulus Business Manager application. This includes user-specific preferences.",
       "properties": {
         "id": {
           "type": "string",
