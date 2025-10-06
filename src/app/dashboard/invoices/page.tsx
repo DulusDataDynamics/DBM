@@ -93,8 +93,8 @@ export default function InvoicesPage() {
     const { data: settings } = useDoc<Settings>(settingsDocRef);
 
 
-    const getClientName = (clientId: string) => {
-        return clients?.find(c => c.id === clientId)?.name || 'Unknown Client';
+    const getClient = (clientId: string) => {
+        return clients?.find(c => c.id === clientId);
     }
 
     const handleAddInvoice = () => {
@@ -111,6 +111,36 @@ export default function InvoicesPage() {
       if (!user) return;
       const invoiceRef = doc(firestore, `users/${user.uid}/invoices/${invoiceId}`);
       deleteDocumentNonBlocking(invoiceRef);
+    }
+    
+    const handleSendEmail = (invoice: Invoice) => {
+      const client = getClient(invoice.clientId);
+      if (!client) {
+        toast({
+          variant: "destructive",
+          title: "Client not found",
+          description: "Could not find the client associated with this invoice.",
+        });
+        return;
+      }
+
+      const subject = `Invoice ${invoice.invoiceNumber} from ${user?.displayName || 'Dulus Inc.'}`;
+      const body = `
+        Dear ${client.name},
+
+        Please find your invoice details below:
+
+        Invoice Number: ${invoice.invoiceNumber}
+        Amount Due: ${getCurrencySymbol(invoice.currency)}${invoice.amount.toFixed(2)}
+        Due Date: ${new Date(invoice.dueDate).toLocaleDateString()}
+
+        Thank you for your business!
+
+        Best regards,
+        ${user?.displayName || 'Dulus Inc.'}
+      `.trim().replace(/\n/g, '%0D%0A').replace(/ /g, '%20');
+
+      window.location.href = `mailto:${client.email}?subject=${subject}&body=${body}`;
     }
     
     const handleUnlockPage = () => {
@@ -214,7 +244,7 @@ export default function InvoicesPage() {
               {!isLoadingInvoices && !isLoadingClients && invoices && invoices.map((invoice) => (
                 <TableRow key={invoice.id}>
                   <TableCell className="font-medium">{invoice.invoiceNumber}</TableCell>
-                  <TableCell>{getClientName(invoice.clientId)}</TableCell>
+                  <TableCell>{getClient(invoice.clientId)?.name || 'Unknown Client'}</TableCell>
                   <TableCell>
                     <Badge variant={
                         invoice.status === 'paid' ? 'default' : 
@@ -236,7 +266,7 @@ export default function InvoicesPage() {
                       <DropdownMenuContent align="end">
                         <DropdownMenuLabel>Actions</DropdownMenuLabel>
                         <DropdownMenuItem onClick={() => handleEditInvoice(invoice)}>Edit</DropdownMenuItem>
-                        <DropdownMenuItem>Send via Email</DropdownMenuItem>
+                        <DropdownMenuItem onClick={() => handleSendEmail(invoice)}>Send via Email</DropdownMenuItem>
                          <AlertDialog>
                           <AlertDialogTrigger asChild>
                             <DropdownMenuItem onSelect={(e) => e.preventDefault()}>Delete</DropdownMenuItem>
