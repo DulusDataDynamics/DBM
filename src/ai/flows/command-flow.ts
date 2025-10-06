@@ -4,7 +4,7 @@
  */
 
 import { ai } from '@/ai/genkit';
-import { z } from 'genkit';
+import { z } from 'zod';
 import {
   createTask,
   listClients,
@@ -70,42 +70,33 @@ const createInvoiceTool = ai.defineTool(
   }
 );
 
+const commandFlow = ai.defineFlow(
+  {
+    name: 'commandFlow',
+    inputSchema: CommandInputSchema,
+    outputSchema: CommandOutputSchema,
+  },
+  async (input) => {
+    const { command, userId } = input;
+    const tools = [createTaskTool, listClientsTool, createInvoiceTool];
+
+    const llmResponse = await ai.generate({
+      prompt: `You are an AI assistant that can perform actions based on the user's request. The user's request is: "${command}".
+1.  Figure out which tool to use.
+2.  If you need to create an invoice and only have a client's name, you MUST use the \`listClients\` tool first to find their ID.
+3.  Once the action is complete, respond in a conversational and friendly tone.`,
+      tools: tools,
+      context: { userId },
+    });
+    
+    const finalReply = llmResponse.text || "I've completed the action.";
+    return { reply: finalReply };
+  }
+);
+
 
 export async function runCommand(
   input: CommandInput
 ): Promise<CommandOutput> {
-  const { command, userId } = input;
-
-  const tools = [createTaskTool, listClientsTool, createInvoiceTool];
-
-  const llmResponse = await ai.generate({
-    prompt: `You are an AI assistant that can perform actions based on the user's request. The user's request is: "${command}".
-1.  Figure out which tool to use.
-2.  If you need to create an invoice and only have a client's name, you MUST use the \`listClients\` tool first to find their ID.
-3.  Once the action is complete, respond in a conversational and friendly tone.`,
-    tools: tools,
-    context: { userId },
-  });
-
-  let message = llmResponse.message;
-
-  // This loop will continue as long as the AI wants to call a tool.
-  // It allows for multi-step operations (e.g., listClients -> createInvoice).
-  while (message.toolRequest) {
-    const toolRequest = message.toolRequest;
-    const toolResult = await toolRequest.run();
-
-    // Send the tool result back to the AI to continue the conversation
-    // CRITICAL: We must pass the context again in the follow-up call.
-    const nextResponse = await ai.generate({
-      history: [message, toolResult],
-      tools: tools,
-      context: { userId },
-    });
-    message = nextResponse.message;
-  }
-
-  // Once the AI is done calling tools, it will generate a final text response.
-  const finalReply = message.content.find(part => part.text)?.text || "I've completed the action.";
-  return { reply: finalReply };
+  return commandFlow(input);
 }
