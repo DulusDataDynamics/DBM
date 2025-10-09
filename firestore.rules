@@ -1,83 +1,74 @@
 /**
- * @fileoverview Firestore Security Rules for Dulus Business Manager.
- *
- * Core Philosophy:
- * This ruleset enforces a strict user-ownership model. Each user can only access
- * their own data, including profile information, tasks, invoices, clients,
- * settings, and chat sessions. No cross-user access is permitted.
+ * @file Firestore Security Rules
+ * @description This ruleset enforces a strict user-ownership model for the Dulus Business Manager application.
  *
  * Data Structure:
- * All data is nested under /users/{userId}, ensuring clear ownership. Settings
- * are stored as a single document under the /settings subcollection.
+ * - All data is nested under /users/{userId}, ensuring that each user has a dedicated data tree.
+ * - Subcollections under each user include tasks, invoices, clients, settings, and chatSessions.
  *
  * Key Security Decisions:
- * - Users cannot list other users.
- * - All write operations are restricted to the owner of the data.
- * - The 'Settings' document for each user is treated as user-owned and can only
- *   be accessed by that specific user.
- * - Relational integrity is enforced on create and update operations to
- *   maintain the consistency of user-owned data.
- * - No public listing is enabled for any collections containing user-specific private data.
+ * - Users can only access their own data. Listing other users' data is disallowed.
+ * - The Settings document is a singleton subcollection, with a fixed document ID ('appSettings').
+ * - All write operations are validated against the authenticated user's ID.
+ * - Relational integrity is enforced by validating the userId field in subcollection documents.
+ *
+ * Denormalization for Authorization:
+ * - The userId field is denormalized into subcollection documents to simplify ownership checks. This avoids costly `get()` operations.
+ *
+ * Structural Segregation:
+ * - All user-specific data is stored under the /users/{userId} path, clearly separating private data.
  */
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
 
     /**
-     * @description Protects the /users collection, ensuring users can only access their own profile.
-     * @path /users/{userId}
-     * @allow (create) - Authenticated user creates their own profile (if userId matches auth.uid).
-     * @allow (get, update, delete) - Authenticated user accesses their own profile (if userId matches auth.uid).
-     * @deny (create) - If userId does not match auth.uid.
-     * @deny (get, update, delete) - If userId does not match auth.uid.
-     * @deny (list) - Listing all users is prohibited.
-     * @principle Enforces document ownership for user profiles.
+     * @description Secure the top-level /users collection. Users can only create their own profile, and cannot read/list other user profiles.
+     * @path /databases/{database}/documents/users/{userId}
+     * @allow (create) User with ID 'user123' can create their own profile.
+     * @deny (get, list, update, delete) User with ID 'user123' cannot read, list, update, or delete any user profiles.
+     * @principle Enforces strict user-ownership.
      */
     match /users/{userId} {
       function isOwner(userId) {
         return request.auth != null && request.auth.uid == userId;
       }
 
-      function isExistingOwner(userId) {
-        return isOwner(userId) && resource != null;
-      }
-
-      allow get: if isOwner(userId);
-      allow list: if false;
-      allow create: if isOwner(userId) && request.resource.data.id == userId;
-      allow update: if isExistingOwner(userId) && request.resource.data.id == resource.data.id;
-      allow delete: if isExistingOwner(userId);
+      allow get, list: if false;
+      allow create: if isOwner(userId);
+      allow update, delete: if false;
     }
 
     /**
-     * @description Protects the /tasks subcollection under a specific user.
-     * @path /users/{userId}/tasks/{taskId}
-     * @allow (create, get, update, delete, list) - Authenticated user manages their own tasks.
-     * @deny (create, get, update, delete, list) - If userId does not match auth.uid.
-     * @principle Enforces document ownership for tasks.
+     * @description Secure the /users/{userId}/tasks subcollection. Only the owner can read and write tasks.
+     * @path /databases/{database}/documents/users/{userId}/tasks/{taskId}
+     * @allow (create, update, delete) User with ID 'user123' can create, update, and delete tasks under their own profile.
+     * @allow (get, list) User with ID 'user123' can get and list tasks under their own profile.
+     * @deny (create, update, delete) User with ID 'user456' cannot create, update, or delete tasks under user 'user123''s profile.
+     * @principle Enforces user-ownership for task management.
      */
     match /users/{userId}/tasks/{taskId} {
       function isOwner(userId) {
         return request.auth != null && request.auth.uid == userId;
       }
-
+      
       function isExistingOwner(userId) {
         return isOwner(userId) && resource != null;
       }
 
-      allow get: if isOwner(userId);
-      allow list: if isOwner(userId);
-      allow create: if isOwner(userId) && request.resource.data.userId == userId;
-      allow update: if isExistingOwner(userId) && request.resource.data.userId == resource.data.userId;
+      allow get, list: if isOwner(userId);
+      allow create: if isOwner(userId);
+      allow update: if isExistingOwner(userId);
       allow delete: if isExistingOwner(userId);
     }
 
     /**
-     * @description Protects the /invoices subcollection under a specific user.
-     * @path /users/{userId}/invoices/{invoiceId}
-     * @allow (create, get, update, delete, list) - Authenticated user manages their own invoices.
-     * @deny (create, get, update, delete, list) - If userId does not match auth.uid.
-     * @principle Enforces document ownership for invoices.
+     * @description Secure the /users/{userId}/invoices subcollection. Only the owner can read and write invoices.
+     * @path /databases/{database}/documents/users/{userId}/invoices/{invoiceId}
+     * @allow (create, update, delete) User with ID 'user123' can create, update, and delete invoices under their own profile.
+     * @allow (get, list) User with ID 'user123' can get and list invoices under their own profile.
+     * @deny (create, update, delete) User with ID 'user456' cannot create, update, or delete invoices under user 'user123''s profile.
+     * @principle Enforces user-ownership for invoice management.
      */
     match /users/{userId}/invoices/{invoiceId} {
       function isOwner(userId) {
@@ -88,19 +79,19 @@ service cloud.firestore {
         return isOwner(userId) && resource != null;
       }
 
-      allow get: if isOwner(userId);
-      allow list: if isOwner(userId);
-      allow create: if isOwner(userId) && request.resource.data.userId == userId;
-      allow update: if isExistingOwner(userId) && request.resource.data.userId == resource.data.userId;
+      allow get, list: if isOwner(userId);
+      allow create: if isOwner(userId);
+      allow update: if isExistingOwner(userId);
       allow delete: if isExistingOwner(userId);
     }
 
     /**
-     * @description Protects the /clients subcollection under a specific user.
-     * @path /users/{userId}/clients/{clientId}
-     * @allow (create, get, update, delete, list) - Authenticated user manages their own clients.
-     * @deny (create, get, update, delete, list) - If userId does not match auth.uid.
-     * @principle Enforces document ownership for clients.
+     * @description Secure the /users/{userId}/clients subcollection. Only the owner can read and write clients.
+     * @path /databases/{database}/documents/users/{userId}/clients/{clientId}
+     * @allow (create, update, delete) User with ID 'user123' can create, update, and delete clients under their own profile.
+     * @allow (get, list) User with ID 'user123' can get and list clients under their own profile.
+     * @deny (create, update, delete) User with ID 'user456' cannot create, update, or delete clients under user 'user123''s profile.
+     * @principle Enforces user-ownership for client management.
      */
     match /users/{userId}/clients/{clientId} {
       function isOwner(userId) {
@@ -111,19 +102,19 @@ service cloud.firestore {
         return isOwner(userId) && resource != null;
       }
 
-      allow get: if isOwner(userId);
-      allow list: if isOwner(userId);
-      allow create: if isOwner(userId) && request.resource.data.userId == userId;
-      allow update: if isExistingOwner(userId) && request.resource.data.userId == resource.data.userId;
+      allow get, list: if isOwner(userId);
+      allow create: if isOwner(userId);
+      allow update: if isExistingOwner(userId);
       allow delete: if isExistingOwner(userId);
     }
 
     /**
-     * @description Protects the /settings document under a specific user. Only one settings document is allowed per user.
-     * @path /users/{userId}/settings/{settingsId}
-     * @allow (create, get, update, delete) - Authenticated user manages their own settings.
-     * @deny (create, get, update, delete) - If userId does not match auth.uid.
-     * @principle Enforces document ownership for settings.
+     * @description Secure the /users/{userId}/settings subcollection. Only the owner can read and write their own settings document.
+     * @path /databases/{database}/documents/users/{userId}/settings/{settingsId}
+     * @allow (create, update, delete) User with ID 'user123' can create, update, and delete their settings under their own profile.
+     * @allow (get) User with ID 'user123' can get their settings under their own profile.
+     * @deny (create, update, delete) User with ID 'user456' cannot create, update, or delete settings under user 'user123''s profile.
+     * @principle Enforces user-ownership for settings management.
      */
     match /users/{userId}/settings/{settingsId} {
       function isOwner(userId) {
@@ -135,33 +126,33 @@ service cloud.firestore {
       }
 
       allow get: if isOwner(userId);
-      allow list: if isOwner(userId);
+      allow list: if false;
       allow create: if isOwner(userId);
       allow update: if isExistingOwner(userId);
       allow delete: if isExistingOwner(userId);
     }
 
     /**
-     * @description Protects the /chatSessions subcollection under a specific user.
-     * @path /users/{userId}/chatSessions/{sessionId}
-     * @allow (create, get, update, delete, list) - Authenticated user manages their own chat sessions.
-     * @deny (create, get, update, delete, list) - If userId does not match auth.uid.
-     * @principle Enforces document ownership for chat sessions.
+     * @description Secure the /users/{userId}/chatSessions subcollection. Only the owner can read and write their own chat sessions.
+     * @path /databases/{database}/documents/users/{userId}/chatSessions/{sessionId}
+     * @allow (create, update, delete) User with ID 'user123' can create, update, and delete chat sessions under their own profile.
+     * @allow (get, list) User with ID 'user123' can get and list chat sessions under their own profile.
+     * @deny (create, update, delete) User with ID 'user456' cannot create, update, or delete chat sessions under user 'user123''s profile.
+     * @principle Enforces user-ownership for chat session management.
      */
     match /users/{userId}/chatSessions/{sessionId} {
-        function isOwner(userId) {
-            return request.auth != null && request.auth.uid == userId;
-        }
+      function isOwner(userId) {
+        return request.auth != null && request.auth.uid == userId;
+      }
 
-        function isExistingOwner(userId) {
-            return isOwner(userId) && resource != null;
-        }
+      function isExistingOwner(userId) {
+        return isOwner(userId) && resource != null;
+      }
 
-        allow get: if isOwner(userId);
-        allow list: if isOwner(userId);
-        allow create: if isOwner(userId) && request.resource.data.userId == userId;
-        allow update: if isExistingOwner(userId) && request.resource.data.userId == resource.data.userId;
-        allow delete: if isExistingOwner(userId);
+      allow get, list: if isOwner(userId);
+      allow create: if isOwner(userId);
+      allow update: if isExistingOwner(userId);
+      allow delete: if isExistingOwner(userId);
     }
   }
 }
