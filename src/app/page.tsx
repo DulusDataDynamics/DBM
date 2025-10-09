@@ -50,12 +50,12 @@ export default function LandingPage() {
                                 </div>
                             </div>
                              <Image
-                                src="https://picsum.photos/seed/dulus-hero/600/600"
+                                src="https://picsum.photos/seed/dulus-dashboard/600/600"
                                 alt="Hero"
                                 width={600}
                                 height={600}
                                 className="mx-auto aspect-square overflow-hidden rounded-xl object-cover sm:w-full lg:order-last"
-                                data-ai-hint="business dashboard illustration"
+                                data-ai-hint="app dashboard screenshot"
                             />
                         </div>
                     </div>
