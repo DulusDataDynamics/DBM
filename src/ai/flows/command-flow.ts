@@ -115,6 +115,7 @@ const commandFlow = ai.defineFlow(
     const tools = [createTaskTool, listClientsTool, createInvoiceTool, createClientTool, listTasksTool];
 
     const llmResponse = await ai.generate({
+      model: 'googleai/gemini-2.5-pro',
       prompt: `You are Sparky, an AI business assistant. Your goal is to help the user manage their business by executing commands. The user's request is: "${command}".
 
 Here is your thought process for fulfilling the user's request:
