@@ -1,163 +1,177 @@
 /**
  * @file Firestore Security Rules
- * @core_philosophy This ruleset enforces a strict user-ownership model.
- *   All data is nested under /users/{userId}, and users can only access their own data.
- * @data_structure
- *   /users/{userId} - User profile information.
- *   /users/{userId}/tasks/{taskId} - Tasks for a specific user.
- *   /users/{userId}/invoices/{invoiceId} - Invoices for a specific user.
- *   /users/{userId}/clients/{clientId} - Clients for a specific user.
- *   /users/{userId}/settings/{settingsId} - Settings for a specific user (single document).
- *   /users/{userId}/chatSessions/{sessionId} - Chat sessions for a specific user.
- * @key_security_decisions
- *   - Users can only create, read, update, and delete their own data.
- *   - Listing of other users is disallowed.
- *   - Data validation is minimal (prototyping mode). Only authorization-critical fields are validated.
- *   - All write operations require a verified user identity (request.auth != null).
+ * @description This ruleset enforces a strict user-ownership model for the Dulus Business Manager application.
+ *
+ * Data Structure:
+ * - All data is nested under /users/{userId}, ensuring that each user has their own private data tree.
+ * - Subcollections under /users/{userId} include tasks, invoices, clients, settings, and chatSessions.
+ *
+ * Key Security Decisions:
+ * - Users can only access their own data. Listing other users is disallowed.
+ * - Each user has a single settings document under their user ID.
+ *
+ * Error Context:
+ * - The error indicates a "Missing or insufficient permissions" error when attempting to create a new chat session.
+ * - The path in the error message is `/databases/(default)/documents/users/5y45V3EAfceqswh25MOdWG2ltyJ2/chatSessions`.
+ * - This suggests the user '5y45V3EAfceqswh25MOdWG2ltyJ2' is trying to create a chat session but is being denied by the security rules.
+ *
+ * Denormalization for Authorization:
+ * - The `userId` field is present on all subcollection documents to simplify ownership checks.
  */
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
 
     /**
-     * @description Enforces user-level access control for user profiles.
+     * @description Checks if the request is authenticated.
+     * @return {boolean} True if the request is authenticated, false otherwise.
+     */
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    /**
+     * @description Checks if the authenticated user ID matches the provided user ID.
+     * @param {string} userId The user ID to check against.
+     * @return {boolean} True if the user is the owner, false otherwise.
+     */
+    function isOwner(userId) {
+      return isSignedIn() && request.auth.uid == userId;
+    }
+
+    /**
+     * @description Checks if the authenticated user is the owner and the resource exists.
+     * @param {string} userId The user ID to check against.
+     * @return {boolean} True if the user is the existing owner, false otherwise.
+     */
+    function isExistingOwner(userId) {
+      return isOwner(userId) && resource != null;
+    }
+
+
+    /**
+     * @description Enforces user-level access control. Only the authenticated user can read or write their own profile.
      * @path /users/{userId}
-     * @allow (create) Authenticated user can create their own profile.
-     * @deny (create) Authenticated user cannot create a profile with a different ID.
-     * @allow (get, update, delete) Authenticated user can access and modify their own profile.
-     * @deny (get, update, delete) Authenticated user cannot access or modify another user's profile.
+     * @allow (get) User 'user123' can read their own profile.
+     * @allow (create) User 'user123' can create their profile if the UID matches.
+     * @allow (update) User 'user123' can update their profile.
+     * @allow (delete) User 'user123' can delete their profile.
+     * @deny (get) User 'user456' cannot read User 'user123' profile.
+     * @deny (create) User 'user123' cannot create User 'user456' profile.
+     * @deny (update) User 'user456' cannot update User 'user123' profile.
+     * @deny (delete) User 'user456' cannot delete User 'user123' profile.
      * @principle Enforces document ownership for all operations.
      */
     match /users/{userId} {
-      function isOwner(userId) {
-        return request.auth != null && request.auth.uid == userId;
-      }
-      function isExistingOwner(userId) {
-          return isOwner(userId) && resource != null;
-      }
-
-      allow create: if isOwner(userId) && request.resource.data.id == userId;
       allow get: if isOwner(userId);
-      allow list: if false;
-      allow update: if isExistingOwner(userId) && request.resource.data.id == resource.data.id;
+      allow list: if false; // Listing all users is not permitted.
+      allow create: if isOwner(userId) && request.resource.data.id == userId;
+      allow update: if isExistingOwner(userId) && request.resource.data.id == resource.data.id; //Enforce immutability of userId
       allow delete: if isExistingOwner(userId);
     }
 
     /**
-     * @description Enforces user-level access control for tasks.
+     * @description Enforces user-specific task access control. Only the owner can manage their tasks.
      * @path /users/{userId}/tasks/{taskId}
-     * @allow (create) Authenticated user can create tasks under their user ID.
-     * @deny (create) Authenticated user cannot create tasks under another user ID.
-     * @allow (get, list, update, delete) Authenticated user can access and modify their own tasks.
-     * @deny (get, list, update, delete) Authenticated user cannot access or modify another user's tasks.
-     * @principle Enforces document ownership for writes.
+     * @allow (get) User 'user123' can read task 'task456' if they own it.
+     * @allow (create) User 'user123' can create task 'task456' under their profile.
+     * @allow (update) User 'user123' can update task 'task456' if they own it.
+     * @allow (delete) User 'user123' can delete task 'task456' if they own it.
+     * @deny (get) User 'user456' cannot read task 'task456' under User 'user123'.
+     * @deny (create) User 'user123' cannot create task 'task456' under User 'user456'.
+     * @deny (update) User 'user456' cannot update task 'task456' under User 'user123'.
+     * @deny (delete) User 'user456' cannot delete task 'task456' under User 'user123'.
+     * @principle Enforces document ownership for writes and reads.
      */
     match /users/{userId}/tasks/{taskId} {
-      function isOwner(userId) {
-        return request.auth != null && request.auth.uid == userId;
-      }
-      function isExistingOwner(userId) {
-          return isOwner(userId) && resource != null;
-      }
-      allow create: if isOwner(userId) && request.resource.data.userId == userId;
       allow get: if isOwner(userId);
       allow list: if isOwner(userId);
-      allow update: if isExistingOwner(userId) && request.resource.data.userId == resource.data.userId;
+      allow create: if isOwner(userId) && request.resource.data.userId == userId;
+      allow update: if isExistingOwner(userId) && request.resource.data.userId == resource.data.userId; //Enforce immutability of userId
       allow delete: if isExistingOwner(userId);
     }
 
     /**
-     * @description Enforces user-level access control for invoices.
+     * @description Enforces user-specific invoice access control. Only the owner can manage their invoices.
      * @path /users/{userId}/invoices/{invoiceId}
-     * @allow (create) Authenticated user can create invoices under their user ID.
-     * @deny (create) Authenticated user cannot create invoices under another user ID.
-     * @allow (get, list, update, delete) Authenticated user can access and modify their own invoices.
-     * @deny (get, list, update, delete) Authenticated user cannot access or modify another user's invoices.
-     * @principle Enforces document ownership for writes.
+     * @allow (get) User 'user123' can read invoice 'invoice456' if they own it.
+     * @allow (create) User 'user123' can create invoice 'invoice456' under their profile.
+     * @allow (update) User 'user123' can update invoice 'invoice456' if they own it.
+     * @allow (delete) User 'user123' can delete invoice 'invoice456' if they own it.
+     * @deny (get) User 'user456' cannot read invoice 'invoice456' under User 'user123'.
+     * @deny (create) User 'user123' cannot create invoice 'invoice456' under User 'user456'.
+     * @deny (update) User 'user456' cannot update invoice 'invoice456' under User 'user123'.
+     * @deny (delete) User 'user456' cannot delete invoice 'invoice456' under User 'user123'.
+     * @principle Enforces document ownership for writes and reads.
      */
     match /users/{userId}/invoices/{invoiceId} {
-      function isOwner(userId) {
-        return request.auth != null && request.auth.uid == userId;
-      }
-      function isExistingOwner(userId) {
-          return isOwner(userId) && resource != null;
-      }
-
-      allow create: if isOwner(userId) && request.resource.data.userId == userId;
       allow get: if isOwner(userId);
       allow list: if isOwner(userId);
-      allow update: if isExistingOwner(userId) && request.resource.data.userId == resource.data.userId;
+      allow create: if isOwner(userId) && request.resource.data.userId == userId;
+      allow update: if isExistingOwner(userId) && request.resource.data.userId == resource.data.userId; //Enforce immutability of userId
       allow delete: if isExistingOwner(userId);
     }
 
     /**
-     * @description Enforces user-level access control for clients.
+     * @description Enforces user-specific client access control. Only the owner can manage their clients.
      * @path /users/{userId}/clients/{clientId}
-     * @allow (create) Authenticated user can create clients under their user ID.
-     * @deny (create) Authenticated user cannot create clients under another user ID.
-     * @allow (get, list, update, delete) Authenticated user can access and modify their own clients.
-     * @deny (get, list, update, delete) Authenticated user cannot access or modify another user's clients.
-     * @principle Enforces document ownership for writes.
+     * @allow (get) User 'user123' can read client 'client456' if they own it.
+     * @allow (create) User 'user123' can create client 'client456' under their profile.
+     * @allow (update) User 'user123' can update client 'client456' if they own it.
+     * @allow (delete) User 'user123' can delete client 'client456' if they own it.
+     * @deny (get) User 'user456' cannot read client 'client456' under User 'user123'.
+     * @deny (create) User 'user123' cannot create client 'client456' under User 'user456'.
+     * @deny (update) User 'user456' cannot update client 'client456' under User 'user123'.
+     * @deny (delete) User 'user456' cannot delete client 'client456' under User 'user123'.
+     * @principle Enforces document ownership for writes and reads.
      */
     match /users/{userId}/clients/{clientId} {
-      function isOwner(userId) {
-        return request.auth != null && request.auth.uid == userId;
-      }
-      function isExistingOwner(userId) {
-          return isOwner(userId) && resource != null;
-      }
-      allow create: if isOwner(userId) && request.resource.data.userId == userId;
       allow get: if isOwner(userId);
       allow list: if isOwner(userId);
-      allow update: if isExistingOwner(userId) && request.resource.data.userId == resource.data.userId;
+      allow create: if isOwner(userId) && request.resource.data.userId == userId;
+      allow update: if isExistingOwner(userId) && request.resource.data.userId == resource.data.userId; //Enforce immutability of userId
       allow delete: if isExistingOwner(userId);
     }
 
     /**
-     * @description Enforces user-level access control for settings.
+     * @description Enforces user-specific settings access control. Only the owner can manage their settings.
      * @path /users/{userId}/settings/{settingsId}
-     * @allow (create) Authenticated user can create settings under their user ID.
-     * @deny (create) Authenticated user cannot create settings under another user ID.
-     * @allow (get, update, delete) Authenticated user can access and modify their own settings.
-     * @deny (get, update, delete) Authenticated user cannot access or modify another user's settings.
-     * @principle Enforces document ownership for writes.
+     * @allow (get) User 'user123' can read settings 'appSettings' if they own it.
+     * @allow (create) User 'user123' can create settings 'appSettings' under their profile.
+     * @allow (update) User 'user123' can update settings 'appSettings' if they own it.
+     * @allow (delete) User 'user123' can delete settings 'appSettings' if they own it.
+     * @deny (get) User 'user456' cannot read settings 'appSettings' under User 'user123'.
+     * @deny (create) User 'user123' cannot create settings 'appSettings' under User 'user456'.
+     * @deny (update) User 'user456' cannot update settings 'appSettings' under User 'user123'.
+     * @deny (delete) User 'user456' cannot delete settings 'appSettings' under User 'user123'.
+     * @principle Enforces document ownership for writes and reads.  There should be only one settings document per user
      */
     match /users/{userId}/settings/{settingsId} {
-      function isOwner(userId) {
-        return request.auth != null && request.auth.uid == userId;
-      }
-      function isExistingOwner(userId) {
-          return isOwner(userId) && resource != null;
-      }
-
-      allow create: if isOwner(userId);
       allow get: if isOwner(userId);
-      allow list: if false;
+      allow list: if false; // Only a single document.  Listing not needed
+      allow create: if isOwner(userId);
       allow update: if isExistingOwner(userId);
       allow delete: if isExistingOwner(userId);
     }
 
-    /**
-     * @description Enforces user-level access control for chat sessions.
-     * @path /users/{userId}/chatSessions/{sessionId}
-     * @allow (create) Authenticated user can create chat sessions under their user ID.
-     * @deny (create) Authenticated user cannot create chat sessions under another user ID.
-     * @allow (get, list, update, delete) Authenticated user can access and modify their own chat sessions.
-     * @deny (get, list, update, delete) Authenticated user cannot access or modify another user's chat sessions.
-     * @principle Enforces document ownership for writes.
-     */
+      /**
+       * @description Enforces user-specific chat session access control. Only the owner can manage their chat sessions.
+       * @path /users/{userId}/chatSessions/{sessionId}
+       * @allow (get) User 'user123' can read chat session 'session456' if they own it.
+       * @allow (create) User 'user123' can create chat session 'session456' under their profile.
+       * @allow (update) User 'user123' can update chat session 'session456' if they own it.
+       * @allow (delete) User 'user123' can delete chat session 'session456' if they own it.
+       * @deny (get) User 'user456' cannot read chat session 'session456' under User 'user123'.
+       * @deny (create) User 'user123' cannot create chat session 'session456' under User 'user456'.
+       * @deny (update) User 'user456' cannot update chat session 'session456' under User 'user123'.
+       * @deny (delete) User 'user456' cannot delete chat session 'session456' under User 'user123'.
+       * @principle Enforces document ownership for writes and reads.
+       */
     match /users/{userId}/chatSessions/{sessionId} {
-      function isOwner(userId) {
-        return request.auth != null && request.auth.uid == userId;
-      }
-      function isExistingOwner(userId) {
-          return isOwner(userId) && resource != null;
-      }
-
-      allow create: if isOwner(userId) && request.resource.data.userId == userId;
       allow get: if isOwner(userId);
       allow list: if isOwner(userId);
-      allow update: if isExistingOwner(userId) && request.resource.data.userId == resource.data.userId;
+      allow create: if isOwner(userId) && request.resource.data.userId == userId;
+      allow update: if isExistingOwner(userId) && request.resource.data.userId == resource.data.userId; //Enforce immutability of userId
       allow delete: if isExistingOwner(userId);
     }
   }
