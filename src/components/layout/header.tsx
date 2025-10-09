@@ -22,7 +22,6 @@ import { useRouter, usePathname } from 'next/navigation';
 import { useState, useRef, useEffect, useTransition } from 'react';
 import { cn } from '@/lib/utils';
 import { useToast } from '@/hooks/use-toast';
-import { runCommand } from '@/ai/flows/command-flow';
 import { useChat } from '@/context/chat-context';
 
 interface AppHeaderProps {
@@ -57,7 +56,7 @@ export function AppHeader({ onToggleSidebar, isSidebarOpen }: AppHeaderProps) {
     const router = useRouter();
     const pathname = usePathname();
     const { toast } = useToast();
-    const { addMessage, setCommandIsLoading } = useChat();
+    const { addMessage } = useChat();
     const [isPending, startTransition] = useTransition();
 
     const [isRecording, setIsRecording] = useState(false);
@@ -139,22 +138,10 @@ export function AppHeader({ onToggleSidebar, isSidebarOpen }: AppHeaderProps) {
             router.push('/dashboard/chatbot');
         }
 
-        setCommandIsLoading(true);
-        addMessage({ text: command, isUser: true }, true);
-        setInputValue('');
-
-        startTransition(async () => {
-            try {
-                const response = await runCommand({ command, userId: user.uid });
-                addMessage({ text: response.reply, isUser: false }, true);
-            } catch (error) {
-                console.error("AI command error:", error);
-                const errorMessage = "Sorry, I encountered an issue processing your command. Please try again.";
-                addMessage({ text: errorMessage, isUser: false }, true);
-            } finally {
-                setCommandIsLoading(false);
-            }
+        startTransition(() => {
+            addMessage({ text: command, isUser: true }, true);
         });
+        setInputValue('');
     };
 
     const userAvatar = user?.photoURL;
@@ -220,5 +207,3 @@ export function AppHeader({ onToggleSidebar, isSidebarOpen }: AppHeaderProps) {
     </header>
   );
 }
-
-    

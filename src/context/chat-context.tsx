@@ -1,6 +1,6 @@
 'use client';
 
-import { chat } from '@/ai/flows/chat';
+import { runCommand } from '@/ai/flows/command-flow';
 import React, { createContext, useContext, useState, ReactNode, useCallback, useEffect } from 'react';
 import { useUser, useFirestore } from '@/firebase';
 import { collection, query, orderBy, onSnapshot, addDoc, serverTimestamp, doc, getDoc, updateDoc } from 'firebase/firestore';
@@ -26,7 +26,7 @@ interface ChatContextType {
     commandIsLoading: boolean;
     loadSession: (sessionId: string) => void;
     createNewSession: () => Promise<void>;
-    addMessage: (message: Message, isCommand?: boolean) => Promise<void>;
+    addMessage: (message: Message, isFromCommandBar?: boolean) => Promise<void>;
     setCommandIsLoading: (isLoading: boolean) => void;
 }
 
@@ -85,7 +85,9 @@ export const ChatProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         try {
             // The `addDoc` call will trigger the `onSnapshot` listener, 
             // which will then add the new session to the `sessions` list and make it active.
-            await addDoc(sessionsCollection, newSessionData);
+            const docRef = await addDoc(sessionsCollection, newSessionData);
+            // Immediately load the new session
+            loadSession(docRef.id);
         } catch (error) {
             const contextualError = new FirestorePermissionError({
                 operation: 'create',
@@ -96,7 +98,7 @@ export const ChatProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         } finally {
             setIsLoading(false);
         }
-    }, [user, firestore]);
+    }, [user, firestore, loadSession]);
     
     // Subscribe to user's chat sessions
     useEffect(() => {
@@ -138,7 +140,7 @@ export const ChatProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [user, firestore]);
 
-    const addMessage = useCallback(async (message: Message, isCommand: boolean = false) => {
+    const addMessage = useCallback(async (message: Message, isFromCommandBar: boolean = false) => {
         if (!activeSession || !user || !firestore) return;
 
         const sessionRef = doc(firestore, `users/${user.uid}/chatSessions`, activeSession.id);
@@ -168,10 +170,12 @@ export const ChatProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
             setActiveSession(prev => prev ? ({ ...prev, messages: activeSession.messages }) : null);
         });
 
-        if (message.isUser && !isCommand) {
-            setIsLoading(true);
+        // If the message is from the user, process it as a command.
+        if (message.isUser) {
+            const currentLoadingState = isFromCommandBar ? setCommandIsLoading : setIsLoading;
+            currentLoadingState(true);
             try {
-                const response = await chat(message.text);
+                const response = await runCommand({ command: message.text, userId: user.uid });
                 const botMessage = { text: response.reply, isUser: false };
                 
                 // Final update with bot message
@@ -188,7 +192,7 @@ export const ChatProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
                 });
 
             } catch (error) {
-                console.error("Chatbot error:", error);
+                console.error("AI command error:", error);
                 const errorMessage = { text: "Sorry, I'm having trouble connecting. Please try again.", isUser: false };
                 
                 const errorMessages = [...optimisticMessages, errorMessage];
@@ -203,10 +207,10 @@ export const ChatProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
                 });
 
             } finally {
-                setIsLoading(false);
+                currentLoadingState(false);
             }
         }
-    }, [activeSession, user, firestore]);
+    }, [activeSession, user, firestore, setCommandIsLoading]);
 
 
     return (
