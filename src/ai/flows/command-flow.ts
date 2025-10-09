@@ -138,13 +138,23 @@ Follow this thought process to fulfill the user's request:
 5.  **Execute Tools Sequentially:** If multiple steps are needed, execute them in the correct logical order. For example, you must successfully get a \`clientId\` *before* calling \`createInvoice\`.
 
 6.  **Formulate the Final Response:** Once all actions are complete, respond to the user in a friendly, conversational tone.
-    *   **Confirm what you have done.** Instead of a generic "Done," say "I've created a new invoice for [Client Name] for [Amount]."
-    *   **Summarize multiple actions.** If you created a client and then an invoice, say "I've added [Client Name] as a new client and created your first invoice for them."
+    *   **Confirm what you have done.** Instead of a generic "Done," say "I've created a new invoice for [Client Name] for [Amount]." or "I've added [Client Name] as a new client."
+    *   If you used a tool, use the output from the tool to formulate the response. For example, if you created an invoice, the tool output will be the new invoice object, so you can mention the invoice number.
     *   If you can't fulfill the request, explain why in a helpful way.`,
       tools: tools,
       context: { userId },
     });
     
+    const toolOutputs = llmResponse.toolRequest?.history() || [];
+    if (toolOutputs.length > 0) {
+        const lastToolOutput = toolOutputs[toolOutputs.length - 1];
+        const finalResponse = await ai.generate({
+            model: 'googleai/gemini-2.5-pro',
+            prompt: `You have just finished executing a user's command. The original command was "${command}". You used one or more tools and the output of the last tool you used is: ${JSON.stringify(lastToolOutput.output)}. Now, formulate a clear, friendly, and concise final response to the user confirming what you have done. Be specific. For example, if you created an invoice, mention the invoice number or amount. If you created a client, mention their name.`,
+        });
+        return { reply: finalResponse.text };
+    }
+
     const finalReply = llmResponse.text || "I've completed the action.";
     return { reply: finalReply };
   }
