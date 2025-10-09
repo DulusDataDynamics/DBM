@@ -54,7 +54,7 @@ export const ChatProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
                 setActiveSession({
                     id: sessionSnap.id,
                     title: data.title,
-                    createdAt: data.createdAt.toDate(),
+                    createdAt: data.createdAt?.toDate() || new Date(),
                     messages: data.messages || []
                 });
             }
@@ -84,7 +84,7 @@ export const ChatProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
             setActiveSession({
                 id: docRef.id,
                 title: newSessionData.title,
-                createdAt: new Date(), // Approximate
+                createdAt: new Date(), // Approximate, will be updated by listener
                 messages: [],
             });
         } catch (error) {
@@ -114,12 +114,11 @@ export const ChatProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
                 return {
                     id: doc.id,
                     title: data.title,
-                    createdAt: data.createdAt.toDate(),
+                    createdAt: data.createdAt?.toDate() || new Date(),
                 };
             });
             setSessions(userSessions);
             
-            // If there's no active session, load the latest one or create a new one
             if (!activeSession && userSessions.length > 0) {
                 loadSession(userSessions[0].id);
             } else if (!activeSession && userSessions.length === 0) {
@@ -140,10 +139,17 @@ export const ChatProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         if (!activeSession || !user || !firestore) return;
 
         const sessionRef = doc(firestore, `users/${user.uid}/chatSessions`, activeSession.id);
-
-        const updatedMessages = [...activeSession.messages, message];
-        setActiveSession(prev => prev ? { ...prev, messages: updatedMessages } : null);
         
+        // Optimistically update UI
+        setActiveSession(prev => {
+            if (!prev) return null;
+            return { ...prev, messages: [...prev.messages, message] };
+        });
+
+        // Get current messages from state to avoid race conditions
+        const currentMessages = activeSession.messages;
+        const updatedMessages = [...currentMessages, message];
+
         updateDoc(sessionRef, { messages: updatedMessages }).catch(error => {
             const contextualError = new FirestorePermissionError({
                 path: sessionRef.path,
@@ -159,37 +165,38 @@ export const ChatProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
                 const response = await chat(message.text);
                 const botMessage = { text: response.reply, isUser: false };
                 
-                const currentSessionSnap = await getDoc(sessionRef);
-                const currentMessages = currentSessionSnap.data()?.messages || [];
-                const finalMessages = [...currentMessages, botMessage];
-
-                setActiveSession(prev => prev ? { ...prev, messages: finalMessages } : null);
-                updateDoc(sessionRef, { messages: finalMessages }).catch(error => {
-                     const contextualError = new FirestorePermissionError({
-                        path: sessionRef.path,
-                        operation: 'update',
-                        requestResourceData: { messages: finalMessages },
+                setActiveSession(prev => {
+                    if (!prev) return null;
+                    const finalMessages = [...updatedMessages, botMessage];
+                    updateDoc(sessionRef, { messages: finalMessages }).catch(error => {
+                         const contextualError = new FirestorePermissionError({
+                            path: sessionRef.path,
+                            operation: 'update',
+                            requestResourceData: { messages: finalMessages },
+                        });
+                        errorEmitter.emit('permission-error', contextualError);
                     });
-                    errorEmitter.emit('permission-error', contextualError);
+                    return { ...prev, messages: finalMessages };
                 });
 
             } catch (error) {
                 console.error("Chatbot error:", error);
                 const errorMessage = { text: "Sorry, I'm having trouble connecting. Please try again.", isUser: false };
                 
-                const currentSessionSnap = await getDoc(sessionRef);
-                const currentMessages = currentSessionSnap.data()?.messages || [];
-                const finalMessages = [...currentMessages, errorMessage];
-
-                setActiveSession(prev => prev ? { ...prev, messages: finalMessages } : null);
-                updateDoc(sessionRef, { messages: finalMessages }).catch(error => {
-                     const contextualError = new FirestorePermissionError({
-                        path: sessionRef.path,
-                        operation: 'update',
-                        requestResourceData: { messages: finalMessages },
+                setActiveSession(prev => {
+                    if (!prev) return null;
+                    const finalMessages = [...updatedMessages, errorMessage];
+                     updateDoc(sessionRef, { messages: finalMessages }).catch(error => {
+                         const contextualError = new FirestorePermissionError({
+                            path: sessionRef.path,
+                            operation: 'update',
+                            requestResourceData: { messages: finalMessages },
+                        });
+                        errorEmitter.emit('permission-error', contextualError);
                     });
-                    errorEmitter.emit('permission-error', contextualError);
+                    return { ...prev, messages: finalMessages };
                 });
+
             } finally {
                 setIsLoading(false);
             }
