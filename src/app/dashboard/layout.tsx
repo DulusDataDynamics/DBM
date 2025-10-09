@@ -1,12 +1,11 @@
+
 'use client';
 
 import { AppHeader } from '@/components/layout/header';
 import { MainSidebar } from '@/components/layout/sidebar';
-import { useFirestore, useUser, useDoc, useMemoFirebase } from '@/firebase';
+import { useUser } from '@/firebase';
 import { useRouter } from 'next/navigation';
-import { useEffect, useState } from 'react';
-import { doc } from 'firebase/firestore';
-import type { Settings } from '@/lib/data';
+import { useState } from 'react';
 import { cn } from '@/lib/utils';
 import { ChatProvider } from '@/context/chat-context';
 
@@ -23,23 +22,18 @@ export default function DashboardLayout({
     setSidebarOpen(!isSidebarOpen);
   }
 
-  if (isUserLoading) {
+  useEffect(() => {
+    if (!isUserLoading && !user) {
+      router.replace('/login');
+    }
+  }, [user, isUserLoading, router]);
+
+  if (isUserLoading || !user) {
     return (
       <div className="flex min-h-screen items-center justify-center">
         <p>Loading...</p>
       </div>
     );
-  }
-
-  if (!user) {
-     if (typeof window !== 'undefined') {
-       router.replace('/');
-     }
-     return (
-       <div className="flex min-h-screen items-center justify-center">
-         <p>Redirecting to login...</p>
-       </div>
-     );
   }
 
 
@@ -62,3 +56,5 @@ export default function DashboardLayout({
     </ChatProvider>
   );
 }
+
+    

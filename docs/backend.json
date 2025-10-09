@@ -1,3 +1,4 @@
+
 {
   "entities": {
     "User": {
@@ -18,6 +19,11 @@
         "businessName": {
           "type": "string",
           "description": "The name of the user's business."
+        },
+        "role": {
+          "type": "string",
+          "description": "The role of the user (e.g., 'admin', 'staff', 'client').",
+          "enum": ["admin", "staff", "client"]
         },
         "createdAt": {
           "type": "string",
@@ -294,3 +300,5 @@
     }
   }
 }
+
+    

@@ -1,3 +1,4 @@
+
 'use client';
 
 import Link from 'next/link';
@@ -13,12 +14,12 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { Input } from '@/components/ui/input';
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
-import { LogOut, Mic, PanelLeft, Search, Settings, User, Send } from 'lucide-react';
+import { LogOut, Mic, PanelLeft, Search, Settings, User, Send, Moon, Sun } from 'lucide-react';
 import { MainSidebar } from './sidebar';
 import { useAuth, useUser } from '@/firebase';
 import { signOut } from '@/firebase/auth-actions';
 import { useRouter, usePathname } from 'next/navigation';
-import { useState, useRef, useEffect, useCallback, useTransition } from 'react';
+import { useState, useRef, useEffect, useTransition } from 'react';
 import { cn } from '@/lib/utils';
 import { useToast } from '@/hooks/use-toast';
 import { runCommand } from '@/ai/flows/command-flow';
@@ -27,6 +28,27 @@ import { useChat } from '@/context/chat-context';
 interface AppHeaderProps {
   onToggleSidebar: () => void;
   isSidebarOpen: boolean;
+}
+
+function ThemeSwitcher() {
+  const [isDarkMode, setIsDarkMode] = useState(false);
+
+  useEffect(() => {
+    const isDark = document.documentElement.classList.contains('dark');
+    setIsDarkMode(isDark);
+  }, []);
+
+  const toggleTheme = () => {
+    document.documentElement.classList.toggle('dark');
+    setIsDarkMode(!isDarkMode);
+  };
+
+  return (
+    <Button variant="outline" size="icon" onClick={toggleTheme}>
+      {isDarkMode ? <Sun className="h-[1.2rem] w-[1.2rem]" /> : <Moon className="h-[1.2rem] w-[1.2rem]" />}
+      <span className="sr-only">Toggle theme</span>
+    </Button>
+  );
 }
 
 export function AppHeader({ onToggleSidebar, isSidebarOpen }: AppHeaderProps) {
@@ -176,6 +198,7 @@ export function AppHeader({ onToggleSidebar, isSidebarOpen }: AppHeaderProps) {
             </Button>
         )}
       </div>
+      <ThemeSwitcher />
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
           <Button variant="outline" size="icon" className="overflow-hidden rounded-full">
@@ -197,3 +220,5 @@ export function AppHeader({ onToggleSidebar, isSidebarOpen }: AppHeaderProps) {
     </header>
   );
 }
+
+    
