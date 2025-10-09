@@ -43,6 +43,54 @@ export async function createTask(
   }
 }
 
+export async function listTasks(userId: string): Promise<z.infer<typeof TaskSchema>[]> {
+    const db = getFirestore(firebaseApp);
+    const tasksCollection = collection(db, 'users', userId, 'tasks');
+    try {
+        const snapshot = await getDocs(tasksCollection);
+        return snapshot.docs.map((doc) => ({ ...(doc.data() as any), id: doc.id }));
+    } catch (serverError) {
+        const contextualError = new FirestorePermissionError({
+            path: tasksCollection.path,
+            operation: 'list',
+        });
+        errorEmitter.emit('permission-error', contextualError);
+        throw serverError;
+    }
+}
+
+
+export async function createClient(
+    userId: string,
+    name: string,
+    email: string,
+    phone: string,
+    address: string
+): Promise<z.infer<typeof ClientSchema>> {
+    const db = getFirestore(firebaseApp);
+    const clientsCollection = collection(db, 'users', userId, 'clients');
+    const clientData = {
+        userId,
+        name,
+        email,
+        phone,
+        address,
+    };
+    try {
+        const docRef = await addDoc(clientsCollection, clientData);
+        return { ...clientData, id: docRef.id };
+    } catch (serverError) {
+        const contextualError = new FirestorePermissionError({
+            path: clientsCollection.path,
+            operation: 'create',
+            requestResourceData: clientData,
+        });
+        errorEmitter.emit('permission-error', contextualError);
+        throw serverError;
+    }
+}
+
+
 export async function listClients(userId: string): Promise<z.infer<typeof ClientSchema>[]> {
   const db = getFirestore(firebaseApp);
   const clientsCollection = collection(db, 'users', userId, 'clients');

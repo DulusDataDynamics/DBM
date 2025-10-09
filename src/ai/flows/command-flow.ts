@@ -9,6 +9,8 @@ import {
   createTask,
   listClients,
   createInvoice,
+  createClient,
+  listTasks,
 } from '@/app/dashboard/actions';
 import { TaskSchema, ClientSchema, InvoiceSchema } from '@/lib/data';
 
@@ -40,6 +42,38 @@ const createTaskTool = ai.defineTool(
   }
 );
 
+const listTasksTool = ai.defineTool(
+    {
+        name: 'listTasks',
+        description: 'Lists all tasks for the user.',
+        inputSchema: z.object({}),
+        outputSchema: z.array(TaskSchema),
+    },
+    async (input, context) => {
+        const { userId } = context as { userId: string };
+        return listTasks(userId);
+    }
+);
+
+const createClientTool = ai.defineTool(
+    {
+        name: 'createClient',
+        description: 'Creates a new client for the user.',
+        inputSchema: z.object({
+            name: z.string(),
+            email: z.string().email(),
+            phone: z.string(),
+            address: z.string(),
+        }),
+        outputSchema: ClientSchema,
+    },
+    async (input, context) => {
+        const { userId } = context as { userId: string };
+        return createClient(userId, input.name, input.email, input.phone, input.address);
+    }
+);
+
+
 const listClientsTool = ai.defineTool(
   {
     name: 'listClients',
@@ -56,7 +90,7 @@ const listClientsTool = ai.defineTool(
 const createInvoiceTool = ai.defineTool(
   {
     name: 'createInvoice',
-    description: 'Creates a new invoice for a client.',
+    description: 'Creates a new invoice for a client. You must have a client ID to use this tool. If you only have a name, use listClients first.',
     inputSchema: z.object({
         clientId: z.string().describe('The ID of the client this invoice belongs to.'),
         amount: z.number().describe('The total amount of the invoice.'),
@@ -78,16 +112,25 @@ const commandFlow = ai.defineFlow(
   },
   async (input) => {
     const { command, userId } = input;
-    const tools = [createTaskTool, listClientsTool, createInvoiceTool];
+    const tools = [createTaskTool, listClientsTool, createInvoiceTool, createClientTool, listTasksTool];
 
     const llmResponse = await ai.generate({
       prompt: `You are Sparky, an AI business assistant. Your goal is to help the user manage their business by executing commands. The user's request is: "${command}".
 
-Here is your thought process:
-1.  First, fully understand the user's request.
-2.  Next, determine if one of your available tools can fulfill the request.
-3.  If you need to create an invoice and only a client's name is provided (not their ID), you MUST use the \`listClients\` tool first to find the correct client ID.
-4.  Once you have executed the tool and the action is complete, respond to the user in a friendly, conversational tone confirming that the action has been taken.`,
+Here is your thought process for fulfilling the user's request:
+1.  **Deconstruct the Request:** First, fully understand what the user is asking for. Is it a single action or a multi-step command? (e.g., "Create an invoice for a new client" is two steps: create client, then create invoice).
+
+2.  **Identify Necessary Tools:** Review your available tools: \`createTask\`, \`listTasks\`, \`createClient\`, \`listClients\`, \`createInvoice\`. Determine which tool(s) are needed.
+
+3.  **Check for Prerequisites:**
+    *   **For Invoicing:** To create an invoice, you **MUST** have a \`clientId\`.
+    *   If the user provides a client's *name* but not their ID, you **MUST** use the \`listClients\` tool first to find the correct \`clientId\`.
+    *   If the client does not exist after checking, and the user's intent is to create an invoice for a *new* client, you **MUST** first use the \`createClient\` tool. You will have to ask the user for the new client's details (name, email, phone, address) if they are not provided in the original prompt.
+    *   **For other actions:** Check if you have all the required information (e.g., a description for a task).
+
+4.  **Execute Tools Sequentially:** If multiple steps are needed, execute the tools in the correct order. For example, you must successfully get a \`clientId\` *before* calling \`createInvoice\`.
+
+5.  **Formulate the Final Response:** Once all actions are complete, respond to the user in a friendly, conversational tone. Confirm what you have done. For example, instead of just saying "Done," say "I've created a new invoice for [Client Name] for [Amount]." If you performed multiple actions, summarize them, e.g., "I've added [Client Name] as a new client and created your first invoice for them."`,
       tools: tools,
       context: { userId },
     });
