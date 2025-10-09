@@ -1,6 +1,7 @@
 'use client';
 
 import { runCommand } from '@/ai/flows/command-flow';
+import { textToSpeech } from '@/ai/flows/text-to-speech';
 import React, { createContext, useContext, useState, ReactNode, useCallback, useEffect } from 'react';
 import { useUser, useFirestore } from '@/firebase';
 import { collection, query, orderBy, onSnapshot, addDoc, serverTimestamp, doc, getDoc, updateDoc } from 'firebase/firestore';
@@ -10,6 +11,7 @@ import { errorEmitter } from '@/firebase/error-emitter';
 export type Message = {
     text: string;
     isUser: boolean;
+    audio?: string;
 };
 
 export type ChatSession = {
@@ -43,7 +45,6 @@ export const ChatProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
 
     const loadSession = useCallback(async (sessionId: string) => {
         if(!user || !firestore) return;
-        // Prevent re-loading the same session
         if (activeSession?.id === sessionId) return;
 
         setIsLoading(true);
@@ -51,7 +52,6 @@ export const ChatProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         
         try {
             const sessionSnap = await getDoc(sessionRef);
-
             if(sessionSnap.exists()) {
                 const data = sessionSnap.data();
                 setActiveSession({
@@ -74,8 +74,7 @@ export const ChatProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
 
     const createNewSession = useCallback(async () => {
         if(!user || !firestore) return;
-        setIsLoading(true);
-
+        
         const newSessionData = {
             title: "New Chat",
             createdAt: serverTimestamp(),
@@ -83,10 +82,7 @@ export const ChatProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         };
         const sessionsCollection = collection(firestore, `users/${user.uid}/chatSessions`);
         try {
-            // The `addDoc` call will trigger the `onSnapshot` listener, 
-            // which will then add the new session to the `sessions` list and make it active.
             const docRef = await addDoc(sessionsCollection, newSessionData);
-            // Immediately load the new session
             loadSession(docRef.id);
         } catch (error) {
             const contextualError = new FirestorePermissionError({
@@ -95,12 +91,9 @@ export const ChatProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
                 requestResourceData: newSessionData,
             });
             errorEmitter.emit('permission-error', contextualError);
-        } finally {
-            setIsLoading(false);
         }
     }, [user, firestore, loadSession]);
     
-    // Subscribe to user's chat sessions
     useEffect(() => {
         if (!user || !firestore) return;
 
@@ -120,12 +113,9 @@ export const ChatProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
             });
             setSessions(userSessions);
             
-            // If there's no active session, or the active session was deleted, load the most recent one.
             if ((!activeSession && userSessions.length > 0) || (activeSession && !userSessions.some(s => s.id === activeSession.id))) {
                 loadSession(userSessions[0].id);
             } else if (userSessions.length === 0) {
-                 // If there are no sessions at all, create a new one.
-                 // The listener will then pick it up and set it as active.
                 createNewSession();
             }
         }, (error) => {
@@ -145,15 +135,12 @@ export const ChatProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
 
         const sessionRef = doc(firestore, `users/${user.uid}/chatSessions`, activeSession.id);
         
-        // Optimistically update UI
         const optimisticMessages = [...activeSession.messages, message];
         setActiveSession(prev => {
             if (!prev) return null;
             return { ...prev, messages: optimisticMessages };
         });
 
-        // Update firestore
-        // We also update the title if it's the first user message
         const updateData: { messages: Message[], title?: string } = { messages: optimisticMessages };
         if(activeSession.messages.length === 0 && message.isUser) {
             updateData.title = message.text.substring(0, 50);
@@ -166,19 +153,23 @@ export const ChatProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
                 requestResourceData: updateData,
             });
             errorEmitter.emit('permission-error', contextualError);
-            // Revert optimistic update on error
             setActiveSession(prev => prev ? ({ ...prev, messages: activeSession.messages }) : null);
         });
 
-        // If the message is from the user, process it as a command.
         if (message.isUser) {
             const currentLoadingState = isFromCommandBar ? setCommandIsLoading : setIsLoading;
             currentLoadingState(true);
             try {
                 const response = await runCommand({ command: message.text, userId: user.uid });
-                const botMessage = { text: response.reply, isUser: false };
                 
-                // Final update with bot message
+                const { audio } = await textToSpeech(response.reply);
+                const botMessage = { text: response.reply, isUser: false, audio };
+
+                if (audio) {
+                    const audioEl = new Audio(audio);
+                    audioEl.play();
+                }
+                
                 const finalMessages = [...optimisticMessages, botMessage];
                  setActiveSession(prev => prev ? ({...prev, messages: finalMessages}) : null);
 
@@ -192,7 +183,7 @@ export const ChatProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
                 });
 
             } catch (error) {
-                console.error("AI command error:", error);
+                console.error("AI command/TTS error:", error);
                 const errorMessage = { text: "Sorry, I'm having trouble connecting. Please try again.", isUser: false };
                 
                 const errorMessages = [...optimisticMessages, errorMessage];

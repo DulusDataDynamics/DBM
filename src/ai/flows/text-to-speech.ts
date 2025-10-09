@@ -37,7 +37,7 @@ async function toWav(
 }
 
 const TextToSpeechOutputSchema = z.object({
-  media: z.string().describe('The base64 encoded audio data.'),
+  audio: z.string().describe('The base64 encoded audio data in data URI format.'),
 });
 
 const textToSpeechFlow = ai.defineFlow(
@@ -67,7 +67,7 @@ const textToSpeechFlow = ai.defineFlow(
       'base64'
     );
     return {
-      media: 'data:audio/wav;base64,' + (await toWav(audioBuffer)),
+      audio: 'data:audio/wav;base64,' + (await toWav(audioBuffer)),
     };
   }
 );

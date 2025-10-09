@@ -3,7 +3,7 @@ import { useState, useRef, useEffect } from 'react';
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Bot, Send, User as UserIcon, Settings, MessageSquarePlus, History, ImageIcon, Star } from "lucide-react";
+import { Bot, Send, User as UserIcon, Settings, MessageSquarePlus, History, ImageIcon, Star, Volume2 } from "lucide-react";
 import { useUser } from '@/firebase';
 import { cn } from '@/lib/utils';
 import { ScrollArea } from '@/components/ui/scroll-area';
@@ -128,7 +128,14 @@ export default function ChatbotPage() {
                                     </Avatar>
                                 )}
                                 <div className={cn("max-w-xl rounded-lg p-3", message.isUser ? "bg-primary text-primary-foreground" : "bg-muted")}>
-                                    <p className="text-sm">{message.text}</p>
+                                     <div className="flex items-center gap-2">
+                                        <p className="text-sm">{message.text}</p>
+                                        {!message.isUser && message.audio && (
+                                            <Button size="icon" variant="ghost" className="h-6 w-6 shrink-0" onClick={() => new Audio(message.audio).play()}>
+                                                <Volume2 className="h-4 w-4" />
+                                            </Button>
+                                        )}
+                                    </div>
                                 </div>
                                 {message.isUser && (
                                      <Avatar className="h-9 w-9">
