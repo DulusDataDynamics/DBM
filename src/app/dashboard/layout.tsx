@@ -5,7 +5,7 @@ import { AppHeader } from '@/components/layout/header';
 import { MainSidebar } from '@/components/layout/sidebar';
 import { useUser } from '@/firebase';
 import { useRouter } from 'next/navigation';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { cn } from '@/lib/utils';
 import { ChatProvider } from '@/context/chat-context';
 
@@ -56,5 +56,3 @@ export default function DashboardLayout({
     </ChatProvider>
   );
 }
-
-    
