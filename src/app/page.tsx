@@ -50,12 +50,12 @@ export default function LandingPage() {
                                 </div>
                             </div>
                              <Image
-                                src="/dulus-bs-manager-logo.png"
-                                alt="Dulus BS Manager Logo"
+                                src="/dulus-bs-manager-logo.jpg"
+                                alt="Dulus BS Manager App Screenshot"
                                 width={600}
-                                height={600}
-                                className="mx-auto aspect-square overflow-hidden rounded-xl object-contain sm:w-full lg:order-last"
-                                data-ai-hint="app logo"
+                                height={400}
+                                className="mx-auto aspect-video overflow-hidden rounded-xl object-cover sm:w-full lg:order-last"
+                                data-ai-hint="app dashboard"
                             />
                         </div>
                     </div>
