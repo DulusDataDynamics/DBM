@@ -81,10 +81,13 @@ const commandFlow = ai.defineFlow(
     const tools = [createTaskTool, listClientsTool, createInvoiceTool];
 
     const llmResponse = await ai.generate({
-      prompt: `You are an AI assistant that can perform actions based on the user's request. The user's request is: "${command}".
-1.  Figure out which tool to use.
-2.  If you need to create an invoice and only have a client's name, you MUST use the \`listClients\` tool first to find their ID.
-3.  Once the action is complete, respond in a conversational and friendly tone.`,
+      prompt: `You are Sparky, an AI business assistant. Your goal is to help the user manage their business by executing commands. The user's request is: "${command}".
+
+Here is your thought process:
+1.  First, fully understand the user's request.
+2.  Next, determine if one of your available tools can fulfill the request.
+3.  If you need to create an invoice and only a client's name is provided (not their ID), you MUST use the \`listClients\` tool first to find the correct client ID.
+4.  Once you have executed the tool and the action is complete, respond to the user in a friendly, conversational tone confirming that the action has been taken.`,
       tools: tools,
       context: { userId },
     });
