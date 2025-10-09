@@ -162,13 +162,13 @@ export const ChatProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
             try {
                 const response = await runCommand({ command: message.text, userId: user.uid });
                 
-                const { audio } = await textToSpeech(response.reply);
-                const botMessage = { text: response.reply, isUser: false, audio };
+                // const { audio } = await textToSpeech(response.reply);
+                const botMessage = { text: response.reply, isUser: false }; // audio removed
 
-                if (audio) {
-                    const audioEl = new Audio(audio);
-                    audioEl.play();
-                }
+                // if (audio) {
+                //     const audioEl = new Audio(audio);
+                //     audioEl.play();
+                // }
                 
                 const finalMessages = [...optimisticMessages, botMessage];
                  setActiveSession(prev => prev ? ({...prev, messages: finalMessages}) : null);
@@ -201,7 +201,7 @@ export const ChatProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
                 currentLoadingState(false);
             }
         }
-    }, [activeSession, user, firestore, setCommandIsLoading]);
+    }, [activeSession, user, firestore, setCommandIsLoading, setIsLoading, loadSession, createNewSession]);
 
 
     return (
