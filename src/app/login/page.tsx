@@ -2,11 +2,11 @@
 'use client';
 
 import Link from 'next/link';
+import Image from 'next/image';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Bot } from 'lucide-react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
@@ -71,8 +71,8 @@ export default function LoginPage() {
       <Card className="mx-auto max-w-sm w-full">
         <CardHeader className="text-center">
             <Link href="/" className="inline-flex items-center justify-center gap-2 mb-4">
-                <Bot className="w-8 h-8 text-primary" />
-                <CardTitle className="text-3xl font-headline">Dulus</CardTitle>
+                <Image src="/logo.svg" alt="Dulus BS Manager Logo" width={32} height={32} />
+                <CardTitle className="text-2xl font-headline">Dulus BS Manager</CardTitle>
             </Link>
           <CardDescription>Enter your email below to login to your account</CardDescription>
         </CardHeader>
@@ -129,5 +129,3 @@ export default function LoginPage() {
     </div>
   );
 }
-
-    

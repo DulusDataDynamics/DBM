@@ -1,13 +1,13 @@
+
 'use client';
 
 import Link from 'next/link';
+import Image from 'next/image';
 import { usePathname } from 'next/navigation';
-import { Bot, BarChart2, CheckSquare, FileText, LayoutDashboard, Settings, Users, LifeBuoy, MessageSquare, User, Sparkles } from 'lucide-react';
+import { BarChart2, CheckSquare, FileText, LayoutDashboard, Settings, Users, LifeBuoy, MessageSquare, User, Sparkles } from 'lucide-react';
 import { TooltipProvider, Tooltip, TooltipTrigger, TooltipContent } from '../ui/tooltip';
 import { cn } from '@/lib/utils';
 import { Separator } from '../ui/separator';
-import { useUser } from '@/firebase';
-import { Avatar, AvatarFallback, AvatarImage } from '../ui/avatar';
 
 const navItems = [
   { href: '/dashboard', icon: LayoutDashboard, label: 'Dashboard' },
@@ -25,10 +25,6 @@ const bottomNavItems = [
 
 export function MainSidebar({ isOpen }: { isOpen: boolean }) {
   const pathname = usePathname();
-  const { user } = useUser();
-  const userAvatar = user?.photoURL;
-  const userFallback = user?.displayName?.charAt(0) || user?.email?.charAt(0) || 'U';
-
 
   const renderNavItem = ({ href, icon: Icon, label }: typeof navItems[0]) => {
     const isActive = pathname === href;
@@ -79,7 +75,7 @@ export function MainSidebar({ isOpen }: { isOpen: boolean }) {
     <div className="flex h-full max-h-screen flex-col gap-2 bg-sidebar text-sidebar-foreground">
       <div className={cn("flex h-14 items-center border-b border-sidebar-border px-4 lg:h-[60px] transition-all", isOpen ? 'lg:px-6' : 'justify-center lg:px-2')}>
         <Link href="/dashboard" className="flex items-center gap-2 font-semibold font-headline">
-          <Bot className="h-6 w-6 text-accent shrink-0" />
+          <Image src="/logo.svg" alt="Dulus BS Manager Logo" width={24} height={24} className="shrink-0" />
           <span className={cn("transition-opacity", !isOpen && "opacity-0 hidden")}>Dulus</span>
         </Link>
       </div>
@@ -97,15 +93,6 @@ export function MainSidebar({ isOpen }: { isOpen: boolean }) {
                 {bottomNavItems.map(renderNavItem)}
             </ul>
         </nav>
-         <Separator className="my-2 bg-sidebar-border" />
-        <div className={cn("flex items-center justify-center p-2 rounded-lg transition-all", !isOpen ? "h-10" : "h-20")}>
-            {isOpen && (
-                 <div className="relative animate-sparkle-bot">
-                    <Bot className="h-10 w-10 text-accent" />
-                    <Sparkles className="absolute -top-1 -right-1 h-4 w-4 text-accent animate-sparkle-star" />
-                </div>
-            )}
-        </div>
       </div>
     </div>
   );
