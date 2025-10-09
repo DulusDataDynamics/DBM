@@ -27,20 +27,16 @@ export default function ChatbotPage() {
         await addMessage({ text, isUser: true });
     };
     
-    const handleNewChat = () => {
-        createNewSession();
+    const handleNewChat = async () => {
+        await createNewSession();
         toast({
             title: "New Chat Started",
-            description: "You can find your old chat in the history.",
+            description: "You can now start a fresh conversation.",
         });
     }
 
     const handleHistoryClick = (sessionId: string) => {
         loadSession(sessionId);
-        toast({
-            title: "Chat History Loaded",
-            description: "You are now viewing a past conversation.",
-        });
     }
 
     const handleFutureFeatureClick = (featureName: string) => {
@@ -142,7 +138,19 @@ export default function ChatbotPage() {
                                 )}
                             </div>
                         ))}
-                         {isProcessing && (
+                         {(isLoading && messages.length === 0) && (
+                            <div className="flex items-start gap-4">
+                                <Avatar className="h-9 w-9 border">
+                                    <div className="bg-primary aspect-square h-full w-full flex items-center justify-center rounded-full text-primary-foreground">
+                                        <Bot className="h-5 w-5" />
+                                    </div>
+                                </Avatar>
+                                <div className="max-w-md rounded-lg p-3 bg-muted">
+                                    <p className="text-sm animate-pulse">Loading conversation...</p>
+                                </div>
+                            </div>
+                         )}
+                          {(isProcessing && messages.length > 0) && (
                              <div className="flex items-start gap-4">
                                 <Avatar className="h-9 w-9 border">
                                     <div className="bg-primary aspect-square h-full w-full flex items-center justify-center rounded-full text-primary-foreground">
