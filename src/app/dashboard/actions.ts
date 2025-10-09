@@ -1,4 +1,3 @@
-
 'use server';
 
 import {
@@ -8,7 +7,7 @@ import {
   getFirestore,
   doc,
 } from 'firebase/firestore';
-import { firebaseApp } from '@/firebase';
+import { firebaseApp } from '@/firebase/server-init';
 import { z } from 'zod';
 import { InvoiceSchema, TaskSchema, ClientSchema } from '@/lib/data';
 import { errorEmitter } from '@/firebase/error-emitter';
