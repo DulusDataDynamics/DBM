@@ -29,6 +29,7 @@ export async function initiateEmailSignUp(authInstance: Auth, email: string, pas
       id: user.uid,
       email: user.email,
       businessName: businessName,
+      role: 'client', // Assign default role
       createdAt: serverTimestamp(),
     };
     
@@ -58,12 +59,13 @@ export async function initiateGoogleSignIn(authInstance: Auth): Promise<void> {
       id: user.uid,
       email: user.email,
       businessName: user.displayName || 'My Business', // Default business name
+      role: 'client', // Assign default role
       createdAt: serverTimestamp(),
     };
 
     setDoc(userDocRef, userData, { merge: true }).catch(error => {
         const contextualError = new FirestorePermissionError({
-            path: userDocRef.path,
+            path: userDoc_actions.tsf.path,
             operation: 'write',
             requestResourceData: userData,
         });

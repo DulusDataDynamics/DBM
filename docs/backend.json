@@ -22,8 +22,8 @@
         },
         "role": {
           "type": "string",
-          "description": "The role of the user (e.g., 'admin', 'staff', 'client').",
-          "enum": ["admin", "staff", "client"]
+          "description": "The role of the user (e.g., 'admin', 'client').",
+          "enum": ["admin", "client"]
         },
         "createdAt": {
           "type": "string",
@@ -300,5 +300,3 @@
     }
   }
 }
-
-    

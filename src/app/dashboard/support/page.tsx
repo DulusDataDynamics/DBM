@@ -57,17 +57,17 @@ export default function SupportPage() {
                         <CardContent className="space-y-4">
                             <div>
                                 <h3 className="font-semibold">Email Us</h3>
-                                <a href="mailto:support@dulus.com" className="text-sm text-primary hover:underline">
-                                    support@dulus.com
+                                <a href="mailto:dulusdatadynamics@gmail.com" className="text-sm text-primary hover:underline">
+                                    dulusdatadynamics@gmail.com
                                 </a>
                                 <p className="text-xs text-muted-foreground">We typically reply within 24 hours.</p>
                             </div>
                              <div>
-                                <h3 className="font-semibold">Call Us</h3>
+                                <h3 className="font-semibold">Call / WhatsApp</h3>
                                 <p className="text-sm text-primary">
-                                    +1 (555) 123-4567
+                                    +27 64 64 1288 CAT
                                 </p>
-                                <p className="text-xs text-muted-foreground">Mon-Fri, 9am - 5pm EST</p>
+                                <p className="text-xs text-muted-foreground">Mon-Fri, 9am - 5pm CAT</p>
                             </div>
                         </CardContent>
                     </Card>
