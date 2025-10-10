@@ -20,7 +20,7 @@ const navItems = [
 
 const bottomNavItems = [
     { href: '/dashboard/settings', icon: Settings, label: 'Settings' },
-    { href: '#', icon: LifeBuoy, label: 'Support' },
+    { href: '/dashboard/support', icon: LifeBuoy, label: 'Support' },
 ]
 
 export function MainSidebar({ isOpen }: { isOpen: boolean }) {
