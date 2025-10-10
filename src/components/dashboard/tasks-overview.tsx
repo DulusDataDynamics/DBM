@@ -6,6 +6,7 @@ import { ArrowUpRight } from "lucide-react";
 import { useCollection, useFirestore, useUser, useMemoFirebase } from "@/firebase";
 import { collection, query, where } from "firebase/firestore";
 import type { Task } from "@/lib/data";
+import { ScrollArea } from "@/components/ui/scroll-area";
 
 export function TasksOverview() {
     const { user } = useUser();
@@ -37,16 +38,21 @@ export function TasksOverview() {
             </CardHeader>
             <CardContent>
                 {isLoading && <p>Loading tasks...</p>}
-                <div className="space-y-4">
-                    {pendingTasks?.slice(0, 5).map(task => (
-                        <div key={task.id} className="flex items-center">
-                            <div className="flex flex-col">
-                                <span className="font-medium">{task.description}</span>
-                                <span className="text-sm text-muted-foreground">Due: {new Date(task.dueDate).toLocaleDateString()}</span>
+                <ScrollArea className="h-[240px]">
+                    <div className="space-y-4 pr-4">
+                        {pendingTasks?.length === 0 && !isLoading && (
+                            <p className="text-sm text-muted-foreground">No pending tasks. Well done!</p>
+                        )}
+                        {pendingTasks?.slice(0, 10).map(task => (
+                            <div key={task.id} className="flex items-center">
+                                <div className="flex flex-col">
+                                    <span className="font-medium">{task.description}</span>
+                                    <span className="text-sm text-muted-foreground">Due: {new Date(task.dueDate).toLocaleDateString()}</span>
+                                </div>
                             </div>
-                        </div>
-                    ))}
-                </div>
+                        ))}
+                    </div>
+                </ScrollArea>
             </CardContent>
         </Card>
     );
