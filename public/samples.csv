@@ -1,0 +1,101 @@
+OrderID,ProductName,Category,Price,Quantity,OrderDate,CustomerName,Region
+1001,Laptop,Electronics,1200.00,1,2023-01-15,John Smith,North America
+1002,T-Shirt,Clothing,25.50,2,2023-01-16,Jane Doe,Europe
+1003,Coffee Maker,Home Goods,89.99,1,2023-01-17,Peter Jones,Asia
+1004,"The Great Gatsby",Books,15.00,1,2023-01-18,Mary Williams,North America
+1005,Apples,Groceries,3.50,5,2023-01-19,David Brown,Europe
+1006,Smartphone,Electronics,799.99,1,2023-01-20,Susan Garcia,South America
+1007,Jeans,Clothing,75.00,1,2023-01-21,Michael Miller,Asia
+1008,Blender,Home Goods,45.00,1,2023-01-22,Linda Davis,Africa
+1009,1984,Books,12.50,2,2023-01-23,Robert Rodriguez,Australia
+1010,Bread,Groceries,2.25,3,2023-01-24,Patricia Martinez,North America
+1011,Headphones,Electronics,150.00,1,2023-02-01,James Hernandez,Europe
+1012,Hoodie,Clothing,55.00,1,2023-02-02,Jennifer Lopez,Asia
+1013,Toaster,Home Goods,30.00,1,2023-02-03,William Gonzalez,South America
+1014,"Moby Dick",Books,18.00,1,2023-02-04,Elizabeth Wilson,Africa
+1015,Milk,Groceries,4.00,2,2023-02-05,Richard Anderson,Australia
+1016,Smartwatch,Electronics,250.00,1,2023-02-06,Barbara Thomas,North America
+1017,Jacket,Clothing,120.00,1,2023-02-07,Joseph Taylor,Europe
+1018,Lamp,Home Goods,65.00,1,2023-02-08,Jessica Moore,Asia
+1019,"Pride and Prejudice",Books,10.00,3,2023-02-09,Thomas Jackson,South America
+1020,Eggs,Groceries,3.00,2,2023-02-10,Sarah White,Africa
+1021,Tablet,Electronics,450.00,1,2023-03-01,Charles Harris,Australia
+1022,Socks,Clothing,12.00,5,2023-03-02,Karen Martin,North America
+1023,Rug,Home Goods,200.00,1,2023-03-03,Daniel Thompson,Europe
+1024,"To Kill a Mockingbird",Books,14.00,1,2023-03-04,Nancy Garcia,Asia
+1025,Cheese,Groceries,8.50,1,2023-03-05,Matthew Martinez,South America
+1026,Laptop,Electronics,1250.00,1,2023-03-06,Lisa Robinson,Africa
+1027,T-Shirt,Clothing,28.00,3,2023-03-07,Donald Clark,Australia
+1028,Coffee Maker,Home Goods,95.00,1,2023-03-08,Betty Rodriguez,North America
+1029,"The Great Gatsby",Books,16.50,1,2023-03-09,Paul Lewis,Europe
+1030,Apples,Groceries,3.75,4,2023-03-10,Sandra Lee,Asia
+1031,Smartphone,Electronics,850.00,1,2023-03-11,Steven Walker,South America
+1032,Jeans,Clothing,80.00,1,2023-03-12,Laura Hall,Africa
+1033,Blender,Home Goods,50.00,1,2023-03-13,Mark Allen,Australia
+1034,1984,Books,13.00,1,2023-03-14,Donna Young,North America
+1035,Bread,Groceries,2.50,2,2023-03-15,Kenneth Hernandez,Europe
+1036,Headphones,Electronics,175.00,1,2023-04-01,Carol King,Asia
+1037,Hoodie,Clothing,60.00,1,2023-04-02,George Wright,South America
+1038,Toaster,Home Goods,32.00,1,2023-04-03,Ruth Lopez,Africa
+1039,"Moby Dick",Books,19.00,1,2023-04-04,Edward Hill,Australia
+1040,Milk,Groceries,4.25,2,2023-04-05,Sharon Scott,North America
+1041,Smartwatch,Electronics,270.00,1,2023-04-06,Brian Green,Europe
+1042,Jacket,Clothing,130.00,1,2023-04-07,Deborah Adams,Asia
+1043,Lamp,Home Goods,70.00,1,2023-04-08,Ronald Baker,South America
+1044,"Pride and Prejudice",Books,11.00,2,2023-04-09,Michelle Nelson,Africa
+1045,Eggs,Groceries,3.25,2,2023-04-10,Anthony Carter,Australia
+1046,Tablet,Electronics,475.00,1,2023-04-11,Cynthia Mitchell,North America
+1047,Socks,Clothing,13.00,4,2023-04-12,Kevin Perez,Europe
+1048,Rug,Home Goods,220.00,1,2023-04-13,Kimberly Roberts,Asia
+1049,"To Kill a Mockingbird",Books,15.50,1,2023-04-14,Jason Turner,South America
+1050,Cheese,Groceries,9.00,1,2023-04-15,Melissa Phillips,Africa
+1051,Laptop,Electronics,1300.00,1,2023-05-01,Gary Campbell,Australia
+1052,T-Shirt,Clothing,26.00,4,2023-05-02,Amy Parker,North America
+1053,Coffee Maker,Home Goods,100.00,1,2023-05-03,Larry Evans,Europe
+1054,"The Great Gatsby",Books,17.00,1,2023-05-04,Brenda Edwards,Asia
+1055,Apples,Groceries,4.00,6,2023-05-05,Justin Collins,South America
+1056,Smartphone,Electronics,900.00,1,2023-05-06,Rebecca Stewart,Africa
+1057,Jeans,Clothing,85.00,1,2023-05-07,Jerry Sanchez,Australia
+1058,Blender,Home Goods,55.00,1,2023-05-08,Heather Morris,North America
+1059,1984,Books,14.50,1,2023-05-09,Frank Rogers,Europe
+1060,Bread,Groceries,2.75,3,2023-05-10,Teresa Reed,Asia
+1061,Headphones,Electronics,190.00,1,2023-05-11,Jonathan Cook,South America
+1062,Hoodie,Clothing,65.00,1,2023-05-12,Denise Morgan,Africa
+1063,Toaster,Home Goods,35.00,1,2023-05-13,Patrick Bell,Australia
+1064,"Moby Dick",Books,20.00,1,2023-05-14,Diana Murphy,North America
+1065,Milk,Groceries,4.50,2,2023-05-15,Bruce Bailey,Europe
+1066,Smartwatch,Electronics,290.00,1,2023-06-01,Julia Rivera,Asia
+1067,Jacket,Clothing,140.00,1,2023-06-02,Albert Cooper,South America
+1068,Lamp,Home Goods,75.00,1,2023-06-03,Christina Richardson,Africa
+1069,"Pride and Prejudice",Books,12.00,1,2023-06-04,Randy Cox,Australia
+1070,Eggs,Groceries,3.50,3,2023-06-05,Cheryl Howard,North America
+1071,Tablet,Electronics,500.00,1,2023-06-06,Philip Ward,Europe
+1072,Socks,Clothing,14.00,6,2023-06-07,Sara Torres,Asia
+1073,Rug,Home Goods,230.00,1,2023-06-08,Earl Peterson,South America
+1074,"To Kill a Mockingbird",Books,16.00,1,2023-06-09,Jacqueline Gray,Africa
+1075,Cheese,Groceries,9.50,2,2023-06-10,Stephen Ramirez,Australia
+1076,Laptop,Electronics,1350.00,1,2023-06-11,Ann James,North America
+1077,T-Shirt,Clothing,29.00,2,2023-06-12,Wayne Watson,Europe
+1078,Coffee Maker,Home Goods,105.00,1,2023-06-13,Beverly Brooks,Asia
+1079,"The Great Gatsby",Books,18.50,1,2023-06-14,Billy Kelly,South America
+1080,Apples,Groceries,4.25,5,2023-06-15,Doris Sanders,Africa
+1081,Smartphone,Electronics,950.00,1,2023-07-01,Alan Price,Australia
+1082,Jeans,Clothing,90.00,1,2023-07-02,Kathryn Bennett,North America
+1083,Blender,Home Goods,60.00,1,2023-07-03,Eugene Wood,Europe
+1084,1984,Books,15.00,1,2023-07-04,Gloria Barnes,Asia
+1085,Bread,Groceries,3.00,2,2023-07-05,Carl Ross,South America
+1086,Headphones,Electronics,200.00,1,2023-07-06,Theresa Henderson,Africa
+1087,Hoodie,Clothing,70.00,1,2023-07-07,Bobby Coleman,Australia
+1088,Toaster,Home Goods,38.00,1,2023-07-08,Mildred Perry,North America
+1089,"Moby Dick",Books,21.00,1,2023-07-09,Walter Jenkins,Europe
+1090,Milk,Groceries,4.75,1,2023-07-10,Joan Powell,Asia
+1091,Smartwatch,Electronics,300.00,1,2023-07-11,Roy Long,South America
+1092,Jacket,Clothing,150.00,1,2023-07-12,Jean Patterson,Africa
+1093,Lamp,Home Goods,80.00,1,2023-07-13,Louis Hughes,Australia
+1094,"Pride and Prejudice",Books,13.50,1,2023-07-14,Janice Flores,North America
+1095,Eggs,Groceries,3.75,4,2023-07-15,Clarence Washington,Europe
+1096,Tablet,Electronics,525.00,1,2023-07-16,Lori Butler,Asia
+1097,Socks,Clothing,15.00,3,2023-07-17,Phillip Simmons,South America
+1098,Rug,Home Goods,240.00,1,2023-07-18,Todd Foster,Africa
+1099,"To Kill a Mockingbird",Books,17.50,1,2023-07-19,Ashley Gonzales,Australia
+1100,Cheese,Groceries,10.00,1,2023-07-20,Russell Bryant,North America
