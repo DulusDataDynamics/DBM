@@ -138,7 +138,7 @@ export default function InvoicesPage() {
         'Best regards,',
         `${settings?.businessName || 'Dulus Inc.'}`
       ];
-      const body = encodeURIComponent(bodyLines.join('\n'));
+      const body = bodyLines.map(encodeURIComponent).join('%0A');
 
       window.location.href = `mailto:${client.email}?subject=${encodeURIComponent(subject)}&body=${body}`;
     }
