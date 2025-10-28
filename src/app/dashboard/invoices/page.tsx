@@ -112,39 +112,10 @@ export default function InvoicesPage() {
       deleteDocumentNonBlocking(invoiceRef);
     }
     
-    const handleSendEmail = (invoice: Invoice) => {
-      const client = getClient(invoice.clientId);
-      if (!client || !client.email) {
-        toast({
-          variant: "destructive",
-          title: "Client Email Not Found",
-          description: "Could not find an email for the client associated with this invoice.",
-        });
-        return;
-      }
-      
-      const businessName = settings?.businessName || "Dulus Business Manager";
-      const subject = `Invoice Reminder: ${invoice.invoiceNumber} from ${businessName}`;
-      const body = `
-Hello ${client.name},
-
-This is a reminder for invoice ${invoice.invoiceNumber} for ${getCurrencySymbol(invoice.currency)}${invoice.amount.toFixed(2)}.
-
-Due Date: ${new Date(invoice.dueDate).toLocaleDateString()}
-
-Thank you,
-The ${businessName} Team
-      `.trim();
-
-      const mailtoLink = `mailto:${client.email}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
-
-      window.location.href = mailtoLink;
-    }
-    
     const handleSendWhatsApp = (invoice: Invoice) => {
         const client = getClient(invoice.clientId);
         if (!client || !client.phone) {
-            toast({ variant: "destructive", title: "Client Phone Not Found" });
+            toast({ variant: "destructive", title: "Client Phone Not Found", description: "This client does not have a phone number saved." });
             return;
         }
 
@@ -319,7 +290,6 @@ The ${businessName} Team
                       <DropdownMenuContent align="end">
                         <DropdownMenuLabel>Actions</DropdownMenuLabel>
                         <DropdownMenuItem onClick={() => handleEditInvoice(invoice)}>Edit</DropdownMenuItem>
-                        <DropdownMenuItem onClick={() => handleSendEmail(invoice)}>Send via Email</DropdownMenuItem>
                         <DropdownMenuItem onClick={() => handleSendWhatsApp(invoice)}>Send via WhatsApp</DropdownMenuItem>
                          <AlertDialog>
                           <AlertDialogTrigger asChild>
