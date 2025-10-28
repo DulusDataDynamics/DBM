@@ -123,24 +123,10 @@ export default function InvoicesPage() {
         return;
       }
 
-      const subject = `Invoice ${invoice.invoiceNumber} from ${settings?.businessName || 'Dulus Inc.'}`;
-      const bodyLines = [
-        `Dear ${client.name},`,
-        '',
-        'Please find your invoice details below:',
-        '',
-        `Invoice Number: ${invoice.invoiceNumber}`,
-        `Amount Due: ${getCurrencySymbol(invoice.currency)}${invoice.amount.toFixed(2)}`,
-        `Due Date: ${new Date(invoice.dueDate).toLocaleDateString()}`,
-        '',
-        'Thank you for your business!',
-        '',
-        'Best regards,',
-        `${settings?.businessName || 'Dulus Inc.'}`
-      ];
-      const body = bodyLines.map(encodeURIComponent).join('%0A');
+      const subject = `Invoice ${invoice.invoiceNumber} from ${settings?.businessName || 'your business'}`;
+      const body = `Dear ${client.name},\n\nPlease find attached your invoice ${invoice.invoiceNumber} for ${getCurrencySymbol(invoice.currency)}${invoice.amount.toFixed(2)} due on ${new Date(invoice.dueDate).toLocaleDateString()}.\n\nThank you for your business.\n\nBest regards,\n${settings?.businessName || 'Your Business'}`;
 
-      window.location.href = `mailto:${client.email}?subject=${encodeURIComponent(subject)}&body=${body}`;
+      window.location.href = `mailto:${client.email}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
     }
     
     const handleUnlockPage = () => {
@@ -344,3 +330,5 @@ export default function InvoicesPage() {
     </>
   );
 }
+
+    
