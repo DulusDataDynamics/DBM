@@ -7,12 +7,14 @@ import { Client, Invoice } from "@/lib/data";
 import { collection } from "firebase/firestore";
 import { Download } from "lucide-react";
 import { Bar, BarChart, Pie, PieChart, ResponsiveContainer, Tooltip, XAxis, YAxis, Legend, Cell } from 'recharts';
+import { useToast } from "@/hooks/use-toast";
 
 const COLORS = ['hsl(var(--chart-1))', 'hsl(var(--chart-2))', 'hsl(var(--chart-3))', 'hsl(var(--chart-4))', 'hsl(var(--chart-5))'];
 
 export default function ReportsPage() {
     const { user } = useUser();
     const firestore = useFirestore();
+    const { toast } = useToast();
 
     const invoicesQuery = useMemoFirebase(() => {
         if (!user) return null;
@@ -27,7 +29,7 @@ export default function ReportsPage() {
     const { data: clients, isLoading: isLoadingClients } = useCollection<Client>(clientsQuery);
 
     const invoiceStatusData = invoices?.reduce((acc, invoice) => {
-        const status = invoice.status;
+        const status = new Date(invoice.dueDate) < new Date() && invoice.status === 'unpaid' ? 'overdue' : invoice.status;
         const existing = acc.find(item => item.name === status);
         if(existing) {
             existing.value += 1;
@@ -46,14 +48,21 @@ export default function ReportsPage() {
         }
     }).filter(c => c.revenue > 0) || [];
 
+    const handleExport = () => {
+         toast({
+            title: "Coming Soon!",
+            description: `Export functionality is under development.`,
+        });
+    }
+
 
     return (
         <>
             <PageHeader title="Reports" description="Analyze your business performance with detailed reports.">
-                <Button size="sm" variant="outline" className="gap-1">
+                <Button size="sm" variant="outline" className="gap-1" onClick={handleExport}>
                     <Download className="h-3.5 w-3.5" />
                     <span className="sr-only sm:not-sr-only sm:whitespace-nowrap">
-                        Export to CSV
+                        Export All Data
                     </span>
                 </Button>
             </PageHeader>
@@ -103,7 +112,7 @@ export default function ReportsPage() {
                                         outerRadius={80}
                                         fill="#8884d8"
                                         dataKey="value"
-                                        label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}
+                                        label={({ name, percent }) => `${name.charAt(0).toUpperCase() + name.slice(1)} ${(percent * 100).toFixed(0)}%`}
                                     >
                                         {invoiceStatusData.map((entry, index) => (
                                             <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
@@ -115,7 +124,7 @@ export default function ReportsPage() {
                                             borderColor: 'hsl(var(--border))',
                                         }}
                                     />
-                                    <Legend />
+                                    <Legend formatter={(value) => value.charAt(0).toUpperCase() + value.slice(1)} />
                                 </PieChart>
                             </ResponsiveContainer>
                          )}

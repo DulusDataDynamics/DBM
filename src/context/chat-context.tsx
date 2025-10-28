@@ -201,7 +201,7 @@ export const ChatProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
                 currentLoadingState(false);
             }
         }
-    }, [activeSession, user, firestore, setCommandIsLoading, setIsLoading, loadSession, createNewSession]);
+    }, [activeSession, user, firestore, setCommandIsLoading, setIsLoading]);
 
 
     return (

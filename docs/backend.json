@@ -64,6 +64,11 @@
         "completed": {
           "type": "boolean",
           "description": "Indicates whether the task is completed."
+        },
+        "priority": {
+          "type": "string",
+          "description": "The priority of the task.",
+          "enum": ["Low", "Medium", "High"]
         }
       },
       "required": [
