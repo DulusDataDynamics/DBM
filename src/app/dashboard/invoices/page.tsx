@@ -122,12 +122,23 @@ export default function InvoicesPage() {
         });
         return;
       }
+      
+      const businessName = settings?.businessName || "Dulus Business Manager";
+      const subject = `Invoice Reminder: ${invoice.invoiceNumber} from ${businessName}`;
+      const body = `
+Hello ${client.name},
 
-      navigator.clipboard.writeText(client.email);
-      toast({
-        title: "Email Copied!",
-        description: `${client.name}'s email address has been copied to your clipboard.`
-      })
+This is a reminder for invoice ${invoice.invoiceNumber} for ${getCurrencySymbol(invoice.currency)}${invoice.amount.toFixed(2)}.
+
+Due Date: ${new Date(invoice.dueDate).toLocaleDateString()}
+
+Thank you,
+The ${businessName} Team
+      `.trim();
+
+      const mailtoLink = `mailto:${client.email}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
+
+      window.location.href = mailtoLink;
     }
     
     const handleSendWhatsApp = (invoice: Invoice) => {
