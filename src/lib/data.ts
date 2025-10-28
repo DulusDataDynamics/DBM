@@ -49,6 +49,7 @@ export type Task = {
   description: string;
   dueDate: string;
   completed: boolean;
+  priority?: 'Low' | 'Medium' | 'High';
 };
 
 export const TaskSchema = z.object({
@@ -57,6 +58,7 @@ export const TaskSchema = z.object({
   description: z.string(),
   dueDate: z.string(),
   completed: z.boolean(),
+  priority: z.enum(['Low', 'Medium', 'High']).optional(),
 });
 
 

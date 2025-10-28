@@ -111,6 +111,7 @@ export default function TasksPage() {
               <TableRow>
                 <TableHead>Description</TableHead>
                 <TableHead>Status</TableHead>
+                <TableHead>Priority</TableHead>
                 <TableHead>Due Date</TableHead>
                 <TableHead>
                   <span className="sr-only">Actions</span>
@@ -118,10 +119,10 @@ export default function TasksPage() {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {isLoading && <TableRow><TableCell colSpan={4} className="text-center">Loading...</TableCell></TableRow>}
+              {isLoading && <TableRow><TableCell colSpan={5} className="text-center">Loading...</TableCell></TableRow>}
                {!isLoading && tasks && tasks.length === 0 && (
                 <TableRow>
-                  <TableCell colSpan={4} className="text-center">No tasks found. Add one to get started.</TableCell>
+                  <TableCell colSpan={5} className="text-center">No tasks found. Add one to get started.</TableCell>
                 </TableRow>
               )}
               {!isLoading && tasks && tasks.map((task) => (
@@ -130,6 +131,15 @@ export default function TasksPage() {
                   <TableCell>
                     <Badge variant={task.completed ? 'default' : 'secondary'}>
                       {task.completed ? 'Done' : 'In Progress'}
+                    </Badge>
+                  </TableCell>
+                  <TableCell>
+                    <Badge variant={
+                      task.priority === 'High' ? 'destructive' :
+                      task.priority === 'Medium' ? 'secondary' :
+                      'outline'
+                    }>
+                      {task.priority || 'Low'}
                     </Badge>
                   </TableCell>
                   <TableCell>{new Date(task.dueDate).toLocaleDateString()}</TableCell>

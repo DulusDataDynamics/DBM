@@ -1,8 +1,10 @@
 
 import Link from 'next/link';
 import { Bot } from 'lucide-react';
+import { format } from 'date-fns';
 
 export default function TermsPage() {
+  const lastUpdated = format(new Date(), 'MMMM dd, yyyy');
   return (
     <div className="flex flex-col min-h-screen">
        <header className="px-4 lg:px-6 h-14 flex items-center bg-background/80 backdrop-blur-sm sticky top-0 z-50 border-b">
@@ -20,7 +22,7 @@ export default function TermsPage() {
         <div className="container px-4 md:px-6 py-12 md:py-24 lg:py-32">
           <div className="mx-auto max-w-3xl">
             <h1 className="text-4xl font-bold tracking-tight font-headline">Terms of Service</h1>
-            <p className="mt-4 text-muted-foreground">Last updated: October 10, 2025</p>
+            <p className="mt-4 text-muted-foreground">Last updated: {lastUpdated}</p>
 
             <div className="prose prose-stone dark:prose-invert mt-8 max-w-none">
               <p>Welcome to Dulus Business Manager!</p>
