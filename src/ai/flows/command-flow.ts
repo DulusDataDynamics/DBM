@@ -160,7 +160,7 @@ const commandFlow = ai.defineFlow(
   },
   async (input) => {
     const llmResponse = await ai.generate({
-      model: 'googleai/gemini-pro',
+      model: 'googleai/gemini-1.5-flash-latest',
       system: `You are Sparky, an expert AI business assistant for the Dulus Business Manager (DBM).
         Your primary function is to help users manage their business by executing commands.
         You understand natural language, even if it's casual, short, misspelled, or uses synonyms. For example, "make invoice," "create bill," and "send receipt" all mean you should use the 'createInvoice' tool.
@@ -203,5 +203,3 @@ export async function runCommand(
 ): Promise<CommandOutput> {
   return await commandFlow(input);
 }
-
-    
