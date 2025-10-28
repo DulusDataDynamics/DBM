@@ -65,7 +65,7 @@ export async function initiateGoogleSignIn(authInstance: Auth): Promise<void> {
 
     setDoc(userDocRef, userData, { merge: true }).catch(error => {
         const contextualError = new FirestorePermissionError({
-            path: userDoc_actions.tsf.path,
+            path: userDocRef.path,
             operation: 'write',
             requestResourceData: userData,
         });
