@@ -1,34 +1,18 @@
+
 import { z } from 'zod';
 
-export type Client = {
-  id: string;
-  name: string;
-  email: string;
-  phone: string;
-  address: string;
-  userId: string;
-};
+export type Client = z.infer<typeof ClientSchema>;
 
 export const ClientSchema = z.object({
   id: z.string(),
-  userId: z.string(),
   name: z.string(),
   email: z.string().email(),
   phone: z.string(),
   address: z.string(),
+  userId: z.string(),
 });
 
-export type Invoice = {
-  id: string;
-  userId: string;
-  clientId: string;
-  invoiceNumber: string;
-  issueDate: string;
-  dueDate: string;
-  amount: number;
-  status: 'paid' | 'unpaid' | 'overdue';
-  currency: string;
-};
+export type Invoice = z.infer<typeof InvoiceSchema>;
 
 export const InvoiceSchema = z.object({
   id: z.string(),
@@ -43,14 +27,7 @@ export const InvoiceSchema = z.object({
 });
 
 
-export type Task = {
-  id: string;
-  userId: string;
-  description: string;
-  dueDate: string;
-  completed: boolean;
-  priority?: 'Low' | 'Medium' | 'High';
-};
+export type Task = z.infer<typeof TaskSchema>;
 
 export const TaskSchema = z.object({
   id: z.string(),
@@ -59,6 +36,30 @@ export const TaskSchema = z.object({
   dueDate: z.string(),
   completed: z.boolean(),
   priority: z.enum(['Low', 'Medium', 'High']).optional(),
+});
+
+export type Quote = z.infer<typeof QuoteSchema>;
+
+export const QuoteSchema = z.object({
+    id: z.string(),
+    userId: z.string(),
+    clientId: z.string(),
+    quoteNumber: z.string(),
+    issueDate: z.string(),
+    expiryDate: z.string(),
+    amount: z.number(),
+    status: z.enum(['draft', 'sent', 'accepted', 'rejected']),
+});
+
+export type StockItem = z.infer<typeof StockItemSchema>;
+
+export const StockItemSchema = z.object({
+    id: z.string(),
+    userId: z.string(),
+    name: z.string(),
+    sku: z.string().optional(),
+    quantity: z.number(),
+    price: z.number().optional(),
 });
 
 
@@ -80,3 +81,5 @@ export type Settings = {
   theme?: string;
   invoiceLockPin?: string;
 }
+
+    

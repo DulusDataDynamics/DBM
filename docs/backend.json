@@ -7,36 +7,13 @@
       "type": "object",
       "description": "Represents a user of the Dulus Business Manager application.",
       "properties": {
-        "id": {
-          "type": "string",
-          "description": "Unique identifier for the user entity."
-        },
-        "email": {
-          "type": "string",
-          "description": "Email address of the user.",
-          "format": "email"
-        },
-        "businessName": {
-          "type": "string",
-          "description": "The name of the user's business."
-        },
-        "role": {
-          "type": "string",
-          "description": "The role of the user (e.g., 'admin', 'client').",
-          "enum": ["admin", "client"]
-        },
-        "createdAt": {
-          "type": "string",
-          "description": "Timestamp indicating when the user account was created.",
-          "format": "date-time"
-        }
+        "id": { "type": "string", "description": "Unique identifier for the user entity." },
+        "email": { "type": "string", "description": "Email address of the user.", "format": "email" },
+        "businessName": { "type": "string", "description": "The name of the user's business." },
+        "role": { "type": "string", "description": "The role of the user (e.g., 'admin', 'client').", "enum": ["admin", "client"] },
+        "createdAt": { "type": "string", "description": "Timestamp indicating when the user account was created.", "format": "date-time" }
       },
-      "required": [
-        "id",
-        "email",
-        "businessName",
-        "createdAt"
-      ]
+      "required": ["id", "email", "businessName", "createdAt"]
     },
     "Task": {
       "$schema": "http://json-schema.org/draft-07/schema#",
@@ -44,40 +21,14 @@
       "type": "object",
       "description": "Represents a task within the Dulus Business Manager application.",
       "properties": {
-        "id": {
-          "type": "string",
-          "description": "Unique identifier for the task entity."
-        },
-        "userId": {
-          "type": "string",
-          "description": "Reference to User. (Relationship: User 1:N Task)"
-        },
-        "description": {
-          "type": "string",
-          "description": "Description of the task."
-        },
-        "dueDate": {
-          "type": "string",
-          "description": "Due date for the task.",
-          "format": "date-time"
-        },
-        "completed": {
-          "type": "boolean",
-          "description": "Indicates whether the task is completed."
-        },
-        "priority": {
-          "type": "string",
-          "description": "The priority of the task.",
-          "enum": ["Low", "Medium", "High"]
-        }
+        "id": { "type": "string", "description": "Unique identifier for the task entity." },
+        "userId": { "type": "string", "description": "Reference to User. (Relationship: User 1:N Task)" },
+        "description": { "type": "string", "description": "Description of the task." },
+        "dueDate": { "type": "string", "description": "Due date for the task.", "format": "date-time" },
+        "completed": { "type": "boolean", "description": "Indicates whether the task is completed." },
+        "priority": { "type": "string", "description": "The priority of the task.", "enum": ["Low", "Medium", "High"] }
       },
-      "required": [
-        "id",
-        "userId",
-        "description",
-        "dueDate",
-        "completed"
-      ]
+      "required": ["id", "userId", "description", "dueDate", "completed"]
     },
     "Invoice": {
       "$schema": "http://json-schema.org/draft-07/schema#",
@@ -85,56 +36,17 @@
       "type": "object",
       "description": "Represents an invoice in the Dulus Business Manager application.",
       "properties": {
-        "id": {
-          "type": "string",
-          "description": "Unique identifier for the invoice entity."
-        },
-        "userId": {
-          "type": "string",
-          "description": "Reference to User. (Relationship: User 1:N Invoice)"
-        },
-        "clientId": {
-          "type": "string",
-          "description": "Reference to Client. (Relationship: Client 1:N Invoice)"
-        },
-        "invoiceNumber": {
-          "type": "string",
-          "description": "Unique invoice number."
-        },
-        "issueDate": {
-          "type": "string",
-          "description": "Date the invoice was issued.",
-          "format": "date-time"
-        },
-        "dueDate": {
-          "type": "string",
-          "description": "Date the invoice is due.",
-          "format": "date-time"
-        },
-        "amount": {
-          "type": "number",
-          "description": "Total amount of the invoice."
-        },
-        "status": {
-          "type": "string",
-          "description": "Status of the invoice (e.g., paid, unpaid, overdue)."
-        },
-        "currency": {
-          "type": "string",
-          "description": "The currency of the invoice amount."
-        }
+        "id": { "type": "string", "description": "Unique identifier for the invoice entity." },
+        "userId": { "type": "string", "description": "Reference to User. (Relationship: User 1:N Invoice)" },
+        "clientId": { "type": "string", "description": "Reference to Client. (Relationship: Client 1:N Invoice)" },
+        "invoiceNumber": { "type": "string", "description": "Unique invoice number." },
+        "issueDate": { "type": "string", "description": "Date the invoice was issued.", "format": "date-time" },
+        "dueDate": { "type": "string", "description": "Date the invoice is due.", "format": "date-time" },
+        "amount": { "type": "number", "description": "Total amount of the invoice." },
+        "status": { "type": "string", "description": "Status of the invoice (e.g., paid, unpaid, overdue)." },
+        "currency": { "type": "string", "description": "The currency of the invoice amount." }
       },
-      "required": [
-        "id",
-        "userId",
-        "clientId",
-        "invoiceNumber",
-        "issueDate",
-        "dueDate",
-        "amount",
-        "status",
-        "currency"
-      ]
+      "required": ["id", "userId", "clientId", "invoiceNumber", "issueDate", "dueDate", "amount", "status", "currency"]
     },
     "Client": {
       "$schema": "http://json-schema.org/draft-07/schema#",
@@ -142,40 +54,46 @@
       "type": "object",
       "description": "Represents a client in the Dulus Business Manager application.",
       "properties": {
-        "id": {
-          "type": "string",
-          "description": "Unique identifier for the client entity."
-        },
-        "userId": {
-          "type": "string",
-          "description": "Reference to User. (Relationship: User 1:N Client)"
-        },
-        "name": {
-          "type": "string",
-          "description": "Name of the client."
-        },
-        "email": {
-          "type": "string",
-          "description": "Email address of the client.",
-          "format": "email"
-        },
-        "phone": {
-          "type": "string",
-          "description": "Phone number of the client."
-        },
-        "address": {
-          "type": "string",
-          "description": "Address of dissected client."
-        }
+        "id": { "type": "string", "description": "Unique identifier for the client entity." },
+        "userId": { "type": "string", "description": "Reference to User. (Relationship: User 1:N Client)" },
+        "name": { "type": "string", "description": "Name of the client." },
+        "email": { "type": "string", "description": "Email address of the client.", "format": "email" },
+        "phone": { "type": "string", "description": "Phone number of the client." },
+        "address": { "type": "string", "description": "Address of dissected client." }
       },
-      "required": [
-        "id",
-        "userId",
-        "name",
-        "email",
-        "phone",
-        "address"
-      ]
+      "required": ["id", "userId", "name", "email", "phone", "address"]
+    },
+     "Quote": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "Quote",
+      "type": "object",
+      "description": "Represents a price quote for a client.",
+      "properties": {
+        "id": { "type": "string" },
+        "userId": { "type": "string" },
+        "clientId": { "type": "string" },
+        "quoteNumber": { "type": "string" },
+        "issueDate": { "type": "string", "format": "date-time" },
+        "expiryDate": { "type": "string", "format": "date-time" },
+        "amount": { "type": "number" },
+        "status": { "type": "string", "enum": ["draft", "sent", "accepted", "rejected"] }
+      },
+      "required": ["id", "userId", "clientId", "quoteNumber", "issueDate", "expiryDate", "amount", "status"]
+    },
+    "StockItem": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "Stock Item",
+      "type": "object",
+      "description": "Represents an item in the user's inventory/stock.",
+      "properties": {
+        "id": { "type": "string" },
+        "userId": { "type": "string" },
+        "name": { "type": "string" },
+        "sku": { "type": "string" },
+        "quantity": { "type": "number" },
+        "price": { "type": "number" }
+      },
+      "required": ["id", "userId", "name", "quantity"]
     },
     "Settings": {
       "$schema": "http://json-schema.org/draft-07/schema#",
@@ -183,43 +101,16 @@
       "type": "object",
       "description": "Represents the application settings for a user's business. This is a single document per user.",
       "properties": {
-        "id": {
-          "type": "string",
-          "description": "Unique identifier for the settings entity, typically 'appSettings'."
-        },
-        "businessName": {
-            "type": "string",
-            "description": "The name of the user's business."
-        },
-        "businessAddress": {
-            "type": "string",
-            "description": "The physical address of the user's business."
-        },
-        "contactEmail": {
-            "type": "string",
-            "description": "The contact email for the user's business."
-        },
-        "logoUrl": {
-          "type": "string",
-          "description": "URL of the business logo.",
-          "format": "uri"
-        },
-        "currency": {
-          "type": "string",
-          "description": "Preferred currency for the business (e.g., 'zar', 'usd')."
-        },
-        "theme": {
-          "type": "string",
-          "description": "Selected theme for the application (e.g., 'light', 'dark')."
-        },
-        "invoiceLockPin": {
-          "type": "string",
-          "description": "A 6-digit PIN to lock the invoicing page."
-        }
+        "id": { "type": "string", "description": "Unique identifier for the settings entity, typically 'appSettings'." },
+        "businessName": { "type": "string", "description": "The name of the user's business." },
+        "businessAddress": { "type": "string", "description": "The physical address of the user's business." },
+        "contactEmail": { "type": "string", "description": "The contact email for the user's business." },
+        "logoUrl": { "type": "string", "description": "URL of the business logo.", "format": "uri" },
+        "currency": { "type": "string", "description": "Preferred currency for the business (e.g., 'zar', 'usd')." },
+        "theme": { "type": "string", "description": "Selected theme for the application (e.g., 'light', 'dark')." },
+        "invoiceLockPin": { "type": "string", "description": "A 6-digit PIN to lock the invoicing page." }
       },
-      "required": [
-        "id"
-      ]
+      "required": ["id"]
     },
     "ChatSession": {
         "$schema": "http://json-schema.org/draft-07/schema#",
@@ -227,81 +118,32 @@
         "type": "object",
         "description": "Represents a single chat conversation with the AI assistant.",
         "properties": {
-            "id": {
-                "type": "string",
-                "description": "Unique identifier for the chat session."
-            },
-            "userId": {
-                "type": "string",
-                "description": "Reference to User."
-            },
-            "title": {
-                "type": "string",
-                "description": "A title for the chat session, e.g., the first user message."
-            },
-            "createdAt": {
-                "type": "string",
-                "description": "Timestamp indicating when the session was created.",
-                "format": "date-time"
-            },
+            "id": { "type": "string", "description": "Unique identifier for the chat session." },
+            "userId": { "type": "string", "description": "Reference to User." },
+            "title": { "type": "string", "description": "A title for the chat session, e.g., the first user message." },
+            "createdAt": { "type": "string", "description": "Timestamp indicating when the session was created.", "format": "date-time" },
             "messages": {
                 "type": "array",
                 "description": "An array of messages in the conversation.",
-                "items": {
-                    "type": "object",
-                    "properties": {
-                        "text": { "type": "string" },
-                        "isUser": { "type": "boolean" }
-                    },
-                    "required": ["text", "isUser"]
-                }
+                "items": { "type": "object", "properties": { "text": { "type": "string" }, "isUser": { "type": "boolean" } }, "required": ["text", "isUser"] }
             }
         },
         "required": ["id", "userId", "title", "createdAt", "messages"]
     }
   },
   "auth": {
-    "providers": [
-      "password",
-      "google.com"
-    ]
+    "providers": ["password", "google.com"]
   },
   "firestore": {
-    "/users/{userId}": {
-      "schema": {
-        "$ref": "#/entities/User"
-      },
-      "description": "Stores user profile information."
-    },
-    "/users/{userId}/tasks/{taskId}": {
-      "schema": {
-        "$ref": "#/entities/Task"
-      },
-      "description": "Subcollection for user tasks."
-    },
-    "/users/{userId}/invoices/{invoiceId}": {
-      "schema": {
-        "$ref": "#/entities/Invoice"
-      },
-      "description": "Subcollection for user invoices."
-    },
-    "/users/{userId}/clients/{clientId}": {
-      "schema": {
-        "$ref": "#/entities/Client"
-      },
-      "description": "Subcollection for user clients."
-    },
-    "/users/{userId}/settings/{settingsId}": {
-      "schema": {
-        "$ref": "#/entities/Settings"
-      },
-      "description": "Subcollection for user settings. A single document (e.g., 'appSettings') stores all preferences."
-    },
-    "/users/{userId}/chatSessions/{sessionId}": {
-        "schema": {
-            "$ref": "#/entities/ChatSession"
-        },
-        "description": "Subcollection for user chat conversations."
-    }
+    "/users/{userId}": { "schema": { "$ref": "#/entities/User" }, "description": "Stores user profile information." },
+    "/users/{userId}/tasks/{taskId}": { "schema": { "$ref": "#/entities/Task" }, "description": "Subcollection for user tasks." },
+    "/users/{userId}/invoices/{invoiceId}": { "schema": { "$ref": "#/entities/Invoice" }, "description": "Subcollection for user invoices." },
+    "/users/{userId}/clients/{clientId}": { "schema": { "$ref": "#/entities/Client" }, "description": "Subcollection for user clients." },
+    "/users/{userId}/quotes/{quoteId}": { "schema": { "$ref": "#/entities/Quote" }, "description": "Subcollection for user quotes." },
+    "/users/{userId}/stock/{stockItemId}": { "schema": { "$ref": "#/entities/StockItem" }, "description": "Subcollection for user stock/inventory." },
+    "/users/{userId}/settings/{settingsId}": { "schema": { "$ref": "#/entities/Settings" }, "description": "Subcollection for user settings. A single document (e.g., 'appSettings') stores all preferences." },
+    "/users/{userId}/chatSessions/{sessionId}": { "schema": { "$ref": "#/entities/ChatSession" }, "description": "Subcollection for user chat conversations." }
   }
 }
+
+    

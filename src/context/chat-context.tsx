@@ -1,3 +1,4 @@
+
 'use client';
 
 import { runCommand } from '@/ai/flows/command-flow';
@@ -159,8 +160,8 @@ export const ChatProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
             const currentLoadingState = isFromCommandBar ? setCommandIsLoading : setIsLoading;
             currentLoadingState(true);
             try {
-                // Return a placeholder response
-                const botMessage = { text: `Command received: "${message.text}". Backend processing is under construction.`, isUser: false };
+                const commandResponse = await runCommand({ command: message.text, userId: user.uid });
+                const botMessage = { text: commandResponse.reply, isUser: false };
                 
                 const finalMessages = [...optimisticMessages, botMessage];
                  setActiveSession(prev => prev ? ({...prev, messages: finalMessages}) : null);
@@ -219,3 +220,5 @@ export const useChat = () => {
     }
     return context;
 };
+
+    
