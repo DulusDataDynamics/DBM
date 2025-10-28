@@ -1,3 +1,4 @@
+
 'use client';
 
 import { Badge } from "@/components/ui/badge";
@@ -123,22 +124,23 @@ export default function InvoicesPage() {
       }
 
       const subject = `Invoice ${invoice.invoiceNumber} from ${settings?.businessName || 'Dulus Inc.'}`;
-      const body = `
-        Dear ${client.name},
+      const bodyLines = [
+        `Dear ${client.name},`,
+        '',
+        'Please find your invoice details below:',
+        '',
+        `Invoice Number: ${invoice.invoiceNumber}`,
+        `Amount Due: ${getCurrencySymbol(invoice.currency)}${invoice.amount.toFixed(2)}`,
+        `Due Date: ${new Date(invoice.dueDate).toLocaleDateString()}`,
+        '',
+        'Thank you for your business!',
+        '',
+        'Best regards,',
+        `${settings?.businessName || 'Dulus Inc.'}`
+      ];
+      const body = encodeURIComponent(bodyLines.join('\n'));
 
-        Please find your invoice details below:
-
-        Invoice Number: ${invoice.invoiceNumber}
-        Amount Due: ${getCurrencySymbol(invoice.currency)}${invoice.amount.toFixed(2)}
-        Due Date: ${new Date(invoice.dueDate).toLocaleDateString()}
-
-        Thank you for your business!
-
-        Best regards,
-        ${settings?.businessName || 'Dulus Inc.'}
-      `.trim().replace(/\n/g, '%0D%0A').replace(/ /g, '%20');
-
-      window.location.href = `mailto:${client.email}?subject=${subject}&body=${body}`;
+      window.location.href = `mailto:${client.email}?subject=${encodeURIComponent(subject)}&body=${body}`;
     }
     
     const handleUnlockPage = () => {
