@@ -13,7 +13,7 @@ export const ClientSchema = z.object({
   id: z.string(),
   userId: z.string(),
   name: z.string(),
-  email: z.string(),
+  email: z.string().email(),
   phone: z.string(),
   address: z.string(),
 });

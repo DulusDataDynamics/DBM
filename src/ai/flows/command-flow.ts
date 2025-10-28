@@ -115,7 +115,7 @@ const commandFlow = ai.defineFlow(
     const tools = [createTaskTool, listClientsTool, createInvoiceTool, createClientTool, listTasksTool];
 
     const llmResponse = await ai.generate({
-      model: 'googleai/gemini-2.5-pro',
+      model: 'googleai/gemini-1.5-pro-latest',
       prompt: `You are Sparky, an AI business assistant. Your goal is to help the user manage their business by executing commands based on their requests, even if their grammar is imperfect. Your primary job is to understand the user's *intent* and use the available tools to accomplish their goal.
 
 The user's request is: "${command}".
@@ -149,7 +149,7 @@ Follow this thought process to fulfill the user's request:
     if (toolOutputs.length > 0) {
         const lastToolOutput = toolOutputs[toolOutputs.length - 1];
         const finalResponse = await ai.generate({
-            model: 'googleai/gemini-2.5-pro',
+            model: 'googleai/gemini-1.5-pro-latest',
             prompt: `You have just finished executing a user's command. The original command was "${command}". You used one or more tools and the output of the last tool you used is: ${JSON.stringify(lastToolOutput.output)}. Now, formulate a clear, friendly, and concise final response to the user confirming what you have done. Be specific. For example, if you created an invoice, mention the invoice number or amount. If you created a client, mention their name.`,
         });
         return { reply: finalResponse.text };
