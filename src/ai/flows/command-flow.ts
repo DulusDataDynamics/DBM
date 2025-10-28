@@ -140,7 +140,7 @@ const commandFlow = ai.defineFlow(
     outputSchema: CommandOutputSchema,
   },
   async (input) => {
-    const model = ai.getModel('googleai/gemini-2.5-flash');
+    const model = ai.getModel('googleai/gemini-pro');
 
     const llmResponse = await model.generate({
       system: `You are Sparky, an expert AI business assistant for the Dulus Business Manager (DBM).
@@ -216,5 +216,3 @@ export async function runCommand(
 ): Promise<CommandOutput> {
   return await commandFlow(input);
 }
-
-    
