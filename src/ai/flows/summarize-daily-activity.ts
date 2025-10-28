@@ -25,33 +25,5 @@ const SummarizeDailyActivityOutputSchema = z.object({
 export type SummarizeDailyActivityOutput = z.infer<typeof SummarizeDailyActivityOutputSchema>;
 
 export async function summarizeDailyActivity(input: SummarizeDailyActivityInput): Promise<SummarizeDailyActivityOutput> {
-  return summarizeDailyActivityFlow(input);
+  return { summary: "Daily activity summary is currently unavailable." };
 }
-
-const prompt = ai.definePrompt({
-  name: 'summarizeDailyActivityPrompt',
-  input: {schema: SummarizeDailyActivityInputSchema},
-  output: {schema: SummarizeDailyActivityOutputSchema},
-  prompt: `You are an AI assistant that provides daily summaries of business activities for business owners.
-
-  Based on the following information, generate a concise and informative daily summary. The summary should include key highlights from completed tasks, sent invoices, new clients, and financial metrics.
-
-  Completed Tasks: {{{completedTasks}}}
-  Sent Invoices: {{{sentInvoices}}}
-  New Clients: {{{newClients}}}
-  Financial Metrics: {{{financialMetrics}}}
-
-  Summary:`,
-});
-
-const summarizeDailyActivityFlow = ai.defineFlow(
-  {
-    name: 'summarizeDailyActivityFlow',
-    inputSchema: SummarizeDailyActivityInputSchema,
-    outputSchema: SummarizeDailyActivityOutputSchema,
-  },
-  async input => {
-    const {output} = await prompt(input);
-    return output!;
-  }
-);

@@ -23,30 +23,5 @@ const BusinessInsightsOutputSchema = z.object({
 export type BusinessInsightsOutput = z.infer<typeof BusinessInsightsOutputSchema>;
 
 export async function generateBusinessInsights(input: BusinessInsightsInput): Promise<BusinessInsightsOutput> {
-  return generateBusinessInsightsFlow(input);
+    return { insights: "Business insights are currently being redeveloped." };
 }
-
-const prompt = ai.definePrompt({
-  name: 'businessInsightsPrompt',
-  input: {schema: BusinessInsightsInputSchema},
-  output: {schema: BusinessInsightsOutputSchema},
-  prompt: `You are an AI-powered business consultant. Analyze the provided sales and financial data to identify trends, suggest cost-saving measures, and highlight growth opportunities. Provide actionable insights and recommendations to improve business performance.
-
-Sales Data: {{{salesData}}}
-Financial Data: {{{financialData}}}
-
-Insights:
-`, // Ensure the insights are well-formatted and easy to understand.
-});
-
-const generateBusinessInsightsFlow = ai.defineFlow(
-  {
-    name: 'generateBusinessInsightsFlow',
-    inputSchema: BusinessInsightsInputSchema,
-    outputSchema: BusinessInsightsOutputSchema,
-  },
-  async input => {
-    const {output} = await prompt(input);
-    return output!;
-  }
-);

@@ -1,7 +1,6 @@
 'use client';
 
 import { runCommand } from '@/ai/flows/command-flow';
-import { textToSpeech } from '@/ai/flows/text-to-speech';
 import React, { createContext, useContext, useState, ReactNode, useCallback, useEffect } from 'react';
 import { useUser, useFirestore } from '@/firebase';
 import { collection, query, orderBy, onSnapshot, addDoc, serverTimestamp, doc, getDoc, updateDoc } from 'firebase/firestore';
@@ -160,15 +159,8 @@ export const ChatProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
             const currentLoadingState = isFromCommandBar ? setCommandIsLoading : setIsLoading;
             currentLoadingState(true);
             try {
-                const response = await runCommand({ command: message.text, userId: user.uid });
-                
-                // const { audio } = await textToSpeech(response.reply);
-                const botMessage = { text: response.reply, isUser: false }; // audio removed
-
-                // if (audio) {
-                //     const audioEl = new Audio(audio);
-                //     audioEl.play();
-                // }
+                // Return a placeholder response
+                const botMessage = { text: `Command received: "${message.text}". Backend processing is under construction.`, isUser: false };
                 
                 const finalMessages = [...optimisticMessages, botMessage];
                  setActiveSession(prev => prev ? ({...prev, messages: finalMessages}) : null);
@@ -183,7 +175,7 @@ export const ChatProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
                 });
 
             } catch (error) {
-                console.error("AI command/TTS error:", error);
+                console.error("AI command error:", error);
                 const errorMessage = { text: "Sorry, I'm having trouble connecting. Please try again.", isUser: false };
                 
                 const errorMessages = [...optimisticMessages, errorMessage];

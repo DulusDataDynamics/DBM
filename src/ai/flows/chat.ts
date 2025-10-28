@@ -20,28 +20,5 @@ const ChatOutputSchema = z.object({
 export type ChatOutput = z.infer<typeof ChatOutputSchema>;
 
 export async function chat(input: ChatInput): Promise<ChatOutput> {
-  return chatFlow(input);
+  return { reply: "This feature is under construction." };
 }
-
-const prompt = ai.definePrompt({
-  name: 'chatPrompt',
-  input: {schema: ChatInputSchema},
-  output: {schema: ChatOutputSchema},
-  prompt: `You are Sparky, a friendly and helpful AI business assistant. Your goal is to assist users with managing their business tasks, invoices, and clients. Keep your responses concise and helpful.
-
-User: {{{input}}}
-Sparky:
-`,
-});
-
-const chatFlow = ai.defineFlow(
-  {
-    name: 'chatFlow',
-    inputSchema: ChatInputSchema,
-    outputSchema: ChatOutputSchema,
-  },
-  async input => {
-    const {output} = await prompt(input);
-    return output!;
-  }
-);

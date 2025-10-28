@@ -1,89 +1,13 @@
 'use client';
 
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { summarizeDailyActivity } from '@/ai/flows/summarize-daily-activity';
-import { generateBusinessInsights } from '@/ai/flows/generate-business-insights';
 import { Lightbulb, Sparkles } from 'lucide-react';
-import { useCollection, useFirestore, useUser, useMemoFirebase } from "@/firebase";
-import { collection } from 'firebase/firestore';
-import type { Task, Invoice, Client } from '@/lib/data';
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 
 export function AiAssistant() {
-  const { user } = useUser();
-  const firestore = useFirestore();
-  const [summary, setSummary] = useState<string | null>(null);
-  const [insights, setInsights] = useState<string | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
-
-  const tasksQuery = useMemoFirebase(() => user ? collection(firestore, `users/${user.uid}/tasks`) : null, [firestore, user]);
-  const { data: tasks, isLoading: loadingTasks } = useCollection<Task>(tasksQuery);
-
-  const invoicesQuery = useMemoFirebase(() => user ? collection(firestore, `users/${user.uid}/invoices`) : null, [firestore, user]);
-  const { data: invoices, isLoading: loadingInvoices } = useCollection<Invoice>(invoicesQuery);
-
-  const clientsQuery = useMemoFirebase(() => user ? collection(firestore, `users/${user.uid}/clients`) : null, [firestore, user]);
-  const { data: clients, isLoading: loadingClients } = useCollection<Client>(clientsQuery);
-  
-  useEffect(() => {
-    const isDataLoading = loadingTasks || loadingInvoices || loadingClients;
-    
-    if (!isDataLoading && tasks && invoices && clients) {
-        setIsLoading(true);
-        const fetchAiData = async () => {
-            try {
-                // Fetch Summary
-                const completedTasks = tasks.filter(t => t.completed).map(t => t.description).join(', ');
-                const sentInvoices = invoices.map(i => `Invoice ${i.invoiceNumber} for $${i.amount}`).join(', ');
-                const newClients = clients.map(c => c.name).join(', ');
-
-                const summaryResult = await summarizeDailyActivity({
-                    completedTasks: completedTasks || "None",
-                    sentInvoices: sentInvoices || "None",
-                    newClients: newClients || "None",
-                    financialMetrics: "Not available"
-                });
-                setSummary(summaryResult.summary);
-
-                // Fetch Insights
-                const salesData = {
-                    monthlySales: invoices.reduce((acc, inv) => {
-                        if (inv.status === 'paid') {
-                            const month = new Date(inv.issueDate).toLocaleString('default', { month: 'short' });
-                            const existing = acc.find(item => item.month === month);
-                            if (existing) {
-                                existing.sales += inv.amount;
-                            } else {
-                                acc.push({ month, sales: inv.amount });
-                            }
-                        }
-                        return acc;
-                    }, [] as { month: string, sales: number }[])
-                };
-                
-                const financialData = {
-                    revenue: invoices.filter(i => i.status === 'paid').reduce((sum, i) => sum + i.amount, 0),
-                    pending: invoices.filter(i => i.status !== 'paid').reduce((sum, i) => sum + i.amount, 0)
-                };
-
-                const insightsResult = await generateBusinessInsights({
-                    salesData: JSON.stringify(salesData),
-                    financialData: JSON.stringify(financialData),
-                });
-                setInsights(insightsResult.insights);
-            } catch (error) {
-                console.error("Failed to fetch AI data:", error);
-                setSummary("Could not load daily summary at this time.");
-                setInsights("Could not load smart suggestions at this time.");
-            } finally {
-                setIsLoading(false);
-            }
-        };
-
-        fetchAiData();
-    }
-  }, [loadingTasks, loadingInvoices, loadingClients, tasks, invoices, clients]);
-
+  const [summary, setSummary] = useState<string | null>("Daily summary is currently unavailable while we upgrade our systems.");
+  const [insights, setInsights] = useState<string | null>("Smart suggestions are currently unavailable.");
+  const [isLoading, setIsLoading] = useState(false);
 
   return (
     <Card>
