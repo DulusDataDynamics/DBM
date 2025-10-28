@@ -114,19 +114,34 @@ export default function InvoicesPage() {
     
     const handleSendEmail = (invoice: Invoice) => {
       const client = getClient(invoice.clientId);
-      if (!client) {
+      if (!client || !client.email) {
         toast({
           variant: "destructive",
-          title: "Client not found",
-          description: "Could not find the client associated with this invoice.",
+          title: "Client Email Not Found",
+          description: "Could not find an email for the client associated with this invoice.",
         });
         return;
       }
 
-      const subject = `Invoice ${invoice.invoiceNumber} from ${settings?.businessName || 'your business'}`;
-      const body = `Dear ${client.name},\n\nPlease find attached your invoice ${invoice.invoiceNumber} for ${getCurrencySymbol(invoice.currency)}${invoice.amount.toFixed(2)} due on ${new Date(invoice.dueDate).toLocaleDateString()}.\n\nThank you for your business.\n\nBest regards,\n${settings?.businessName || 'Your Business'}`;
+      navigator.clipboard.writeText(client.email);
+      toast({
+        title: "Email Copied!",
+        description: `${client.name}'s email address has been copied to your clipboard.`
+      })
+    }
+    
+    const handleSendWhatsApp = (invoice: Invoice) => {
+        const client = getClient(invoice.clientId);
+        if (!client || !client.phone) {
+            toast({ variant: "destructive", title: "Client Phone Not Found" });
+            return;
+        }
 
-      window.location.href = `mailto:${client.email}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
+        const businessName = settings?.businessName || "our business";
+        const message = `Hello ${client.name},\n\nThis is a friendly reminder regarding invoice ${invoice.invoiceNumber} for ${getCurrencySymbol(invoice.currency)}${invoice.amount.toFixed(2)} from ${businessName}. It is due on ${new Date(invoice.dueDate).toLocaleDateString()}.\n\nThank you.`;
+        const whatsappUrl = `https://wa.me/${client.phone.replace(/\D/g, '')}?text=${encodeURIComponent(message)}`;
+        
+        window.open(whatsappUrl, '_blank');
     }
     
     const handleUnlockPage = () => {
@@ -294,6 +309,7 @@ export default function InvoicesPage() {
                         <DropdownMenuLabel>Actions</DropdownMenuLabel>
                         <DropdownMenuItem onClick={() => handleEditInvoice(invoice)}>Edit</DropdownMenuItem>
                         <DropdownMenuItem onClick={() => handleSendEmail(invoice)}>Send via Email</DropdownMenuItem>
+                        <DropdownMenuItem onClick={() => handleSendWhatsApp(invoice)}>Send via WhatsApp</DropdownMenuItem>
                          <AlertDialog>
                           <AlertDialogTrigger asChild>
                             <DropdownMenuItem onSelect={(e) => e.preventDefault()}>Delete</DropdownMenuItem>
@@ -330,5 +346,3 @@ export default function InvoicesPage() {
     </>
   );
 }
-
-    

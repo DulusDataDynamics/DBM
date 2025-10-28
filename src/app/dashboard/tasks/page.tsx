@@ -44,11 +44,13 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog"
+import { useToast } from "@/hooks/use-toast";
 
 
 export default function TasksPage() {
     const { user } = useUser();
     const firestore = useFirestore();
+    const { toast } = useToast();
     const [isDialogOpen, setIsDialogOpen] = useState(false);
     const [editingTask, setEditingTask] = useState<Task | undefined>(undefined);
 
@@ -79,6 +81,12 @@ export default function TasksPage() {
       if(!user) return;
       const taskRef = doc(firestore, `users/${user.uid}/tasks/${task.id}`);
       updateDocumentNonBlocking(taskRef, { completed: !task.completed });
+    }
+
+    const handleSendReminder = (task: Task) => {
+      const subject = `Reminder: Task "${task.description}"`;
+      const body = `This is a reminder for the following task:\n\nTask: ${task.description}\nDue Date: ${new Date(task.dueDate).toLocaleDateString()}\n\nPlease ensure this is completed on time.\n\nThank you.`;
+      window.location.href = `mailto:?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
     }
 
   return (
@@ -157,6 +165,7 @@ export default function TasksPage() {
                         <DropdownMenuItem onClick={() => handleToggleComplete(task)}>
                             {task.completed ? 'Mark as Incomplete' : 'Mark as Complete'}
                         </DropdownMenuItem>
+                         <DropdownMenuItem onClick={() => handleSendReminder(task)}>Send Reminder</DropdownMenuItem>
                         <DropdownMenuSeparator />
                          <AlertDialog>
                           <AlertDialogTrigger asChild>
