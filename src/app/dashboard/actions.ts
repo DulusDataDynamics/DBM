@@ -25,6 +25,7 @@ export async function createTask(
     description,
     dueDate: dueDate || new Date().toISOString(),
     completed: false,
+    priority: 'Low',
   };
   
   try {
