@@ -35,23 +35,28 @@ const createTaskTool = ai.defineTool(
     name: 'createTask',
     description: 'Creates a new task. Use this to add a to-do item.',
     inputSchema: z.object({
-      userId: z.string(),
       description: z.string().describe('A detailed description of the task.'),
       dueDate: z.string().optional().describe('The due date for the task in ISO format.'),
     }),
     outputSchema: TaskSchema,
   },
-  async ({ userId, description, dueDate }) => createTask(userId, description, dueDate)
+  async ({ description, dueDate }, context) => {
+    if (!context?.auth?.userId) throw new Error("User ID is required.");
+    return createTask(context.auth.userId, description, dueDate)
+  }
 );
 
 const listTasksTool = ai.defineTool(
     {
         name: 'listTasks',
         description: 'Lists all the tasks for a user.',
-        inputSchema: z.object({ userId: z.string() }),
+        inputSchema: z.object({}),
         outputSchema: z.array(TaskSchema),
     },
-    async ({ userId }) => listTasks(userId)
+    async (input, context) => {
+      if (!context?.auth?.userId) throw new Error("User ID is required.");
+      return listTasks(context.auth.userId)
+    }
 )
 
 const createClientTool = ai.defineTool(
@@ -59,7 +64,6 @@ const createClientTool = ai.defineTool(
     name: 'createClient',
     description: 'Creates a new client record.',
     inputSchema: z.object({
-      userId: z.string(),
       name: z.string().describe("The client's full name."),
       email: z.string().email().describe("The client's email address."),
       phone: z.string().describe("The client's phone number."),
@@ -67,17 +71,23 @@ const createClientTool = ai.defineTool(
     }),
     outputSchema: ClientSchema,
   },
-  async ({ userId, name, email, phone, address }) => createClient(userId, name, email, phone, address)
+  async ({ name, email, phone, address }, context) => {
+    if (!context?.auth?.userId) throw new Error("User ID is required.");
+    return createClient(context.auth.userId, name, email, phone, address)
+  }
 );
 
 const listClientsTool = ai.defineTool(
   {
     name: 'listClients',
     description: 'Lists all clients to find a client ID by name.',
-    inputSchema: z.object({ userId: z.string() }),
+    inputSchema: z.object({}),
     outputSchema: z.array(ClientSchema),
   },
-  async ({ userId }) => listClients(userId)
+  async (input, context) => {
+    if (!context?.auth?.userId) throw new Error("User ID is required.");
+    return listClients(context.auth.userId);
+  }
 );
 
 const createInvoiceTool = ai.defineTool(
@@ -85,14 +95,16 @@ const createInvoiceTool = ai.defineTool(
     name: 'createInvoice',
     description: 'Generates a new invoice for a client.',
     inputSchema: z.object({
-      userId: z.string(),
       clientId: z.string().describe("The client's unique ID. If you only have a name, use the 'listClients' tool first to find the ID."),
       amount: z.number().describe('The total amount for the invoice.'),
       dueDate: z.string().optional().describe('The payment due date in ISO format.'),
     }),
     outputSchema: InvoiceSchema,
   },
-  async ({ userId, clientId, amount, dueDate }) => createInvoice(userId, clientId, amount, dueDate)
+  async ({ clientId, amount, dueDate }, context) => {
+    if (!context?.auth?.userId) throw new Error("User ID is required.");
+    return createInvoice(context.auth.userId, clientId, amount, dueDate)
+  }
 );
 
 const createQuoteTool = ai.defineTool(
@@ -100,23 +112,28 @@ const createQuoteTool = ai.defineTool(
         name: 'createQuote',
         description: 'Generates a new price quote for a client.',
         inputSchema: z.object({
-            userId: z.string(),
             clientId: z.string().describe("The client's unique ID. Use 'listClients' to find it if you only have a name."),
             amount: z.number().describe('The total amount for the quote.'),
         }),
         outputSchema: QuoteSchema,
     },
-    async ({ userId, clientId, amount }) => createQuote(userId, clientId, amount)
+    async ({ clientId, amount }, context) => {
+        if (!context?.auth?.userId) throw new Error("User ID is required.");
+        return createQuote(context.auth.userId, clientId, amount)
+    }
 );
 
 const listStockTool = ai.defineTool(
     {
         name: 'listStock',
         description: 'Lists all items in the stock or inventory.',
-        inputSchema: z.object({ userId: z.string() }),
+        inputSchema: z.object({}),
         outputSchema: z.array(StockItemSchema),
     },
-    async ({ userId }) => listStock(userId)
+    async (input, context) => {
+        if (!context?.auth?.userId) throw new Error("User ID is required.");
+        return listStock(context.auth.userId)
+    }
 );
 
 const updateStockTool = ai.defineTool(
@@ -124,13 +141,15 @@ const updateStockTool = ai.defineTool(
         name: 'updateStock',
         description: 'Updates the quantity of a stock item.',
         inputSchema: z.object({
-            userId: z.string(),
             stockItemId: z.string().describe("The ID of the stock item to update."),
             quantity: z.number().describe("The new quantity for the stock item."),
         }),
         outputSchema: StockItemSchema,
     },
-    async ({ userId, stockItemId, quantity }) => updateStock(userId, stockItemId, quantity)
+    async ({ stockItemId, quantity }, context) => {
+        if (!context?.auth?.userId) throw new Error("User ID is required.");
+        return updateStock(context.auth.userId, stockItemId, quantity)
+    }
 );
 
 const commandFlow = ai.defineFlow(
@@ -173,41 +192,9 @@ const commandFlow = ai.defineFlow(
         updateStockTool
       ],
       toolChoice: 'auto',
+      context: { auth: { userId: input.userId } },
     });
 
-    const toolCalls = llmResponse.toolCalls();
-
-    if (toolCalls.length > 0) {
-      const toolResponses = [];
-      for (const call of toolCalls) {
-        const toolResult = await call.execute();
-        toolResponses.push({
-          tool: call,
-          output: toolResult,
-        });
-      }
-
-      // Send tool results back to the model for a final summary
-      const finalResponse = await ai.generate({
-        model: 'googleai/gemini-pro',
-        prompt: {
-          history: [
-            { role: 'user', content: { text: input.command } },
-            { role: 'model', content: { toolCalls } },
-            {
-              role: 'tool',
-              content: toolResponses.map(response => ({
-                toolResponse: { name: response.tool.name, output: response.output },
-              })),
-            },
-          ],
-        },
-      });
-
-      return { reply: finalResponse.text() };
-    }
-
-    // If no tool was called, return the direct text response
     return { reply: llmResponse.text() };
   }
 );
@@ -218,5 +205,3 @@ export async function runCommand(
 ): Promise<CommandOutput> {
   return await commandFlow(input);
 }
-
-    
