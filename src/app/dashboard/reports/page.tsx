@@ -47,12 +47,61 @@ export default function ReportsPage() {
             revenue: revenue,
         }
     }).filter(c => c.revenue > 0) || [];
+    
+    const getClient = (clientId: string) => {
+        return clients?.find(c => c.id === clientId);
+    }
 
     const handleExport = () => {
-         toast({
-            title: "Coming Soon!",
-            description: `Export functionality is under development.`,
-        });
+        if ((!invoices || invoices.length === 0) && (!clients || clients.length === 0)) {
+            toast({
+              variant: 'destructive',
+              title: 'No Data to Export',
+              description: 'There is no invoice or client data to export.',
+            });
+            return;
+        }
+
+        const headers = [
+            'Type', 'ID', 'Client Name', 'Client Email', 'Client Phone', 'Client Address',
+            'Invoice Number', 'Invoice Status', 'Invoice Amount', 'Invoice Currency',
+            'Invoice Issue Date', 'Invoice Due Date'
+        ];
+        
+        const invoiceRows = invoices?.map(invoice => {
+            const client = getClient(invoice.clientId);
+            return [
+                'Invoice', invoice.id, client?.name || 'N/A', client?.email || 'N/A', client?.phone || 'N/A', `"${client?.address.replace(/"/g, '""') || 'N/A'}"`,
+                invoice.invoiceNumber, new Date(invoice.dueDate) < new Date() && invoice.status === 'unpaid' ? 'overdue' : invoice.status,
+                invoice.amount.toFixed(2), invoice.currency,
+                new Date(invoice.issueDate).toLocaleDateString(), new Date(invoice.dueDate).toLocaleDateString()
+            ].join(',');
+        }) || [];
+        
+        const clientRows = clients?.map(client => {
+            // Include clients who might not have invoices yet
+            if (invoices?.some(inv => inv.clientId === client.id)) return null;
+            return [
+                'Client', client.id, client.name, client.email, client.phone, `"${client.address.replace(/"/g, '""')}"`,
+                'N/A', 'N/A', 'N/A', 'N/A', 'N/A', 'N/A'
+            ].join(',');
+        }).filter(Boolean) as string[] || [];
+
+
+        const allRows = [...invoiceRows, ...clientRows];
+
+        let csvContent = "data:text/csv;charset=utf-8," 
+            + headers.join(",") + "\n" 
+            + allRows.join("\n");
+
+        const encodedUri = encodeURI(csvContent);
+        const link = document.createElement("a");
+        link.setAttribute("href", encodedUri);
+        link.setAttribute("download", "dbm_export.csv");
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        toast({ title: "Export Successful", description: "Your business data has been downloaded as a CSV file." });
     }
 
 
