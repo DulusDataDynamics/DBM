@@ -28,7 +28,7 @@ import {
 export default function ChatbotPage() {
     const { user } = useUser();
     const { toast } = useToast();
-    const { sessions, activeSession, isLoading, addMessage, createNewSession, loadSession, deleteSession, commandIsLoading } = useChat();
+    const { sessions, activeSession, isLoading, addMessage, createNewSession, deleteSession, commandIsLoading } = useChat();
     const [input, setInput] = useState('');
     const scrollViewportRef = useRef<HTMLDivElement>(null);
 
@@ -92,7 +92,7 @@ export default function ChatbotPage() {
                 </Button>
                 <Separator />
                 <h3 className="text-sm font-semibold text-muted-foreground px-2">History</h3>
-                <ScrollArea className="h-64 -mx-2">
+                <ScrollArea className="h-32 -mx-2">
                     <div className="space-y-1 p-2">
                         {sessions.map(session => (
                             <div key={session.id} className="group relative">
@@ -235,3 +235,6 @@ export default function ChatbotPage() {
             </div>
         </div>
     );
+}
+
+    
