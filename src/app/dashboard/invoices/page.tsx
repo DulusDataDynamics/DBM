@@ -137,6 +137,15 @@ export default function InvoicesPage() {
       }
     }
     
+    const escapeCsvField = (field: any) => {
+        if (field === null || field === undefined) {
+            return '""';
+        }
+        const stringField = String(field);
+        const escapedField = stringField.replace(/"/g, '""');
+        return `"${escapedField}"`;
+    };
+
     const handleExportToCsv = () => {
       if (!invoices || invoices.length === 0) {
         toast({
@@ -147,7 +156,9 @@ export default function InvoicesPage() {
         return;
       }
 
-      const headers = ['Invoice ID', 'Client Name', 'Status', 'Amount', 'Currency', 'Issue Date', 'Due Date'];
+      const headers = ['Invoice ID', 'Client Name', 'Status', 'Amount', 'Currency', 'Issue Date', 'Due Date']
+        .map(escapeCsvField).join(',');
+        
       const rows = invoices.map(invoice => [
         invoice.invoiceNumber,
         getClient(invoice.clientId)?.name || 'Unknown',
@@ -156,11 +167,11 @@ export default function InvoicesPage() {
         invoice.currency,
         new Date(invoice.issueDate).toLocaleDateString(),
         new Date(invoice.dueDate).toLocaleDateString(),
-      ]);
+      ].map(escapeCsvField).join(','));
 
       let csvContent = "data:text/csv;charset=utf-8," 
-        + headers.join(",") + "\n" 
-        + rows.map(e => e.join(",")).join("\n");
+        + headers + "\n" 
+        + rows.join("\n");
 
       const encodedUri = encodeURI(csvContent);
       const link = document.createElement("a");

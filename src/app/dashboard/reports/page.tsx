@@ -51,6 +51,18 @@ export default function ReportsPage() {
     const getClient = (clientId: string) => {
         return clients?.find(c => c.id === clientId);
     }
+    
+    const escapeCsvField = (field: any) => {
+        if (field === null || field === undefined) {
+            return '""';
+        }
+        const stringField = String(field);
+        // Escape double quotes by doubling them
+        const escapedField = stringField.replace(/"/g, '""');
+        // Wrap the entire field in double quotes
+        return `"${escapedField}"`;
+    };
+
 
     const handleExport = () => {
         if ((!invoices || invoices.length === 0) && (!clients || clients.length === 0)) {
@@ -66,32 +78,31 @@ export default function ReportsPage() {
             'Type', 'ID', 'Client Name', 'Client Email', 'Client Phone', 'Client Address',
             'Invoice Number', 'Invoice Status', 'Invoice Amount', 'Invoice Currency',
             'Invoice Issue Date', 'Invoice Due Date'
-        ];
+        ].map(escapeCsvField).join(',');
         
         const invoiceRows = invoices?.map(invoice => {
             const client = getClient(invoice.clientId);
             return [
-                'Invoice', invoice.id, client?.name || 'N/A', client?.email || 'N/A', client?.phone || 'N/A', `"${client?.address.replace(/"/g, '""') || 'N/A'}"`,
+                'Invoice', invoice.id, client?.name || 'N/A', client?.email || 'N/A', client?.phone || 'N/A', client?.address || 'N/A',
                 invoice.invoiceNumber, new Date(invoice.dueDate) < new Date() && invoice.status === 'unpaid' ? 'overdue' : invoice.status,
                 invoice.amount.toFixed(2), invoice.currency,
                 new Date(invoice.issueDate).toLocaleDateString(), new Date(invoice.dueDate).toLocaleDateString()
-            ].join(',');
+            ].map(escapeCsvField).join(',');
         }) || [];
         
         const clientRows = clients?.map(client => {
-            // Include clients who might not have invoices yet
             if (invoices?.some(inv => inv.clientId === client.id)) return null;
             return [
-                'Client', client.id, client.name, client.email, client.phone, `"${client.address.replace(/"/g, '""')}"`,
+                'Client', client.id, client.name, client.email, client.phone, client.address,
                 'N/A', 'N/A', 'N/A', 'N/A', 'N/A', 'N/A'
-            ].join(',');
+            ].map(escapeCsvField).join(',');
         }).filter(Boolean) as string[] || [];
 
 
         const allRows = [...invoiceRows, ...clientRows];
 
         let csvContent = "data:text/csv;charset=utf-8," 
-            + headers.join(",") + "\n" 
+            + headers + "\n" 
             + allRows.join("\n");
 
         const encodedUri = encodeURI(csvContent);
