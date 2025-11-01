@@ -3,7 +3,7 @@ import { useState, useRef, useEffect } from 'react';
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Bot, Send, User as UserIcon, Settings, MessageSquarePlus, History, ImageIcon, Star, VolumeX } from "lucide-react";
+import { Bot, Send, User as UserIcon, Settings, MessageSquarePlus, ImageIcon, Star, VolumeX, Trash2 } from "lucide-react";
 import { useUser } from '@/firebase';
 import { cn } from '@/lib/utils';
 import { ScrollArea } from '@/components/ui/scroll-area';
@@ -11,12 +11,23 @@ import { Separator } from '@/components/ui/separator';
 import { useToast } from '@/hooks/use-toast';
 import { useChat, type Message } from '@/context/chat-context';
 import { formatDistanceToNow } from 'date-fns';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
 
 
 export default function ChatbotPage() {
     const { user } = useUser();
     const { toast } = useToast();
-    const { sessions, activeSession, isLoading, addMessage, createNewSession, loadSession, commandIsLoading } = useChat();
+    const { sessions, activeSession, isLoading, addMessage, createNewSession, loadSession, deleteSession, commandIsLoading } = useChat();
     const [input, setInput] = useState('');
     const scrollViewportRef = useRef<HTMLDivElement>(null);
 
@@ -32,6 +43,14 @@ export default function ChatbotPage() {
         toast({
             title: "New Chat Started",
             description: "You can now start a fresh conversation.",
+        });
+    }
+
+    const handleDeleteSession = (sessionId: string) => {
+        deleteSession(sessionId);
+        toast({
+            title: "Chat Deleted",
+            description: "The conversation has been permanently deleted.",
         });
     }
 
@@ -72,18 +91,38 @@ export default function ChatbotPage() {
                 </Button>
                 <Separator />
                 <h3 className="text-sm font-semibold text-muted-foreground px-2">History</h3>
-                <ScrollArea className="flex-1">
-                    <div className="space-y-2 pr-2">
+                <ScrollArea className="flex-1 -mx-2">
+                    <div className="space-y-1 p-2">
                         {sessions.map(session => (
-                             <Button
-                                key={session.id}
-                                variant={activeSession?.id === session.id ? 'secondary' : 'ghost'}
-                                className="w-full justify-between gap-2 truncate"
-                                onClick={() => handleHistoryClick(session.id)}
-                            >
-                                <span className='truncate'>{session.title}</span>
-                                <span className='text-xs text-muted-foreground shrink-0'>{formatDistanceToNow(session.createdAt, { addSuffix: true })}</span>
-                            </Button>
+                            <div key={session.id} className="group relative">
+                                <Button
+                                    variant={activeSession?.id === session.id ? 'secondary' : 'ghost'}
+                                    className="w-full justify-between gap-2 truncate pl-2 pr-8"
+                                    onClick={() => handleHistoryClick(session.id)}
+                                >
+                                    <span className='truncate'>{session.title}</span>
+                                    <span className='text-xs text-muted-foreground shrink-0'>{formatDistanceToNow(session.createdAt, { addSuffix: true })}</span>
+                                </Button>
+                                <AlertDialog>
+                                    <AlertDialogTrigger asChild>
+                                         <Button variant="ghost" size="icon" className="absolute right-1 top-1/2 -translate-y-1/2 h-6 w-6 opacity-0 group-hover:opacity-100">
+                                            <Trash2 className="h-4 w-4 text-muted-foreground" />
+                                        </Button>
+                                    </AlertDialogTrigger>
+                                    <AlertDialogContent>
+                                        <AlertDialogHeader>
+                                            <AlertDialogTitle>Are you sure?</AlertDialogTitle>
+                                            <AlertDialogDescription>
+                                                This action cannot be undone. This will permanently delete this chat session.
+                                            </AlertDialogDescription>
+                                        </AlertDialogHeader>
+                                        <AlertDialogFooter>
+                                            <AlertDialogCancel>Cancel</AlertDialogCancel>
+                                            <AlertDialogAction onClick={() => handleDeleteSession(session.id)}>Delete</AlertDialogAction>
+                                        </AlertDialogFooter>
+                                    </AlertDialogContent>
+                                </AlertDialog>
+                            </div>
                         ))}
                     </div>
                 </ScrollArea>
@@ -102,7 +141,7 @@ export default function ChatbotPage() {
             </div>
 
             {/* Main Chat Area */}
-            <div className="flex flex-col bg-card border rounded-lg shadow-sm overflow-hidden">
+            <div className="flex flex-col bg-card border rounded-lg shadow-sm">
                 <div className='p-4 border-b'>
                     <h2 className="text-xl font-bold font-headline tracking-tight">Chat with Sparky</h2>
                     <p className="text-sm text-muted-foreground">Your friendly AI business assistant.</p>

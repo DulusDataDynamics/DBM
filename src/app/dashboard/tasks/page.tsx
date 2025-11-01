@@ -45,6 +45,7 @@ import {
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog"
 import { useToast } from "@/hooks/use-toast";
+import { ScrollArea } from "@/components/ui/scroll-area";
 
 
 export default function TasksPage() {
@@ -106,91 +107,93 @@ export default function TasksPage() {
         task={editingTask}
       />
 
-      <Card>
+      <Card className="flex flex-col h-[calc(100vh-14rem)]">
         <CardHeader>
           <CardTitle>Task List</CardTitle>
           <CardDescription>
             An overview of all your tasks.
           </CardDescription>
         </CardHeader>
-        <CardContent>
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Description</TableHead>
-                <TableHead>Status</TableHead>
-                <TableHead>Priority</TableHead>
-                <TableHead>Due Date</TableHead>
-                <TableHead>
-                  <span className="sr-only">Actions</span>
-                </TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {isLoading && <TableRow><TableCell colSpan={5} className="text-center">Loading...</TableCell></TableRow>}
-               {!isLoading && tasks && tasks.length === 0 && (
+        <CardContent className="flex-grow overflow-hidden">
+          <ScrollArea className="h-full">
+            <Table className="relative">
+              <TableHeader className="sticky-header">
                 <TableRow>
-                  <TableCell colSpan={5} className="text-center">No tasks found. Add one to get started.</TableCell>
+                  <TableHead>Description</TableHead>
+                  <TableHead>Status</TableHead>
+                  <TableHead>Priority</TableHead>
+                  <TableHead>Due Date</TableHead>
+                  <TableHead>
+                    <span className="sr-only">Actions</span>
+                  </TableHead>
                 </TableRow>
-              )}
-              {!isLoading && tasks && tasks.map((task) => (
-                <TableRow key={task.id}>
-                  <TableCell className="font-medium">{task.description}</TableCell>
-                  <TableCell>
-                    <Badge variant={task.completed ? 'default' : 'secondary'}>
-                      {task.completed ? 'Done' : 'In Progress'}
-                    </Badge>
-                  </TableCell>
-                  <TableCell>
-                    <Badge variant={
-                      task.priority === 'High' ? 'destructive' :
-                      task.priority === 'Medium' ? 'secondary' :
-                      'outline'
-                    }>
-                      {task.priority || 'Low'}
-                    </Badge>
-                  </TableCell>
-                  <TableCell>{new Date(task.dueDate).toLocaleDateString()}</TableCell>
-                  <TableCell>
-                    <DropdownMenu>
-                      <DropdownMenuTrigger asChild>
-                        <Button aria-haspopup="true" size="icon" variant="ghost">
-                          <MoreHorizontal className="h-4 w-4" />
-                          <span className="sr-only">Toggle menu</span>
-                        </Button>
-                      </DropdownMenuTrigger>
-                      <DropdownMenuContent align="end">
-                        <DropdownMenuLabel>Actions</DropdownMenuLabel>
-                        <DropdownMenuItem onClick={() => handleEditTask(task)}>Edit</DropdownMenuItem>
-                        <DropdownMenuItem onClick={() => handleToggleComplete(task)}>
-                            {task.completed ? 'Mark as Incomplete' : 'Mark as Complete'}
-                        </DropdownMenuItem>
-                         <DropdownMenuItem onClick={() => handleSendReminder(task)}>Send Reminder</DropdownMenuItem>
-                        <DropdownMenuSeparator />
-                         <AlertDialog>
-                          <AlertDialogTrigger asChild>
-                            <DropdownMenuItem onSelect={(e) => e.preventDefault()}>Delete</DropdownMenuItem>
-                          </AlertDialogTrigger>
-                          <AlertDialogContent>
-                            <AlertDialogHeader>
-                              <AlertDialogTitle>Are you sure?</AlertDialogTitle>
-                              <AlertDialogDescription>
-                                This action cannot be undone. This will permanently delete this task.
-                              </AlertDialogDescription>
-                            </AlertDialogHeader>
-                            <AlertDialogFooter>
-                              <AlertDialogCancel>Cancel</AlertDialogCancel>
-                              <AlertDialogAction onClick={() => handleDeleteTask(task.id)}>Delete</AlertDialogAction>
-                            </AlertDialogFooter>
-                          </AlertDialogContent>
-                        </AlertDialog>
-                      </DropdownMenuContent>
-                    </DropdownMenu>
-                  </TableCell>
-                </TableRow>
-              ))}
-            </TableBody>
-          </Table>
+              </TableHeader>
+              <TableBody>
+                {isLoading && <TableRow><TableCell colSpan={5} className="text-center">Loading...</TableCell></TableRow>}
+                 {!isLoading && tasks && tasks.length === 0 && (
+                  <TableRow>
+                    <TableCell colSpan={5} className="text-center h-24">No tasks found. Add one to get started.</TableCell>
+                  </TableRow>
+                )}
+                {!isLoading && tasks && tasks.map((task) => (
+                  <TableRow key={task.id}>
+                    <TableCell className="font-medium">{task.description}</TableCell>
+                    <TableCell>
+                      <Badge variant={task.completed ? 'default' : 'secondary'}>
+                        {task.completed ? 'Done' : 'In Progress'}
+                      </Badge>
+                    </TableCell>
+                    <TableCell>
+                      <Badge variant={
+                        task.priority === 'High' ? 'destructive' :
+                        task.priority === 'Medium' ? 'secondary' :
+                        'outline'
+                      }>
+                        {task.priority || 'Low'}
+                      </Badge>
+                    </TableCell>
+                    <TableCell>{new Date(task.dueDate).toLocaleDateString()}</TableCell>
+                    <TableCell>
+                      <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                          <Button aria-haspopup="true" size="icon" variant="ghost">
+                            <MoreHorizontal className="h-4 w-4" />
+                            <span className="sr-only">Toggle menu</span>
+                          </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="end">
+                          <DropdownMenuLabel>Actions</DropdownMenuLabel>
+                          <DropdownMenuItem onClick={() => handleEditTask(task)}>Edit</DropdownMenuItem>
+                          <DropdownMenuItem onClick={() => handleToggleComplete(task)}>
+                              {task.completed ? 'Mark as Incomplete' : 'Mark as Complete'}
+                          </DropdownMenuItem>
+                           <DropdownMenuItem onClick={() => handleSendReminder(task)}>Send Reminder</DropdownMenuItem>
+                          <DropdownMenuSeparator />
+                           <AlertDialog>
+                            <AlertDialogTrigger asChild>
+                              <DropdownMenuItem onSelect={(e) => e.preventDefault()}>Delete</DropdownMenuItem>
+                            </AlertDialogTrigger>
+                            <AlertDialogContent>
+                              <AlertDialogHeader>
+                                <AlertDialogTitle>Are you sure?</AlertDialogTitle>
+                                <AlertDialogDescription>
+                                  This action cannot be undone. This will permanently delete this task.
+                                </AlertDialogDescription>
+                              </AlertDialogHeader>
+                              <AlertDialogFooter>
+                                <AlertDialogCancel>Cancel</AlertDialogCancel>
+                                <AlertDialogAction onClick={() => handleDeleteTask(task.id)}>Delete</AlertDialogAction>
+                              </AlertDialogFooter>
+                            </AlertDialogContent>
+                          </AlertDialog>
+                        </DropdownMenuContent>
+                      </DropdownMenu>
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          </ScrollArea>
         </CardContent>
         <CardFooter>
             {tasks && tasks.length > 0 && (

@@ -4,7 +4,7 @@
 import { runCommand } from '@/ai/flows/command-flow';
 import React, { createContext, useContext, useState, ReactNode, useCallback, useEffect } from 'react';
 import { useUser, useFirestore } from '@/firebase';
-import { collection, query, orderBy, onSnapshot, addDoc, serverTimestamp, doc, getDoc, updateDoc } from 'firebase/firestore';
+import { collection, query, orderBy, onSnapshot, addDoc, serverTimestamp, doc, getDoc, updateDoc, deleteDoc } from 'firebase/firestore';
 import { FirestorePermissionError } from '@/firebase/errors';
 import { errorEmitter } from '@/firebase/error-emitter';
 
@@ -28,6 +28,7 @@ interface ChatContextType {
     commandIsLoading: boolean;
     loadSession: (sessionId: string) => void;
     createNewSession: () => Promise<void>;
+    deleteSession: (sessionId: string) => Promise<void>;
     addMessage: (message: Message, isFromCommandBar?: boolean) => Promise<void>;
     setCommandIsLoading: (isLoading: boolean) => void;
 }
@@ -93,6 +94,30 @@ export const ChatProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
             errorEmitter.emit('permission-error', contextualError);
         }
     }, [user, firestore, loadSession]);
+
+    const deleteSession = useCallback(async (sessionId: string) => {
+        if(!user || !firestore) return;
+
+        const sessionRef = doc(firestore, `users/${user.uid}/chatSessions`, sessionId);
+        try {
+            await deleteDoc(sessionRef);
+            // If the deleted session was the active one, load another one or create a new one.
+            if(activeSession?.id === sessionId) {
+                 const remainingSessions = sessions.filter(s => s.id !== sessionId);
+                if (remainingSessions.length > 0) {
+                    loadSession(remainingSessions[0].id);
+                } else {
+                    createNewSession();
+                }
+            }
+        } catch (error) {
+            const contextualError = new FirestorePermissionError({
+                operation: 'delete',
+                path: sessionRef.path,
+            });
+            errorEmitter.emit('permission-error', contextualError);
+        }
+    }, [user, firestore, activeSession, sessions, loadSession, createNewSession]);
     
     useEffect(() => {
         if (!user || !firestore) return;
@@ -205,6 +230,7 @@ export const ChatProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
             commandIsLoading, 
             loadSession, 
             createNewSession, 
+            deleteSession,
             addMessage, 
             setCommandIsLoading 
         }}>
@@ -220,5 +246,3 @@ export const useChat = () => {
     }
     return context;
 };
-
-    

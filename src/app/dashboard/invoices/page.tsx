@@ -64,6 +64,7 @@ import {
 } from "@/components/ui/input-otp";
 import { useToast } from "@/hooks/use-toast";
 import { Input } from "@/components/ui/input";
+import { ScrollArea } from "@/components/ui/scroll-area";
 
 
 export default function InvoicesPage() {
@@ -267,7 +268,7 @@ export default function InvoicesPage() {
       )}
 
       
-      <Card>
+      <Card className="flex flex-col h-[calc(100vh-14rem)]">
         <CardHeader>
             <div className="flex items-center justify-between gap-4">
               <div>
@@ -287,83 +288,85 @@ export default function InvoicesPage() {
               </div>
             </div>
         </CardHeader>
-        <CardContent>
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Invoice ID</TableHead>
-                <TableHead>Client Name</TableHead>
-                <TableHead>Status</TableHead>
-                <TableHead>Amount</TableHead>
-                <TableHead>Due Date</TableHead>
-                <TableHead>
-                  <span className="sr-only">Actions</span>
-                </TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {(isLoadingInvoices || isLoadingClients) && <TableRow><TableCell colSpan={6} className="text-center">Loading...</TableCell></TableRow>}
-              {!isLoadingInvoices && filteredInvoices && filteredInvoices.length === 0 && (
-                <TableRow>
-                  <TableCell colSpan={6} className="text-center">
-                    {searchQuery ? "No invoices match your search." : "No invoices found. Create one to get started."}
-                  </TableCell>
-                </TableRow>
-              )}
-              {!isLoadingInvoices && !isLoadingClients && filteredInvoices && filteredInvoices.map((invoice) => (
-                <TableRow key={invoice.id}>
-                  <TableCell className="font-medium">{invoice.invoiceNumber}</TableCell>
-                  <TableCell>{getClient(invoice.clientId)?.name || 'Unknown Client'}</TableCell>
-                  <TableCell>
-                    <Badge variant={
-                        invoice.status === 'paid' ? 'default' : 
-                        new Date(invoice.dueDate) < new Date() && invoice.status === 'unpaid' ? 'destructive' : 'secondary'
-                    }>
-                      {new Date(invoice.dueDate) < new Date() && invoice.status === 'unpaid' ? 'overdue' : invoice.status}
-                    </Badge>
-                  </TableCell>
-                  <TableCell>{getCurrencySymbol(invoice.currency)}{invoice.amount.toFixed(2)}</TableCell>
-                  <TableCell>{new Date(invoice.dueDate).toLocaleDateString()}</TableCell>
-                  <TableCell>
-                    <DropdownMenu>
-                      <DropdownMenuTrigger asChild>
-                        <Button aria-haspopup="true" size="icon" variant="ghost" disabled={isPageLocked}>
-                          <MoreHorizontal className="h-4 w-4" />
-                          <span className="sr-only">Toggle menu</span>
-                        </Button>
-                      </DropdownMenuTrigger>
-                      <DropdownMenuContent align="end">
-                        <DropdownMenuLabel>Actions</DropdownMenuLabel>
-                        {invoice.status !== 'paid' && (
-                            <DropdownMenuItem onClick={() => handleMarkAsPaid(invoice.id)}>Mark as Paid</DropdownMenuItem>
-                        )}
-                        <DropdownMenuItem onClick={() => handleEditInvoice(invoice)} disabled={invoice.status === 'paid'}>Edit</DropdownMenuItem>
-                        <DropdownMenuItem onClick={() => handleSendWhatsApp(invoice)}>Send via WhatsApp</DropdownMenuItem>
-                        <DropdownMenuSeparator />
-                         <AlertDialog>
-                          <AlertDialogTrigger asChild>
-                            <DropdownMenuItem onSelect={(e) => e.preventDefault()} disabled={invoice.status === 'paid'} className="text-destructive">Delete</DropdownMenuItem>
-                          </AlertDialogTrigger>
-                          <AlertDialogContent>
-                            <AlertDialogHeader>
-                              <AlertDialogTitle>Are you sure?</AlertDialogTitle>
-                              <AlertDialogDescription>
-                                This action cannot be undone. This will permanently delete this invoice.
-                              </AlertDialogDescription>
-                            </AlertDialogHeader>
-                            <AlertDialogFooter>
-                              <AlertDialogCancel>Cancel</AlertDialogCancel>
-                              <AlertDialogAction onClick={() => handleDeleteInvoice(invoice)}>Delete</AlertDialogAction>
-                            </AlertDialogFooter>
-                          </AlertDialogContent>
-                        </AlertDialog>
-                      </DropdownMenuContent>
-                    </DropdownMenu>
-                  </TableCell>
-                </TableRow>
-              ))}
-            </TableBody>
-          </Table>
+        <CardContent className="flex-grow overflow-hidden">
+            <ScrollArea className="h-full">
+              <Table className="relative">
+                <TableHeader className="sticky-header">
+                  <TableRow>
+                    <TableHead>Invoice ID</TableHead>
+                    <TableHead>Client Name</TableHead>
+                    <TableHead>Status</TableHead>
+                    <TableHead>Amount</TableHead>
+                    <TableHead>Due Date</TableHead>
+                    <TableHead>
+                      <span className="sr-only">Actions</span>
+                    </TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {(isLoadingInvoices || isLoadingClients) && <TableRow><TableCell colSpan={6} className="text-center">Loading...</TableCell></TableRow>}
+                  {!isLoadingInvoices && filteredInvoices && filteredInvoices.length === 0 && (
+                    <TableRow>
+                      <TableCell colSpan={6} className="text-center h-24">
+                        {searchQuery ? "No invoices match your search." : "No invoices found. Create one to get started."}
+                      </TableCell>
+                    </TableRow>
+                  )}
+                  {!isLoadingInvoices && !isLoadingClients && filteredInvoices && filteredInvoices.map((invoice) => (
+                    <TableRow key={invoice.id}>
+                      <TableCell className="font-medium">{invoice.invoiceNumber}</TableCell>
+                      <TableCell>{getClient(invoice.clientId)?.name || 'Unknown Client'}</TableCell>
+                      <TableCell>
+                        <Badge variant={
+                            invoice.status === 'paid' ? 'default' : 
+                            new Date(invoice.dueDate) < new Date() && invoice.status === 'unpaid' ? 'destructive' : 'secondary'
+                        }>
+                          {new Date(invoice.dueDate) < new Date() && invoice.status === 'unpaid' ? 'overdue' : invoice.status}
+                        </Badge>
+                      </TableCell>
+                      <TableCell>{getCurrencySymbol(invoice.currency)}{invoice.amount.toFixed(2)}</TableCell>
+                      <TableCell>{new Date(invoice.dueDate).toLocaleDateString()}</TableCell>
+                      <TableCell>
+                        <DropdownMenu>
+                          <DropdownMenuTrigger asChild>
+                            <Button aria-haspopup="true" size="icon" variant="ghost" disabled={isPageLocked}>
+                              <MoreHorizontal className="h-4 w-4" />
+                              <span className="sr-only">Toggle menu</span>
+                            </Button>
+                          </DropdownMenuTrigger>
+                          <DropdownMenuContent align="end">
+                            <DropdownMenuLabel>Actions</DropdownMenuLabel>
+                            {invoice.status !== 'paid' && (
+                                <DropdownMenuItem onClick={() => handleMarkAsPaid(invoice.id)}>Mark as Paid</DropdownMenuItem>
+                            )}
+                            <DropdownMenuItem onClick={() => handleEditInvoice(invoice)} disabled={invoice.status === 'paid'}>Edit</DropdownMenuItem>
+                            <DropdownMenuItem onClick={() => handleSendWhatsApp(invoice)}>Send via WhatsApp</DropdownMenuItem>
+                            <DropdownMenuSeparator />
+                             <AlertDialog>
+                              <AlertDialogTrigger asChild>
+                                <DropdownMenuItem onSelect={(e) => e.preventDefault()} disabled={invoice.status === 'paid'} className="text-destructive">Delete</DropdownMenuItem>
+                              </AlertDialogTrigger>
+                              <AlertDialogContent>
+                                <AlertDialogHeader>
+                                  <AlertDialogTitle>Are you sure?</AlertDialogTitle>
+                                  <AlertDialogDescription>
+                                    This action cannot be undone. This will permanently delete this invoice.
+                                  </AlertDialogDescription>
+                                </AlertDialogHeader>
+                                <AlertDialogFooter>
+                                  <AlertDialogCancel>Cancel</AlertDialogCancel>
+                                  <AlertDialogAction onClick={() => handleDeleteInvoice(invoice)}>Delete</AlertDialogAction>
+                                </AlertDialogFooter>
+                              </AlertDialogContent>
+                            </AlertDialog>
+                          </DropdownMenuContent>
+                        </DropdownMenu>
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </ScrollArea>
         </CardContent>
         <CardFooter>
             {filteredInvoices && filteredInvoices.length > 0 && (

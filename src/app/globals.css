@@ -103,6 +103,13 @@ body {
   }
 }
 
+@layer components {
+    .sticky-header th {
+        @apply sticky top-0 bg-card z-10;
+    }
+}
+
+
 @keyframes caret-blink {
   0%, 70%, 100% {
     opacity: 1;
