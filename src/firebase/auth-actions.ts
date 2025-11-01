@@ -7,6 +7,7 @@ import {
   GoogleAuthProvider,
   signInWithPopup,
   signOut as firebaseSignOut,
+  sendPasswordResetEmail,
 } from 'firebase/auth';
 import { doc, setDoc, getFirestore, serverTimestamp } from 'firebase/firestore';
 import { firebaseApp } from '@/firebase';
@@ -81,4 +82,8 @@ export async function signOut(authInstance: Auth): Promise<void> {
     console.error("Sign-out failed", error);
     throw error;
   }
+}
+
+export async function sendPasswordReset(authInstance: Auth, email: string): Promise<void> {
+    await sendPasswordResetEmail(authInstance, email);
 }

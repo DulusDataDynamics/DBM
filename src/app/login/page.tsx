@@ -1,4 +1,3 @@
-
 'use client';
 
 import Link from 'next/link';
@@ -12,7 +11,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { useAuth } from '@/firebase';
-import { initiateEmailSignIn, initiateGoogleSignIn } from '@/firebase/auth-actions';
+import { initiateEmailSignIn, initiateGoogleSignIn, sendPasswordReset } from '@/firebase/auth-actions';
 import { useRouter } from 'next/navigation';
 import { useToast } from '@/hooks/use-toast';
 import { FirebaseError } from 'firebase/app';
@@ -20,12 +19,27 @@ import { useState } from 'react';
 import { Loader2 } from 'lucide-react';
 import { Carousel, CarouselContent, CarouselItem } from '@/components/ui/carousel';
 import Autoplay from "embla-carousel-autoplay";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
 
 
 const formSchema = z.object({
   email: z.string().email({ message: 'Please enter a valid email.' }),
   password: z.string().min(1, { message: 'Password is required.' }),
 });
+
+const passwordResetSchema = z.object({
+    resetEmail: z.string().email({ message: 'Please enter a valid email address.'})
+})
 
 const loadingMessages = [
     "Authenticating your credentials...",
@@ -39,6 +53,8 @@ export default function LoginPage() {
   const router = useRouter();
   const { toast } = useToast();
   const [isLoading, setIsLoading] = useState(false);
+  const [resetEmail, setResetEmail] = useState('');
+  const [isResetDialogOpen, setIsResetDialogOpen] = useState(false);
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
@@ -83,6 +99,36 @@ export default function LoginPage() {
       setIsLoading(false);
     }
   };
+
+  const handlePasswordReset = async () => {
+    const result = passwordResetSchema.safeParse({ resetEmail });
+    if (!result.success) {
+        toast({
+            variant: "destructive",
+            title: "Invalid Email",
+            description: result.error.errors[0].message,
+        });
+        return;
+    }
+    
+    try {
+        await sendPasswordReset(auth, result.data.resetEmail);
+        toast({
+            title: "Password Reset Email Sent",
+            description: `If an account exists for ${result.data.resetEmail}, you will receive an email with instructions.`,
+        });
+        setIsResetDialogOpen(false);
+        setResetEmail('');
+    } catch (error) {
+        console.error("Password reset error:", error);
+         toast({
+            variant: "destructive",
+            title: "Something went wrong",
+            description: "Could not send password reset email. Please try again later.",
+        });
+    }
+  }
+
 
   return (
     <div className="flex min-h-screen items-center justify-center bg-background p-4">
@@ -136,9 +182,35 @@ export default function LoginPage() {
                             <FormItem className="grid gap-2">
                                 <div className="flex items-center">
                                 <Label htmlFor="password">Password</Label>
-                                <Link href="#" className="ml-auto inline-block text-sm underline">
-                                    Forgot your password?
-                                </Link>
+                                <AlertDialog open={isResetDialogOpen} onOpenChange={setIsResetDialogOpen}>
+                                    <AlertDialogTrigger asChild>
+                                        <Button variant="link" type="button" className="ml-auto inline-block text-sm underline p-0 h-auto">
+                                            Forgot your password?
+                                        </Button>
+                                    </AlertDialogTrigger>
+                                    <AlertDialogContent>
+                                        <AlertDialogHeader>
+                                            <AlertDialogTitle>Forgot Password?</AlertDialogTitle>
+                                            <AlertDialogDescription>
+                                                Enter your email address below and we'll send you a link to reset your password.
+                                            </AlertDialogDescription>
+                                        </AlertDialogHeader>
+                                        <div className="grid gap-2">
+                                            <Label htmlFor="reset-email">Email</Label>
+                                            <Input 
+                                                id="reset-email" 
+                                                type="email" 
+                                                placeholder="m@example.com" 
+                                                value={resetEmail}
+                                                onChange={(e) => setResetEmail(e.target.value)}
+                                            />
+                                        </div>
+                                        <AlertDialogFooter>
+                                            <AlertDialogCancel>Cancel</AlertDialogCancel>
+                                            <AlertDialogAction onClick={handlePasswordReset}>Send Reset Link</AlertDialogAction>
+                                        </AlertDialogFooter>
+                                    </AlertDialogContent>
+                                </AlertDialog>
                                 </div>
                                 <FormControl>
                                 <Input id="password" type="password" {...field} />
@@ -167,4 +239,3 @@ export default function LoginPage() {
       </Card>
     </div>
   );
-}
