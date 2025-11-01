@@ -98,5 +98,3 @@ export function MainSidebar({ isOpen }: { isOpen: boolean }) {
     </div>
   );
 }
-
-    
