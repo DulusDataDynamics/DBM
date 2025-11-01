@@ -25,14 +25,15 @@ import {
   DropdownMenuItem,
   DropdownMenuLabel,
   DropdownMenuTrigger,
+  DropdownMenuSeparator,
 } from "@/components/ui/dropdown-menu";
-import { KeyRound, MoreHorizontal, PlusCircle, Download } from "lucide-react";
+import { KeyRound, MoreHorizontal, PlusCircle, Download, Search } from "lucide-react";
 import { PageHeader } from "@/components/page-header";
 import { useCollection, useFirestore, useUser, useMemoFirebase } from "@/firebase";
 import { collection, query, doc } from "firebase/firestore";
 import type { Invoice, Client, Settings } from "@/lib/data";
 import { AddEditInvoiceDialog } from "@/components/invoices/add-edit-invoice-dialog";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { useDoc } from "@/firebase/firestore/use-doc";
 import {
   AlertDialog,
@@ -45,7 +46,7 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
-import { deleteDocumentNonBlocking } from "@/firebase/non-blocking-updates";
+import { deleteDocumentNonBlocking, updateDocumentNonBlocking } from "@/firebase/non-blocking-updates";
 import { getCurrencySymbol, exportToCsv } from "@/lib/utils";
 import {
   Dialog,
@@ -62,6 +63,7 @@ import {
   InputOTPSlot,
 } from "@/components/ui/input-otp";
 import { useToast } from "@/hooks/use-toast";
+import { Input } from "@/components/ui/input";
 
 
 export default function InvoicesPage() {
@@ -72,6 +74,7 @@ export default function InvoicesPage() {
     const [editingInvoice, setEditingInvoice] = useState<Invoice | undefined>(undefined);
     const [isPageLocked, setIsPageLocked] = useState(true);
     const [unlockPin, setUnlockPin] = useState('');
+    const [searchQuery, setSearchQuery] = useState('');
     
     const invoicesQuery = useMemoFirebase(() => {
         if (!user) return null;
@@ -91,10 +94,21 @@ export default function InvoicesPage() {
     }, [firestore, user]);
     const { data: settings } = useDoc<Settings>(settingsDocRef);
 
-
     const getClient = (clientId: string) => {
         return clients?.find(c => c.id === clientId);
     }
+    
+    const filteredInvoices = useMemo(() => {
+        if (!invoices) return [];
+        if (!searchQuery) return invoices;
+
+        const lowercasedQuery = searchQuery.toLowerCase();
+        return invoices.filter(invoice => {
+            const clientName = getClient(invoice.clientId)?.name.toLowerCase();
+            const invoiceNumber = invoice.invoiceNumber.toLowerCase();
+            return clientName?.includes(lowercasedQuery) || invoiceNumber.includes(lowercasedQuery);
+        });
+    }, [invoices, searchQuery, clients]);
 
     const handleAddInvoice = () => {
       setEditingInvoice(undefined);
@@ -102,14 +116,29 @@ export default function InvoicesPage() {
     }
 
     const handleEditInvoice = (invoice: Invoice) => {
+      if(invoice.status === 'paid') {
+        toast({ variant: "destructive", title: "Cannot Edit Paid Invoice", description: "Paid invoices cannot be modified." });
+        return;
+      }
       setEditingInvoice(invoice);
       setIsDialogOpen(true);
     }
 
-    const handleDeleteInvoice = (invoiceId: string) => {
+    const handleDeleteInvoice = (invoice: Invoice) => {
+      if (!user) return;
+      if(invoice.status === 'paid') {
+        toast({ variant: "destructive", title: "Cannot Delete Paid Invoice", description: "Paid invoices cannot be deleted." });
+        return;
+      }
+      const invoiceRef = doc(firestore, `users/${user.uid}/invoices/${invoice.id}`);
+      deleteDocumentNonBlocking(invoiceRef);
+    }
+
+    const handleMarkAsPaid = (invoiceId: string) => {
       if (!user) return;
       const invoiceRef = doc(firestore, `users/${user.uid}/invoices/${invoiceId}`);
-      deleteDocumentNonBlocking(invoiceRef);
+      updateDocumentNonBlocking(invoiceRef, { status: 'paid' });
+      toast({ title: "Invoice Updated", description: "The invoice has been marked as paid." });
     }
     
     const handleSendWhatsApp = (invoice: Invoice) => {
@@ -183,7 +212,7 @@ export default function InvoicesPage() {
   return (
     <>
       <PageHeader title="Invoices" description="Manage your invoices and billing.">
-         <Button size="sm" variant="outline" className="gap-1" onClick={() => handleExportToCsv(invoices || [])}>
+         <Button size="sm" variant="outline" className="gap-1" onClick={() => handleExportToCsv(filteredInvoices || [])}>
             <Download className="h-3.5 w-3.5" />
             <span className="sr-only sm:not-sr-only sm:whitespace-nowrap">
               Download CSV
@@ -240,10 +269,23 @@ export default function InvoicesPage() {
       
       <Card>
         <CardHeader>
-          <CardTitle>Invoice History</CardTitle>
-          <CardDescription>
-            A record of all your sent invoices. {isPageLocked && settings?.invoiceLockPin && <span className="text-destructive font-semibold">(Locked)</span>}
-          </CardDescription>
+            <div className="flex items-center justify-between gap-4">
+              <div>
+                <CardTitle>Invoice History</CardTitle>
+                <CardDescription>
+                  A record of all your sent invoices. {isPageLocked && settings?.invoiceLockPin && <span className="text-destructive font-semibold">(Locked)</span>}
+                </CardDescription>
+              </div>
+              <div className="relative w-full max-w-sm">
+                <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
+                <Input
+                  placeholder="Search by client or invoice ID..."
+                  className="pl-8"
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                />
+              </div>
+            </div>
         </CardHeader>
         <CardContent>
           <Table>
@@ -261,12 +303,14 @@ export default function InvoicesPage() {
             </TableHeader>
             <TableBody>
               {(isLoadingInvoices || isLoadingClients) && <TableRow><TableCell colSpan={6} className="text-center">Loading...</TableCell></TableRow>}
-              {!isLoadingInvoices && invoices && invoices.length === 0 && (
+              {!isLoadingInvoices && filteredInvoices && filteredInvoices.length === 0 && (
                 <TableRow>
-                  <TableCell colSpan={6} className="text-center">No invoices found. Create one to get started.</TableCell>
+                  <TableCell colSpan={6} className="text-center">
+                    {searchQuery ? "No invoices match your search." : "No invoices found. Create one to get started."}
+                  </TableCell>
                 </TableRow>
               )}
-              {!isLoadingInvoices && !isLoadingClients && invoices && invoices.map((invoice) => (
+              {!isLoadingInvoices && !isLoadingClients && filteredInvoices && filteredInvoices.map((invoice) => (
                 <TableRow key={invoice.id}>
                   <TableCell className="font-medium">{invoice.invoiceNumber}</TableCell>
                   <TableCell>{getClient(invoice.clientId)?.name || 'Unknown Client'}</TableCell>
@@ -290,11 +334,15 @@ export default function InvoicesPage() {
                       </DropdownMenuTrigger>
                       <DropdownMenuContent align="end">
                         <DropdownMenuLabel>Actions</DropdownMenuLabel>
-                        <DropdownMenuItem onClick={() => handleEditInvoice(invoice)}>Edit</DropdownMenuItem>
+                        {invoice.status !== 'paid' && (
+                            <DropdownMenuItem onClick={() => handleMarkAsPaid(invoice.id)}>Mark as Paid</DropdownMenuItem>
+                        )}
+                        <DropdownMenuItem onClick={() => handleEditInvoice(invoice)} disabled={invoice.status === 'paid'}>Edit</DropdownMenuItem>
                         <DropdownMenuItem onClick={() => handleSendWhatsApp(invoice)}>Send via WhatsApp</DropdownMenuItem>
+                        <DropdownMenuSeparator />
                          <AlertDialog>
                           <AlertDialogTrigger asChild>
-                            <DropdownMenuItem onSelect={(e) => e.preventDefault()}>Delete</DropdownMenuItem>
+                            <DropdownMenuItem onSelect={(e) => e.preventDefault()} disabled={invoice.status === 'paid'} className="text-destructive">Delete</DropdownMenuItem>
                           </AlertDialogTrigger>
                           <AlertDialogContent>
                             <AlertDialogHeader>
@@ -305,7 +353,7 @@ export default function InvoicesPage() {
                             </AlertDialogHeader>
                             <AlertDialogFooter>
                               <AlertDialogCancel>Cancel</AlertDialogCancel>
-                              <AlertDialogAction onClick={() => handleDeleteInvoice(invoice.id)}>Delete</AlertDialogAction>
+                              <AlertDialogAction onClick={() => handleDeleteInvoice(invoice)}>Delete</AlertDialogAction>
                             </AlertDialogFooter>
                           </AlertDialogContent>
                         </AlertDialog>
@@ -318,9 +366,9 @@ export default function InvoicesPage() {
           </Table>
         </CardContent>
         <CardFooter>
-            {invoices && invoices.length > 0 && (
+            {filteredInvoices && filteredInvoices.length > 0 && (
               <div className="text-xs text-muted-foreground">
-                Showing <strong>1-{invoices.length}</strong> of <strong>{invoices.length}</strong> invoices
+                Showing <strong>1-{filteredInvoices.length}</strong> of <strong>{invoices?.length}</strong> invoices
               </div>
             )}
         </CardFooter>
