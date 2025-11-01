@@ -1,10 +1,11 @@
+
 /**
  * @file Firestore Security Rules
  * @description This ruleset enforces a strict user-ownership model for the Dulus Business Manager application.
  *
  * Data Structure:
  * - All data is nested under /users/{userId}, ensuring that each user has a dedicated data tree.
- * - Subcollections under each user include tasks, invoices, clients, settings, and chatSessions.
+ * - Subcollections under each user include tasks, invoices, clients, settings, stock, and chatSessions.
  *
  * Key Security Decisions:
  * - Users can only access their own data. Listing other users' data is disallowed.
@@ -107,6 +108,30 @@ service cloud.firestore {
       allow update: if isExistingOwner(userId);
       allow delete: if isExistingOwner(userId);
     }
+    
+    /**
+     * @description Secure the /users/{userId}/stock subcollection. Only the owner can read and write stock items.
+     * @path /databases/{database}/documents/users/{userId}/stock/{stockItemId}
+     * @allow (create, update, delete) User with ID 'user123' can create, update, and delete stock items under their own profile.
+     * @allow (get, list) User with ID 'user123' can get and list stock items under their own profile.
+     * @deny (create, update, delete) User with ID 'user456' cannot create, update, or delete stock items under user 'user123''s profile.
+     * @principle Enforces user-ownership for inventory management.
+     */
+    match /users/{userId}/stock/{stockItemId} {
+        function isOwner(userId) {
+            return request.auth != null && request.auth.uid == userId;
+        }
+
+        function isExistingOwner(userId) {
+            return isOwner(userId) && resource != null;
+        }
+
+        allow get, list: if isOwner(userId);
+        allow create: if isOwner(userId);
+        allow update: if isExistingOwner(userId);
+        allow delete: if isExistingOwner(userId);
+    }
+
 
     /**
      * @description Secure the /users/{userId}/settings subcollection. Only the owner can read and write their own settings document.
@@ -156,3 +181,5 @@ service cloud.firestore {
     }
   }
 }
+
+    

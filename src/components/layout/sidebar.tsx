@@ -4,7 +4,7 @@
 import Link from 'next/link';
 import Image from 'next/image';
 import { usePathname } from 'next/navigation';
-import { BarChart2, CheckSquare, FileText, LayoutDashboard, Settings, Users, LifeBuoy, MessageSquare, User, Sparkles } from 'lucide-react';
+import { BarChart2, CheckSquare, FileText, LayoutDashboard, Settings, Users, LifeBuoy, MessageSquare, Archive, Sparkles } from 'lucide-react';
 import { TooltipProvider, Tooltip, TooltipTrigger, TooltipContent } from '../ui/tooltip';
 import { cn } from '@/lib/utils';
 import { Separator } from '../ui/separator';
@@ -15,6 +15,7 @@ const navItems = [
   { href: '/dashboard/tasks', icon: CheckSquare, label: 'Tasks' },
   { href: '/dashboard/invoices', icon: FileText, label: 'Invoices' },
   { href: '/dashboard/clients', icon: Users, label: 'Clients' },
+  { href: '/dashboard/stock', icon: Archive, label: 'Stock' },
   { href: '/dashboard/reports', icon: BarChart2, label: 'Reports' },
 ];
 
@@ -97,3 +98,5 @@ export function MainSidebar({ isOpen }: { isOpen: boolean }) {
     </div>
   );
 }
+
+    

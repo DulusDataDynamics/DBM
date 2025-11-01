@@ -95,7 +95,7 @@ const createInvoiceTool = ai.defineTool(
     name: 'createInvoice',
     description: 'Generates a new invoice for a client.',
     inputSchema: z.object({
-      clientId: z.string().describe("The client's unique ID. If you only have a name, use the 'listClients' tool first to find the ID."),
+      clientId: z.string().describe("The client's unique ID. If you only have a name, you MUST use the 'listClients' tool first to find the ID."),
       amount: z.number().describe('The total amount for the invoice.'),
       dueDate: z.string().optional().describe('The payment due date in ISO format.'),
     }),
@@ -132,7 +132,7 @@ const listStockTool = ai.defineTool(
     },
     async (input, context) => {
         if (!context?.auth?.userId) throw new Error("User ID is required.");
-        return listStock(context.auth.userId)
+        return listStock(context.auth?.userId)
     }
 );
 
@@ -166,16 +166,15 @@ const commandFlow = ai.defineFlow(
         You understand natural language, even if it's casual, short, misspelled, or uses synonyms. For example, "make invoice," "create bill," and "send receipt" all mean you should use the 'createInvoice' tool.
         
         Your Thought Process:
-        1.  **Understand Intent:** First, determine the user's goal. Are they trying to create, view, or update something?
-        2.  **Identify the Tool:** Based on the intent, select the appropriate tool. (e.g., 'createInvoice', 'createClient', 'listTasks').
-        3.  **Extract Entities:** Pull out key details from the user's command, such as names, amounts, and dates.
-        4.  **Check Prerequisites:** Before executing a command, think if you need more information.
+        1.  **Deconstruct the Request:** Break down the user's request into individual actions. A single request might involve multiple steps (e.g., "Create a new client 'John Doe' and then send him an invoice for $500").
+        2.  **Identify the Right Tool for Each Action:** For each action, determine the appropriate tool. (e.g., 'createClient' for the first part, 'createInvoice' for the second).
+        3.  **Check Prerequisites & Gather Information:** Before using a tool, check if you have all the necessary information.
             - To create an invoice, you need a 'clientId'. If you only have a client's name, you MUST use the 'listClients' tool first to find their ID.
-            - If information is missing (e.g., an email for a new client, or an amount for an invoice), you MUST ask the user for it. Do not make up information.
-        5.  **Execute:** Use the tools to perform the action.
-        6.  **Confirm:** After executing the tool, provide a friendly, conversational confirmation message to the user. For example: "Done! I've created invoice #INV-5678 for John Doe." or "I've added 'Follow up with marketing team' to your tasks."
+            - If information is missing (e.g., an email for a new client, or an amount for an invoice), you MUST ask the user for the missing details. Do not make up information or assume. Be polite and clear in your questions (e.g., "I can create that client for you, but what is their email address?").
+        4.  **Execute Sequentially:** Execute the tools in a logical order. For multi-step tasks, use the output from one tool as the input for the next (e.g., use the 'clientId' from the 'createClient' tool's output to call the 'createInvoice' tool).
+        5.  **Confirm and Summarize:** After successfully executing all actions, provide a friendly, conversational confirmation message that summarizes what you've done. For example: "Done! I've created a new client record for John Doe and sent him invoice #INV-5678 for $500."
         
-        If the user's request is a simple question or command you can answer without a tool, do so. But prioritize using tools to perform actions within the DBM system.
+        If the user's request is a simple question or a command you can answer without a tool, do so. But prioritize using tools to perform actions within the DBM system.
         The user ID is: ${input.userId}
         `,
       prompt: input.command,
@@ -203,3 +202,5 @@ export async function runCommand(
 ): Promise<CommandOutput> {
   return await commandFlow(input);
 }
+
+    
