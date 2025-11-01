@@ -5,7 +5,8 @@ export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs))
 }
 
-export function getCurrencySymbol(currencyCode: string) {
+export function getCurrencySymbol(currencyCode?: string) {
+    if (!currencyCode) return 'R';
     switch (currencyCode.toLowerCase()) {
         case 'usd':
             return '$';
@@ -26,12 +27,14 @@ export function exportToCsv(filename: string, headers: string[], rows: (string |
             return '""';
         }
         const stringField = String(field);
-        // Escape double quotes by doubling them and wrap the field in double quotes.
-        const escapedField = stringField.replace(/"/g, '""');
-        return `"${escapedField}"`;
+        if (stringField.includes('"') || stringField.includes(',') || stringField.includes('\n')) {
+             const escapedField = stringField.replace(/"/g, '""');
+             return `"${escapedField}"`;
+        }
+        return `"${stringField}"`;
     };
 
-    const csvHeader = headers.map(escapeCsvField).join(',');
+    const csvHeader = headers.map(header => `"${header}"`).join(',');
     const csvRows = rows.map(row => row.map(escapeCsvField).join(','));
     
     const csvContent = "data:text/csv;charset=utf-8," 

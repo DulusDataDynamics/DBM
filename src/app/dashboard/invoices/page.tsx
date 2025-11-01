@@ -120,9 +120,20 @@ export default function InvoicesPage() {
         }
 
         const businessName = settings?.businessName || "our business";
-        const message = `Hello ${client.name},\n\nThis is a friendly reminder regarding invoice ${invoice.invoiceNumber} for ${getCurrencySymbol(invoice.currency)}${invoice.amount.toFixed(2)} from ${businessName}. It is due on ${new Date(invoice.dueDate).toLocaleDateString()}.\n\nThank you.`;
+        const currencySymbol = getCurrencySymbol(invoice.currency);
+        const invoiceAmount = `${currencySymbol}${invoice.amount.toFixed(2)}`;
+        const dueDate = new Date(invoice.dueDate).toLocaleDateString();
+
+        let message = '';
+        const status = new Date(invoice.dueDate) < new Date() && invoice.status === 'unpaid' ? 'overdue' : invoice.status;
+
+        if (status === 'paid') {
+            message = `Hello ${client.name},\n\nThank you for your payment for invoice ${invoice.invoiceNumber} of ${invoiceAmount}. We appreciate your business.\n\nFrom, ${businessName}.`;
+        } else { // unpaid or overdue
+            message = `Hello ${client.name},\n\nThis is a friendly reminder regarding invoice ${invoice.invoiceNumber} for ${invoiceAmount} from ${businessName}. It is due on ${dueDate}.\n\nPlease let us know if you have any questions.\n\nThank you.`;
+        }
+
         const whatsappUrl = `https://wa.me/${client.phone.replace(/\D/g, '')}?text=${encodeURIComponent(message)}`;
-        
         window.open(whatsappUrl, '_blank');
     }
     
@@ -137,8 +148,8 @@ export default function InvoicesPage() {
       }
     }
     
-    const handleExportToCsv = () => {
-      if (!invoices || invoices.length === 0) {
+    const handleExportToCsv = (invoicesToExport: Invoice[]) => {
+      if (!invoicesToExport || invoicesToExport.length === 0) {
         toast({
           variant: 'destructive',
           title: 'No Invoices',
@@ -148,7 +159,7 @@ export default function InvoicesPage() {
       }
 
       const headers = ['Invoice ID', 'Client Name', 'Status', 'Amount', 'Currency', 'Issue Date', 'Due Date'];
-      const rows = invoices.map(invoice => [
+      const rows = invoicesToExport.map(invoice => [
         invoice.invoiceNumber,
         getClient(invoice.clientId)?.name || 'Unknown',
         new Date(invoice.dueDate) < new Date() && invoice.status === 'unpaid' ? 'overdue' : invoice.status,
@@ -172,7 +183,7 @@ export default function InvoicesPage() {
   return (
     <>
       <PageHeader title="Invoices" description="Manage your invoices and billing.">
-         <Button size="sm" variant="outline" className="gap-1" onClick={handleExportToCsv}>
+         <Button size="sm" variant="outline" className="gap-1" onClick={() => handleExportToCsv(invoices || [])}>
             <Download className="h-3.5 w-3.5" />
             <span className="sr-only sm:not-sr-only sm:whitespace-nowrap">
               Download CSV
