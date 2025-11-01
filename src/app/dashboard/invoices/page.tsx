@@ -46,7 +46,7 @@ import {
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
 import { deleteDocumentNonBlocking } from "@/firebase/non-blocking-updates";
-import { getCurrencySymbol } from "@/lib/utils";
+import { getCurrencySymbol, exportToCsv } from "@/lib/utils";
 import {
   Dialog,
   DialogContent,
@@ -137,15 +137,6 @@ export default function InvoicesPage() {
       }
     }
     
-    const escapeCsvField = (field: any) => {
-        if (field === null || field === undefined) {
-            return '""';
-        }
-        const stringField = String(field);
-        const escapedField = stringField.replace(/"/g, '""');
-        return `"${escapedField}"`;
-    };
-
     const handleExportToCsv = () => {
       if (!invoices || invoices.length === 0) {
         toast({
@@ -156,9 +147,7 @@ export default function InvoicesPage() {
         return;
       }
 
-      const headers = ['Invoice ID', 'Client Name', 'Status', 'Amount', 'Currency', 'Issue Date', 'Due Date']
-        .map(escapeCsvField).join(',');
-        
+      const headers = ['Invoice ID', 'Client Name', 'Status', 'Amount', 'Currency', 'Issue Date', 'Due Date'];
       const rows = invoices.map(invoice => [
         invoice.invoiceNumber,
         getClient(invoice.clientId)?.name || 'Unknown',
@@ -167,20 +156,10 @@ export default function InvoicesPage() {
         invoice.currency,
         new Date(invoice.issueDate).toLocaleDateString(),
         new Date(invoice.dueDate).toLocaleDateString(),
-      ].map(escapeCsvField).join(','));
+      ]);
 
-      let csvContent = "data:text/csv;charset=utf-8," 
-        + headers + "\n" 
-        + rows.join("\n");
-
-      const encodedUri = encodeURI(csvContent);
-      const link = document.createElement("a");
-      link.setAttribute("href", encodedUri);
-      link.setAttribute("download", "invoices.csv");
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
-       toast({ title: "Export Successful", description: "Your invoices have been downloaded as a CSV file." });
+      exportToCsv('invoices', headers, rows);
+      toast({ title: "Export Successful", description: "Your invoices have been downloaded as a CSV file." });
     };
     
     useEffect(() => {

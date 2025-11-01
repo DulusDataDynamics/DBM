@@ -8,6 +8,7 @@ import { collection } from "firebase/firestore";
 import { Download } from "lucide-react";
 import { Bar, BarChart, Pie, PieChart, ResponsiveContainer, Tooltip, XAxis, YAxis, Legend, Cell } from 'recharts';
 import { useToast } from "@/hooks/use-toast";
+import { exportToCsv } from "@/lib/utils";
 
 const COLORS = ['hsl(var(--chart-1))', 'hsl(var(--chart-2))', 'hsl(var(--chart-3))', 'hsl(var(--chart-4))', 'hsl(var(--chart-5))'];
 
@@ -51,18 +52,6 @@ export default function ReportsPage() {
     const getClient = (clientId: string) => {
         return clients?.find(c => c.id === clientId);
     }
-    
-    const escapeCsvField = (field: any) => {
-        if (field === null || field === undefined) {
-            return '""';
-        }
-        const stringField = String(field);
-        // Escape double quotes by doubling them
-        const escapedField = stringField.replace(/"/g, '""');
-        // Wrap the entire field in double quotes
-        return `"${escapedField}"`;
-    };
-
 
     const handleExport = () => {
         if ((!invoices || invoices.length === 0) && (!clients || clients.length === 0)) {
@@ -78,7 +67,7 @@ export default function ReportsPage() {
             'Type', 'ID', 'Client Name', 'Client Email', 'Client Phone', 'Client Address',
             'Invoice Number', 'Invoice Status', 'Invoice Amount', 'Invoice Currency',
             'Invoice Issue Date', 'Invoice Due Date'
-        ].map(escapeCsvField).join(',');
+        ];
         
         const invoiceRows = invoices?.map(invoice => {
             const client = getClient(invoice.clientId);
@@ -87,7 +76,7 @@ export default function ReportsPage() {
                 invoice.invoiceNumber, new Date(invoice.dueDate) < new Date() && invoice.status === 'unpaid' ? 'overdue' : invoice.status,
                 invoice.amount.toFixed(2), invoice.currency,
                 new Date(invoice.issueDate).toLocaleDateString(), new Date(invoice.dueDate).toLocaleDateString()
-            ].map(escapeCsvField).join(',');
+            ];
         }) || [];
         
         const clientRows = clients?.map(client => {
@@ -95,23 +84,13 @@ export default function ReportsPage() {
             return [
                 'Client', client.id, client.name, client.email, client.phone, client.address,
                 'N/A', 'N/A', 'N/A', 'N/A', 'N/A', 'N/A'
-            ].map(escapeCsvField).join(',');
-        }).filter(Boolean) as string[] || [];
-
+            ];
+        }).filter(Boolean) as (string|number)[][] || [];
 
         const allRows = [...invoiceRows, ...clientRows];
 
-        let csvContent = "data:text/csv;charset=utf-8," 
-            + headers + "\n" 
-            + allRows.join("\n");
+        exportToCsv('dbm_export', headers, allRows);
 
-        const encodedUri = encodeURI(csvContent);
-        const link = document.createElement("a");
-        link.setAttribute("href", encodedUri);
-        link.setAttribute("download", "dbm_export.csv");
-        document.body.appendChild(link);
-        link.click();
-        document.body.removeChild(link);
         toast({ title: "Export Successful", description: "Your business data has been downloaded as a CSV file." });
     }
 
