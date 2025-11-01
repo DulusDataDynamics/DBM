@@ -92,7 +92,7 @@ export default function ChatbotPage() {
                 </Button>
                 <Separator />
                 <h3 className="text-sm font-semibold text-muted-foreground px-2">History</h3>
-                <ScrollArea className="flex-1 -mx-2 h-48">
+                <ScrollArea className="h-64 -mx-2">
                     <div className="space-y-1 p-2">
                         {sessions.map(session => (
                             <div key={session.id} className="group relative">
@@ -235,5 +235,3 @@ export default function ChatbotPage() {
             </div>
         </div>
     );
-
-    
