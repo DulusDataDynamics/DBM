@@ -1,3 +1,4 @@
+
 'use client';
 import { useState, useRef, useEffect } from 'react';
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -127,7 +128,7 @@ export default function ChatbotPage() {
                     </div>
                 </ScrollArea>
                 <Separator />
-                <div className="space-y-2">
+                <div className="space-y-2 mt-auto">
                     <Button variant="ghost" className="w-full justify-start gap-2" onClick={() => handleFutureFeatureClick('Image analysis')}>
                         <ImageIcon className="h-4 w-4" /> Images
                     </Button>
@@ -234,4 +235,5 @@ export default function ChatbotPage() {
             </div>
         </div>
     );
-}
+
+    
