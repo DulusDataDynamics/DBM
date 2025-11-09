@@ -5,7 +5,7 @@ import { Toaster } from '@/components/ui/toaster';
 import { AuthProvider } from '@/contexts/auth-context';
 
 export const metadata: Metadata = {
-  title: 'Dulus Business Hub',
+  title: 'Dulus BS Manager',
   description: 'The all-in-one platform to manage your business.',
 };
 

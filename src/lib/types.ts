@@ -7,7 +7,7 @@ export type Client = {
 
 export type Invoice = {
   id: string;
-  client: Client;
+  client?: Client;
   clientId: string;
   amount: number;
   status: 'Paid' | 'Unpaid' | 'Overdue';
