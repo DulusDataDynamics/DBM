@@ -3,13 +3,11 @@
 import { usePathname, useRouter } from 'next/navigation';
 import React, { useEffect } from 'react';
 import Link from 'next/link';
-
 import { useAuth } from '@/hooks/use-auth';
-import { NAV_LINKS } from '@/lib/constants';
+import { NAV_LINKS, SUPPORT_LINKS } from '@/lib/constants';
 import { cn } from '@/lib/utils';
 import { Logo } from '@/components/logo';
 import { UserNav } from '@/components/app/user-nav';
-import { Button } from '@/components/ui/button';
 import {
   SidebarProvider,
   Sidebar,
@@ -21,6 +19,7 @@ import {
   SidebarFooter,
   SidebarTrigger,
   SidebarInset,
+  SidebarSeparator,
 } from '@/components/ui/sidebar';
 
 export default function AppLayout({ children }: { children: React.ReactNode }) {
@@ -67,17 +66,31 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
             ))}
           </SidebarMenu>
         </SidebarContent>
-        <SidebarFooter>
-          <UserNav />
+        <SidebarFooter className="flex-col !items-stretch">
+          <SidebarSeparator />
+           <SidebarMenu>
+            {SUPPORT_LINKS.map((link) => (
+              <SidebarMenuItem key={link.href}>
+                <SidebarMenuButton
+                  asChild
+                  isActive={pathname.startsWith(link.href)}
+                  tooltip={{ children: link.label }}
+                >
+                  <Link href={link.href}>
+                    <link.icon />
+                    <span>{link.label}</span>
+                  </Link>
+                </SidebarMenuButton>
+              </SidebarMenuItem>
+            ))}
+          </SidebarMenu>
         </SidebarFooter>
       </Sidebar>
       <SidebarInset>
-        <header className="sticky top-0 z-10 flex h-16 items-center justify-between border-b bg-background/80 px-4 backdrop-blur-sm sm:justify-end">
-          <div className="sm:hidden">
-            <SidebarTrigger />
-          </div>
-          <div className="hidden sm:block">
-            <UserNav />
+        <header className="sticky top-0 z-10 flex h-16 items-center justify-between border-b bg-background/80 px-4 backdrop-blur-sm sm:justify-between">
+          <SidebarTrigger className="sm:hidden" />
+          <div className="flex items-center gap-4">
+             <UserNav />
           </div>
         </header>
         <main className="flex-1 p-4 md:p-6 lg:p-8">

@@ -5,6 +5,8 @@ import {
   CheckCircle2,
   Boxes,
   BarChart3,
+  Settings,
+  LifeBuoy,
 } from 'lucide-react';
 
 export const NAV_LINKS = [
@@ -37,5 +39,18 @@ export const NAV_LINKS = [
     href: '/reports',
     icon: BarChart3,
     label: 'Reports',
+  },
+];
+
+export const SUPPORT_LINKS = [
+  {
+    href: '/settings',
+    icon: Settings,
+    label: 'Settings',
+  },
+  {
+    href: '/support',
+    icon: LifeBuoy,
+    label: 'Support',
   },
 ];
