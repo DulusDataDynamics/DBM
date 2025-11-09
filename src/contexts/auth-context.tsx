@@ -7,8 +7,7 @@ import {
   onAuthStateChanged, 
   createUserWithEmailAndPassword, 
   signInWithEmailAndPassword,
-  signOut,
-  signInAnonymously
+  signOut
 } from 'firebase/auth';
 import { auth } from '@/lib/firebase';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -16,7 +15,7 @@ import { Skeleton } from '@/components/ui/skeleton';
 interface AuthContextType {
   user: User | null;
   loading: boolean;
-  login: (email?: string, password?: string) => Promise<void>;
+  login: (email: string, password: string) => Promise<void>;
   signup: (email: string, password: string) => Promise<void>;
   logout: () => Promise<void>;
 }
@@ -41,15 +40,10 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     return () => unsubscribe();
   }, []);
 
-  const login = async (email?: string, password?: string) => {
+  const login = async (email: string, password: string) => {
     setLoading(true);
     try {
-      if (email && password) {
-        await signInWithEmailAndPassword(auth, email, password);
-      } else {
-        // Demo user login
-        await signInAnonymously(auth);
-      }
+      await signInWithEmailAndPassword(auth, email, password);
       router.push('/dashboard');
     } catch (error) {
       console.error("Login failed:", error);

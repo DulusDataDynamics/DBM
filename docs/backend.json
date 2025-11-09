@@ -99,7 +99,7 @@
     }
   },
   "auth": {
-    "providers": ["email", "anonymous"]
+    "providers": ["email"]
   },
   "firestore": {
     "/clients/{clientId}": {

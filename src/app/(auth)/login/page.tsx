@@ -35,16 +35,6 @@ export default function LoginPage() {
     }
   };
 
-  const handleDemoLogin = async () => {
-    setLoading(true);
-    try {
-      await login();
-    } catch (error) {
-      console.error(error);
-      setLoading(false);
-    }
-  }
-
   if (user) {
     return redirect('/dashboard');
   }
@@ -86,9 +76,6 @@ export default function LoginPage() {
         <CardFooter className="flex flex-col gap-4">
           <Button className="w-full" type="submit" disabled={loading}>
             {loading ? 'Logging in...' : 'Login'}
-          </Button>
-           <Button variant="secondary" className="w-full" onClick={handleDemoLogin} type="button" disabled={loading}>
-            {loading ? 'Logging in...' : 'Continue with Demo User'}
           </Button>
           <p className="text-sm text-center text-muted-foreground">
             Don&apos;t have an account?{' '}
