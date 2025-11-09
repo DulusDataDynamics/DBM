@@ -37,6 +37,7 @@ import {
 } from '@/components/ui/select';
 import { Separator } from '@/components/ui/separator';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { useState } from 'react';
 
 const settingsSections = [
   { value: 'profile', label: 'Profile', icon: User, content: 'Manage your personal account information.' },
@@ -52,6 +53,23 @@ const settingsSections = [
 ];
 
 export default function SettingsPage() {
+  const [profilePicPreview, setProfilePicPreview] = useState<string | null>(null);
+  const [companyLogoPreview, setCompanyLogoPreview] = useState<string | null>(null);
+
+  const handleProfilePictureChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (file) {
+      setProfilePicPreview(URL.createObjectURL(file));
+    }
+  };
+
+  const handleCompanyLogoChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (file) {
+      setCompanyLogoPreview(URL.createObjectURL(file));
+    }
+  };
+
   return (
     <div className="space-y-6">
       <div>
@@ -84,12 +102,12 @@ export default function SettingsPage() {
                   <CardContent className="space-y-6">
                     <div className="flex items-center gap-6">
                       <Avatar className="h-20 w-20">
-                        <AvatarImage src="https://picsum.photos/seed/avatar/200" alt="User Avatar" />
+                        {profilePicPreview && <AvatarImage src={profilePicPreview} alt="User Avatar" />}
                         <AvatarFallback>U</AvatarFallback>
                       </Avatar>
                       <div className="space-y-2">
                         <Label htmlFor="profile-picture">Profile Picture</Label>
-                        <Input id="profile-picture" type="file" className="max-w-sm" />
+                        <Input id="profile-picture" type="file" className="max-w-sm" onChange={handleProfilePictureChange} accept="image/*" />
                         <p className="text-xs text-muted-foreground">PNG, JPG, GIF up to 5MB.</p>
                       </div>
                     </div>
@@ -135,12 +153,20 @@ export default function SettingsPage() {
                   </CardHeader>
                   <CardContent className="space-y-6">
                     <div className="flex items-center gap-6">
-                      <div className="flex h-20 w-20 items-center justify-center rounded-md border bg-muted">
-                        <Building className="h-10 w-10 text-muted-foreground" />
-                      </div>
+                      <Avatar className="h-20 w-20 rounded-md">
+                        {companyLogoPreview ? (
+                          <AvatarImage src={companyLogoPreview} alt="Company Logo" className="rounded-md" />
+                        ) : (
+                           <div className="flex h-full w-full items-center justify-center rounded-md border bg-muted">
+                            <Building className="h-10 w-10 text-muted-foreground" />
+                          </div>
+                        )}
+                        <AvatarFallback className="rounded-md">DB</AvatarFallback>
+                      </Avatar>
+                      
                       <div className="space-y-2">
                         <Label htmlFor="company-logo">Company Logo</Label>
-                        <Input id="company-logo" type="file" className="max-w-sm" />
+                        <Input id="company-logo" type="file" className="max-w-sm" onChange={handleCompanyLogoChange} accept="image/*" />
                         <p className="text-xs text-muted-foreground">PNG, JPG, SVG. Recommended size: 200x80px.</p>
                       </div>
                     </div>
