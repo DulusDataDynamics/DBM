@@ -49,7 +49,7 @@ export default function SettingsPage() {
         </p>
       </div>
 
-      <Tabs defaultValue="profile" className="flex flex-col gap-6 md:flex-row">
+      <Tabs defaultValue="profile" className="flex flex-col gap-6 md:flex-row" orientation="vertical">
         <TabsList className="flex h-full flex-shrink-0 flex-row justify-start overflow-x-auto p-1 md:flex-col md:overflow-x-visible">
           {settingsSections.map((section) => (
             <TabsTrigger
@@ -64,7 +64,7 @@ export default function SettingsPage() {
         </TabsList>
         <div className="w-full">
             {settingsSections.map((section) => (
-            <TabsContent key={section.value} value={section.value}>
+            <TabsContent key={section.value} value={section.value} className="mt-0">
                 <Card>
                 <CardHeader>
                     <CardTitle>{section.label}</CardTitle>
