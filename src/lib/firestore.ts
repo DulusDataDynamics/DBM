@@ -34,16 +34,32 @@ export const getClient = async (id: string) => {
 // Invoice functions
 export const subscribeToInvoices = (callback: (invoices: Invoice[]) => void): () => void => {
   const invoicesRef = collection(db, 'invoices');
-  const unsubscribe = onSnapshot(invoicesRef, async (snapshot) => {
-    const invoicesPromises = snapshot.docs.map(async (doc) => {
+  
+  // Keep a map of clients to avoid re-fetching
+  const clientsMap = new Map<string, Client>();
+
+  const unsubInvoices = onSnapshot(invoicesRef, async (invoiceSnapshot) => {
+    const invoicesPromises = invoiceSnapshot.docs.map(async (doc) => {
       const data = doc.data();
-      const client = await getClient(data.clientId) as Client; // This could be optimized
+      let client = clientsMap.get(data.clientId);
+      
+      if (!client) {
+        const clientDoc = await getClient(data.clientId);
+        if (clientDoc) {
+          client = clientDoc;
+          clientsMap.set(data.clientId, client);
+        }
+      }
+      
       return { id: doc.id, ...data, client } as Invoice;
     });
     const invoices = await Promise.all(invoicesPromises);
     callback(invoices);
   });
-  return unsubscribe;
+
+  return () => {
+    unsubInvoices();
+  };
 };
 
 
