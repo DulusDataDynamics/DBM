@@ -8,7 +8,7 @@ import { PlaceHolderImages } from '@/lib/placeholder-images';
 import { Zap, ClipboardCheck, FileText, Users, Shield, BookUser } from 'lucide-react';
 
 export default function LandingPage() {
-  const heroImage = PlaceHolderImages.find((p) => p.id === 'landing-hero');
+  const heroImage = PlaceHolderImages && PlaceHolderImages.find((p) => p.id === 'landing-hero');
 
   const features = [
     {
