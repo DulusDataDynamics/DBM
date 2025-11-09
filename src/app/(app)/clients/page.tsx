@@ -1,3 +1,4 @@
+'use client';
 import {
   Table,
   TableBody,
@@ -22,10 +23,29 @@ import {
   DropdownMenuLabel,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-
-import { clients } from '@/lib/data';
+import { getClients } from '@/lib/firestore';
+import { Client } from '@/lib/types';
+import { useEffect, useState } from 'react';
+import { Skeleton } from '@/components/ui/skeleton';
 
 export default function ClientsPage() {
+  const [clients, setClients] = useState<Client[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    async function fetchClients() {
+      try {
+        const clientsData = await getClients();
+        setClients(clientsData);
+      } catch (error) {
+        console.error("Failed to fetch clients", error);
+      } finally {
+        setLoading(false);
+      }
+    }
+    fetchClients();
+  }, []);
+
   return (
     <Card>
       <CardHeader>
@@ -41,6 +61,11 @@ export default function ClientsPage() {
         </div>
       </CardHeader>
       <CardContent>
+         {loading ? (
+          <div className="space-y-4">
+            {[...Array(5)].map((_, i) => <Skeleton key={i} className="h-12 w-full" />)}
+          </div>
+        ) : (
         <Table>
           <TableHeader>
             <TableRow>
@@ -77,6 +102,7 @@ export default function ClientsPage() {
             ))}
           </TableBody>
         </Table>
+        )}
       </CardContent>
     </Card>
   );

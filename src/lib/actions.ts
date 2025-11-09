@@ -1,20 +1,19 @@
 'use server';
 
 import { generateRevenueInsights } from "@/ai/flows/generate-revenue-insights";
-import { invoices, clients } from "./data";
 import { Invoice } from "./types";
 
-export async function getRevenueInsights() {
+export async function getRevenueInsights(invoices: Invoice[]) {
   try {
     const revenueData = invoices
       .filter(i => i.status === 'Paid')
       .map(i => ({
-        clientId: i.client.id,
+        clientId: i.clientId,
         amount: i.amount,
       }));
 
     const invoiceData = invoices.map(i => ({
-      clientId: i.client.id,
+      clientId: i.clientId,
       status: i.status,
       amount: i.amount,
     }));

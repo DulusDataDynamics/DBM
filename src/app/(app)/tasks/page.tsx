@@ -1,3 +1,4 @@
+'use client';
 import {
   Table,
   TableBody,
@@ -24,9 +25,39 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { Badge } from '@/components/ui/badge';
 import { Checkbox } from '@/components/ui/checkbox';
-import { tasks } from '@/lib/data';
+import { getTasks, updateTaskCompletion } from '@/lib/firestore';
+import { Task } from '@/lib/types';
+import { useEffect, useState, useTransition } from 'react';
+import { Skeleton } from '@/components/ui/skeleton';
 
 export default function TasksPage() {
+  const [tasks, setTasks] = useState<Task[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [isPending, startTransition] = useTransition();
+
+  useEffect(() => {
+    async function fetchTasks() {
+      try {
+        const tasksData = await getTasks();
+        setTasks(tasksData.sort((a, b) => new Date(a.dueDate).getTime() - new Date(b.dueDate).getTime()));
+      } catch (error) {
+        console.error("Failed to fetch tasks", error);
+      } finally {
+        setLoading(false);
+      }
+    }
+    fetchTasks();
+  }, []);
+
+  const handleTaskChecked = (task: Task, checked: boolean) => {
+    startTransition(async () => {
+      await updateTaskCompletion(task.id, checked);
+      setTasks(currentTasks => 
+        currentTasks.map(t => t.id === task.id ? {...t, completed: checked} : t)
+      );
+    });
+  }
+
   return (
     <Card>
       <CardHeader>
@@ -42,6 +73,11 @@ export default function TasksPage() {
         </div>
       </CardHeader>
       <CardContent>
+         {loading ? (
+            <div className="space-y-4">
+              {[...Array(5)].map((_, i) => <Skeleton key={i} className="h-12 w-full" />)}
+            </div>
+          ) : (
         <Table>
           <TableHeader>
             <TableRow>
@@ -58,7 +94,12 @@ export default function TasksPage() {
             {tasks.map((task) => (
               <TableRow key={task.id} className={task.completed ? 'text-muted-foreground line-through' : ''}>
                 <TableCell>
-                  <Checkbox checked={task.completed} aria-label="Mark task as complete" />
+                  <Checkbox 
+                    checked={task.completed} 
+                    onCheckedChange={(checked) => handleTaskChecked(task, !!checked)}
+                    aria-label="Mark task as complete" 
+                    disabled={isPending}
+                  />
                 </TableCell>
                 <TableCell className="font-medium">{task.description}</TableCell>
                 <TableCell>
@@ -75,7 +116,7 @@ export default function TasksPage() {
                 <TableCell>
                   <DropdownMenu>
                     <DropdownMenuTrigger asChild>
-                      <Button aria-haspopup="true" size="icon" variant="ghost" disabled={task.completed}>
+                      <Button aria-haspopup="true" size="icon" variant="ghost" disabled={task.completed || isPending}>
                         <MoreHorizontal className="h-4 w-4" />
                         <span className="sr-only">Toggle menu</span>
                       </Button>
@@ -91,6 +132,7 @@ export default function TasksPage() {
             ))}
           </TableBody>
         </Table>
+        )}
       </CardContent>
     </Card>
   );

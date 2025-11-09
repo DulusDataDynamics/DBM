@@ -8,19 +8,27 @@ import {
   CardHeader,
   CardTitle,
 } from '@/components/ui/card';
-import { clients, invoices } from '@/lib/data';
+import { Invoice } from '@/lib/types';
 
-const revenueByClient = clients.map(client => {
-  const clientInvoices = invoices.filter(invoice => invoice.client.id === client.id && invoice.status === 'Paid');
-  const totalRevenue = clientInvoices.reduce((acc, inv) => acc + inv.amount, 0);
-  return {
-    client: client.name,
-    total: totalRevenue,
-  };
-}).filter(c => c.total > 0);
+interface RevenueChartProps {
+  invoices: Invoice[];
+}
 
+export function RevenueChart({ invoices }: RevenueChartProps) {
 
-export function RevenueChart() {
+  const revenueByClient = invoices.reduce((acc, invoice) => {
+    if (invoice.status === 'Paid') {
+      const clientName = invoice.client.name;
+      if (!acc[clientName]) {
+        acc[clientName] = { client: clientName, total: 0 };
+      }
+      acc[clientName].total += invoice.amount;
+    }
+    return acc;
+  }, {} as Record<string, { client: string, total: number }>);
+
+  const chartData = Object.values(revenueByClient);
+
   return (
     <Card>
       <CardHeader>
@@ -28,7 +36,7 @@ export function RevenueChart() {
       </CardHeader>
       <CardContent className="pl-2">
         <ResponsiveContainer width="100%" height={350}>
-          <BarChart data={revenueByClient}>
+          <BarChart data={chartData}>
             <XAxis
               dataKey="client"
               stroke="hsl(var(--foreground))"

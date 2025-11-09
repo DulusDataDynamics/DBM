@@ -9,17 +9,11 @@ import {
   CardTitle,
   CardDescription
 } from '@/components/ui/card';
-import { invoices } from '@/lib/data';
+import { Invoice } from '@/lib/types';
 
-const statusData = invoices.reduce((acc, invoice) => {
-  if (!acc[invoice.status]) {
-    acc[invoice.status] = { name: invoice.status, value: 0 };
-  }
-  acc[invoice.status].value += 1;
-  return acc;
-}, {} as Record<string, { name: string, value: number }>);
-
-const data = Object.values(statusData);
+interface InvoiceStatusChartProps {
+  invoices: Invoice[];
+}
 
 const COLORS: Record<string, string> = {
   Paid: 'hsl(var(--chart-1))',
@@ -27,7 +21,18 @@ const COLORS: Record<string, string> = {
   Overdue: 'hsl(var(--chart-5))',
 };
 
-export function InvoiceStatusChart() {
+export function InvoiceStatusChart({ invoices }: InvoiceStatusChartProps) {
+
+  const statusData = invoices.reduce((acc, invoice) => {
+    if (!acc[invoice.status]) {
+      acc[invoice.status] = { name: invoice.status, value: 0 };
+    }
+    acc[invoice.status].value += 1;
+    return acc;
+  }, {} as Record<string, { name: string, value: number }>);
+
+  const data = Object.values(statusData);
+
   return (
     <Card>
       <CardHeader>

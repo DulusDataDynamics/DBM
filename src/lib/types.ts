@@ -8,6 +8,7 @@ export type Client = {
 export type Invoice = {
   id: string;
   client: Client;
+  clientId: string;
   amount: number;
   status: 'Paid' | 'Unpaid' | 'Overdue';
   dueDate: string;

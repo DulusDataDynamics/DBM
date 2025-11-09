@@ -1,3 +1,4 @@
+'use client';
 import {
   Table,
   TableBody,
@@ -22,10 +23,29 @@ import {
   DropdownMenuLabel,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-
-import { inventory } from '@/lib/data';
+import { getInventory } from '@/lib/firestore';
+import { InventoryItem } from '@/lib/types';
+import { useEffect, useState } from 'react';
+import { Skeleton } from '@/components/ui/skeleton';
 
 export default function InventoryPage() {
+  const [inventory, setInventory] = useState<InventoryItem[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    async function fetchInventory() {
+      try {
+        const inventoryData = await getInventory();
+        setInventory(inventoryData);
+      } catch (error) {
+        console.error("Failed to fetch inventory", error);
+      } finally {
+        setLoading(false);
+      }
+    }
+    fetchInventory();
+  }, []);
+
   return (
     <Card>
       <CardHeader>
@@ -41,6 +61,11 @@ export default function InventoryPage() {
         </div>
       </CardHeader>
       <CardContent>
+        {loading ? (
+            <div className="space-y-4">
+              {[...Array(5)].map((_, i) => <Skeleton key={i} className="h-12 w-full" />)}
+            </div>
+          ) : (
         <Table>
           <TableHeader>
             <TableRow>
@@ -79,6 +104,7 @@ export default function InventoryPage() {
             ))}
           </TableBody>
         </Table>
+        )}
       </CardContent>
     </Card>
   );

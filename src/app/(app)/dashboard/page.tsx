@@ -1,3 +1,4 @@
+'use client';
 import {
   Card,
   CardContent,
@@ -18,9 +19,54 @@ import { StatCard } from '@/components/app/stat-card';
 import { RevenueChart } from '@/components/app/revenue-chart';
 
 import { DollarSign, Users, FileText, CheckCircle2 } from 'lucide-react';
-import { invoices, tasks } from '@/lib/data';
+import { getInvoices, getTasks, getClients } from '@/lib/firestore';
+import { Invoice, Task, Client } from '@/lib/types';
+import { useEffect, useState } from 'react';
+import { Skeleton } from '@/components/ui/skeleton';
 
 export default function DashboardPage() {
+  const [invoices, setInvoices] = useState<Invoice[]>([]);
+  const [tasks, setTasks] = useState<Task[]>([]);
+  const [clients, setClients] = useState<Client[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    async function fetchData() {
+      try {
+        const [invoicesData, tasksData, clientsData] = await Promise.all([
+          getInvoices(),
+          getTasks(),
+          getClients()
+        ]);
+        setInvoices(invoicesData);
+        setTasks(tasksData);
+        setClients(clientsData);
+      } catch (error) {
+        console.error("Failed to fetch data", error);
+      } finally {
+        setLoading(false);
+      }
+    }
+    fetchData();
+  }, []);
+
+  if (loading) {
+    return (
+       <div className="flex flex-col gap-8">
+        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+          <Skeleton className="h-32" />
+          <Skeleton className="h-32" />
+          <Skeleton className="h-32" />
+          <Skeleton className="h-32" />
+        </div>
+        <div className="grid grid-cols-1 gap-4 lg:grid-cols-7">
+          <Skeleton className="lg:col-span-4 h-96" />
+          <Skeleton className="lg:col-span-3 h-96" />
+        </div>
+      </div>
+    );
+  }
+
   const totalRevenue = invoices
     .filter((invoice) => invoice.status === 'Paid')
     .reduce((sum, invoice) => sum + invoice.amount, 0);
@@ -43,10 +89,10 @@ export default function DashboardPage() {
           description="Total revenue from paid invoices"
         />
         <StatCard
-          title="New Clients"
-          value="+5"
+          title="Total Clients"
+          value={clients.length.toString()}
           icon={Users}
-          description="+2 since last month"
+          description="All-time clients"
         />
         <StatCard
           title="Pending Invoices"
@@ -64,7 +110,7 @@ export default function DashboardPage() {
 
       <div className="grid grid-cols-1 gap-4 lg:grid-cols-7">
         <div className="lg:col-span-4">
-          <RevenueChart />
+          <RevenueChart invoices={invoices} />
         </div>
         <Card className="lg:col-span-3">
           <CardHeader>
@@ -86,8 +132,8 @@ export default function DashboardPage() {
                 {recentInvoices.map((invoice) => (
                   <TableRow key={invoice.id}>
                     <TableCell>
-                      <div className="font-medium">{invoice.client.name}</div>
-                      <div className="text-sm text-muted-foreground">{invoice.client.email}</div>
+                      <div className="font-medium">{invoice.client?.name || '...'}</div>
+                      <div className="text-sm text-muted-foreground">{invoice.client?.email || '...'}</div>
                     </TableCell>
                     <TableCell>
                       <Badge 

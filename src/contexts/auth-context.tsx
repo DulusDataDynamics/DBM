@@ -2,72 +2,86 @@
 
 import React, { createContext, useState, useEffect, ReactNode } from 'react';
 import { useRouter } from 'next/navigation';
-import { User } from 'firebase/auth';
-
+import { 
+  User, 
+  onAuthStateChanged, 
+  createUserWithEmailAndPassword, 
+  signInWithEmailAndPassword,
+  signOut,
+  signInAnonymously
+} from 'firebase/auth';
+import { auth } from '@/lib/firebase';
 import { Skeleton } from '@/components/ui/skeleton';
 
-// Mock User Type
-type MockUser = {
-  uid: string;
-  email: string | null;
-  displayName: string | null;
-};
-
 interface AuthContextType {
-  user: MockUser | null;
+  user: User | null;
   loading: boolean;
   login: (email?: string, password?: string) => Promise<void>;
-  signup: (email?: string, password?: string) => Promise<void>;
+  signup: (email: string, password: string) => Promise<void>;
   logout: () => Promise<void>;
 }
 
 export const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
-  const [user, setUser] = useState<MockUser | null>(null);
+  const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
   const router = useRouter();
 
   useEffect(() => {
-    // Simulate checking for a logged-in user
-    const checkUser = setTimeout(() => {
-      const storedUser = sessionStorage.getItem('dulus-user');
-      if (storedUser) {
-        setUser(JSON.parse(storedUser));
-      }
+    const unsubscribe = onAuthStateChanged(auth, (user) => {
+      setUser(user);
       setLoading(false);
-    }, 1000);
+      if (user) {
+        // If user is logged in, you can add logic to redirect them
+        // For example, if they are on a login page
+      }
+    });
 
-    return () => clearTimeout(checkUser);
+    return () => unsubscribe();
   }, []);
 
-  const login = async (email = 'demo@dulus.com', password?: string) => {
+  const login = async (email?: string, password?: string) => {
     setLoading(true);
-    // Simulate API call
-    await new Promise((resolve) => setTimeout(resolve, 500));
-    const mockUser: MockUser = {
-      uid: '12345-abcde',
-      email: email,
-      displayName: 'Demo User',
-    };
-    setUser(mockUser);
-    sessionStorage.setItem('dulus-user', JSON.stringify(mockUser));
-    setLoading(false);
-    router.push('/dashboard');
+    try {
+      if (email && password) {
+        await signInWithEmailAndPassword(auth, email, password);
+      } else {
+        // Demo user login
+        await signInAnonymously(auth);
+      }
+      router.push('/dashboard');
+    } catch (error) {
+      console.error("Login failed:", error);
+      // You might want to show a toast or message to the user
+      setLoading(false);
+      throw error;
+    }
+    // setLoading is handled by onAuthStateChanged
   };
 
-  const signup = async (email?: string, password?: string) => {
-    await login(email, password); // For demo, signup is the same as login
+  const signup = async (email: string, password: string) => {
+    setLoading(true);
+    try {
+      await createUserWithEmailAndPassword(auth, email, password);
+      router.push('/dashboard');
+    } catch (error) {
+      console.error("Signup failed:", error);
+      setLoading(false);
+      throw error;
+    }
   };
 
   const logout = async () => {
     setLoading(true);
-    // Simulate API call
-    await new Promise((resolve) => setTimeout(resolve, 500));
-    setUser(null);
-    sessionStorage.removeItem('dulus-user');
-    setLoading(false);
-    router.push('/login');
+    try {
+      await signOut(auth);
+      router.push('/login');
+    } catch (error) {
+      console.error("Logout failed:", error);
+    } finally {
+      setLoading(false);
+    }
   };
 
   if (loading) {

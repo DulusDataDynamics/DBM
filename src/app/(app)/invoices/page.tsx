@@ -1,3 +1,4 @@
+'use client';
 import {
   Table,
   TableBody,
@@ -23,9 +24,29 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { Badge } from '@/components/ui/badge';
-import { invoices } from '@/lib/data';
+import { getInvoices } from '@/lib/firestore';
+import { Invoice } from '@/lib/types';
+import { useEffect, useState } from 'react';
+import { Skeleton } from '@/components/ui/skeleton';
 
 export default function InvoicesPage() {
+  const [invoices, setInvoices] = useState<Invoice[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    async function fetchInvoices() {
+      try {
+        const invoicesData = await getInvoices();
+        setInvoices(invoicesData);
+      } catch (error) {
+        console.error("Failed to fetch invoices", error);
+      } finally {
+        setLoading(false);
+      }
+    }
+    fetchInvoices();
+  }, []);
+
   return (
     <Card>
       <CardHeader>
@@ -41,6 +62,11 @@ export default function InvoicesPage() {
         </div>
       </CardHeader>
       <CardContent>
+        {loading ? (
+          <div className="space-y-4">
+            {[...Array(5)].map((_, i) => <Skeleton key={i} className="h-12 w-full" />)}
+          </div>
+        ) : (
         <Table>
           <TableHeader>
             <TableRow>
@@ -58,7 +84,7 @@ export default function InvoicesPage() {
             {invoices.map((invoice) => (
               <TableRow key={invoice.id}>
                 <TableCell className="font-medium">{invoice.id}</TableCell>
-                <TableCell>{invoice.client.name}</TableCell>
+                <TableCell>{invoice.client?.name || '...'}</TableCell>
                 <TableCell>
                   <Badge 
                     variant={
@@ -94,6 +120,7 @@ export default function InvoicesPage() {
             ))}
           </TableBody>
         </Table>
+        )}
       </CardContent>
     </Card>
   );

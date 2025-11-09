@@ -12,14 +12,19 @@ import {
 import { Lightbulb, Sparkles } from 'lucide-react';
 import { getRevenueInsights } from '@/lib/actions';
 import { Skeleton } from '../ui/skeleton';
+import { Invoice } from '@/lib/types';
 
-export function RevenueInsightsGenerator() {
+interface RevenueInsightsGeneratorProps {
+    invoices: Invoice[];
+}
+
+export function RevenueInsightsGenerator({ invoices }: RevenueInsightsGeneratorProps) {
   const [insight, setInsight] = useState<string | null>(null);
   const [isPending, startTransition] = useTransition();
 
   const handleGenerate = () => {
     startTransition(async () => {
-      const result = await getRevenueInsights();
+      const result = await getRevenueInsights(invoices);
       setInsight(result.insight);
     });
   };
@@ -34,7 +39,7 @@ export function RevenueInsightsGenerator() {
               Generate insights from your revenue and invoice data.
             </CardDescription>
           </div>
-          <Button onClick={handleGenerate} disabled={isPending} size="sm" variant="outline">
+          <Button onClick={handleGenerate} disabled={isPending || invoices.length === 0} size="sm" variant="outline">
             <Sparkles className="mr-2 h-4 w-4" />
             {isPending ? 'Generating...' : 'Generate'}
           </Button>
@@ -57,7 +62,10 @@ export function RevenueInsightsGenerator() {
             </div>
           ) : (
             <div className="text-center text-sm text-muted-foreground">
-              Click &quot;Generate&quot; to get AI-powered insights.
+                {invoices.length === 0 
+                ? 'Waiting for invoice data to generate insights.'
+                : 'Click "Generate" to get AI-powered insights.'
+                }
             </div>
           )}
         </div>

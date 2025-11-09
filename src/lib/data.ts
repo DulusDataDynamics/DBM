@@ -1,5 +1,8 @@
 import { Client, Invoice, Task, InventoryItem } from './types';
 
+// This file now contains only the initial seed data.
+// The application will fetch data from Firestore.
+
 export const clients: Client[] = [
   { id: '1', name: 'Innovate LLC', email: 'contact@innovate.com', phone: '555-0101' },
   { id: '2', name: 'Quantum Solutions', email: 'support@quantum.dev', phone: '555-0102' },
@@ -8,13 +11,13 @@ export const clients: Client[] = [
   { id: '5',name: 'Momentum Inc.', email: 'admin@momentum.inc', phone: '555-0105' },
 ];
 
-export const invoices: Invoice[] = [
-  { id: 'INV-001', client: clients[0], amount: 2500, status: 'Paid', dueDate: '2024-06-01' },
-  { id: 'INV-002', client: clients[1], amount: 1800, status: 'Paid', dueDate: '2024-06-05' },
-  { id: 'INV-003', client: clients[2], amount: 3200, status: 'Unpaid', dueDate: '2024-07-15' },
-  { id: 'INV-004', client: clients[3], amount: 500, status: 'Overdue', dueDate: '2024-05-20' },
-  { id: 'INV-005', client: clients[0], amount: 4500, status: 'Unpaid', dueDate: '2024-07-30' },
-  { id: 'INV-006', client: clients[4], amount: 2200, status: 'Paid', dueDate: '2024-06-12' },
+export const invoices: Omit<Invoice, 'client'> & { clientId: string }[] = [
+  { id: 'INV-001', clientId: '1', amount: 2500, status: 'Paid', dueDate: '2024-06-01' },
+  { id: 'INV-002', clientId: '2', amount: 1800, status: 'Paid', dueDate: '2024-06-05' },
+  { id: 'INV-003', clientId: '3', amount: 3200, status: 'Unpaid', dueDate: '2024-07-15' },
+  { id: 'INV-004', clientId: '4', amount: 500, status: 'Overdue', dueDate: '2024-05-20' },
+  { id: 'INV-005', clientId: '1', amount: 4500, status: 'Unpaid', dueDate: '2024-07-30' },
+  { id: 'INV-006', clientId: '5', amount: 2200, status: 'Paid', dueDate: '2024-06-12' },
 ];
 
 export const tasks: Task[] = [
@@ -29,6 +32,6 @@ export const inventory: InventoryItem[] = [
   { id: '1', sku: 'DBM-PRO-001', name: 'Pro Website Package', quantity: 15, price: 2500 },
   { id: '2', sku: 'DBM-STD-001', name: 'Standard Logo Design', quantity: 30, price: 800 },
   { id: '3', sku: 'DBM-HR-CON', name: 'Hourly Consulting', quantity: 100, price: 150 },
-  { id '4', sku: 'DBM-SOC-MGT', name: 'Social Media Mgmt (Month)', quantity: 8, price: 1200 },
+  { id: '4', sku: 'DBM-SOC-MGT', name: 'Social Media Mgmt (Month)', quantity: 8, price: 1200 },
   { id: '5', sku: 'DBM-SEO-AUD', name: 'SEO Audit', quantity: 22, price: 600 },
 ];
