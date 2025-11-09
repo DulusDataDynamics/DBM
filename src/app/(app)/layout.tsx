@@ -87,8 +87,10 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
         </SidebarFooter>
       </Sidebar>
       <SidebarInset>
-        <header className="sticky top-0 z-10 flex h-16 items-center justify-between border-b bg-background/80 px-4 backdrop-blur-sm sm:justify-between">
-          <SidebarTrigger className="sm:hidden" />
+        <header className="sticky top-0 z-10 flex h-16 items-center justify-between border-b bg-background/80 px-4 backdrop-blur-sm">
+          <div className="flex items-center gap-4">
+             <SidebarTrigger />
+          </div>
           <div className="flex items-center gap-4">
              <UserNav />
           </div>
