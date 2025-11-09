@@ -58,7 +58,7 @@ export default function InventoryPage() {
       <CardContent>
         {loading ? (
             <div className="space-y-4">
-               <p className="text-sm text-muted-foreground">Loading inventory...</p>
+               <p className="text-sm text-muted-foreground animate-pulse">Fetching inventory data...</p>
               {[...Array(5)].map((_, i) => <Skeleton key={i} className="h-12 w-full" />)}
             </div>
           ) : (

@@ -58,7 +58,7 @@ export default function ClientsPage() {
       <CardContent>
          {loading ? (
           <div className="space-y-4">
-            <p className="text-sm text-muted-foreground">Loading clients...</p>
+            <p className="text-sm text-muted-foreground animate-pulse">Loading clients, please wait...</p>
             {[...Array(5)].map((_, i) => <Skeleton key={i} className="h-12 w-full" />)}
           </div>
         ) : (

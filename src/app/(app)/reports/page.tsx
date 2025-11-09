@@ -26,11 +26,11 @@ export default function ReportsPage() {
       {loading ? (
          <div className="grid grid-cols-1 gap-6 lg:grid-cols-5">
             <div className="lg:col-span-3 space-y-2">
-              <p className="text-sm text-muted-foreground">Loading revenue chart...</p>
+              <p className="text-sm text-muted-foreground animate-pulse">Analyzing revenue data...</p>
               <Skeleton className="h-96" />
             </div>
             <div className="lg:col-span-2 space-y-2">
-              <p className="text-sm text-muted-foreground">Loading status chart...</p>
+              <p className="text-sm text-muted-foreground animate-pulse">Checking invoice statuses...</p>
               <Skeleton className="h-96" />
             </div>
         </div>
