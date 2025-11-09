@@ -69,6 +69,12 @@ export default function SettingsPage() {
       setCompanyLogoPreview(URL.createObjectURL(file));
     }
   };
+  
+  const handleRemoveProfilePic = () => {
+    setProfilePicPreview(null);
+    const input = document.getElementById('profile-picture') as HTMLInputElement;
+    if (input) input.value = '';
+  }
 
   return (
     <div className="space-y-6">
@@ -102,12 +108,15 @@ export default function SettingsPage() {
                   <CardContent className="space-y-6">
                     <div className="flex items-center gap-6">
                       <Avatar className="h-20 w-20">
-                        {profilePicPreview && <AvatarImage src={profilePicPreview} alt="User Avatar" />}
+                        <AvatarImage src={profilePicPreview || ''} alt="User Avatar" className="object-cover" />
                         <AvatarFallback>U</AvatarFallback>
                       </Avatar>
                       <div className="space-y-2">
                         <Label htmlFor="profile-picture">Profile Picture</Label>
-                        <Input id="profile-picture" type="file" className="max-w-sm" onChange={handleProfilePictureChange} accept="image/*" />
+                         <div className="flex items-center gap-2">
+                            <Input id="profile-picture" type="file" className="max-w-sm" onChange={handleProfilePictureChange} accept="image/*" />
+                            <Button variant="outline" size="sm" onClick={handleRemoveProfilePic} disabled={!profilePicPreview}>Remove</Button>
+                        </div>
                         <p className="text-xs text-muted-foreground">PNG, JPG, GIF up to 5MB.</p>
                       </div>
                     </div>
@@ -155,7 +164,7 @@ export default function SettingsPage() {
                     <div className="flex items-center gap-6">
                       <Avatar className="h-20 w-20 rounded-md">
                         {companyLogoPreview ? (
-                          <AvatarImage src={companyLogoPreview} alt="Company Logo" className="rounded-md" />
+                          <AvatarImage src={companyLogoPreview} alt="Company Logo" className="object-cover rounded-md" />
                         ) : (
                            <div className="flex h-full w-full items-center justify-center rounded-md border bg-muted">
                             <Building className="h-10 w-10 text-muted-foreground" />
