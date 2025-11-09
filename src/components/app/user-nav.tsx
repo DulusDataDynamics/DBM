@@ -1,10 +1,8 @@
 'use client';
 
-import Image from 'next/image';
 import { useAuth } from '@/hooks/use-auth';
-import { PlaceHolderImages } from '@/lib/placeholder-images';
 
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
 import {
   DropdownMenu,
@@ -18,7 +16,6 @@ import {
 
 export function UserNav() {
   const { user, logout } = useAuth();
-  const avatarImage = PlaceHolderImages.find(p => p.id === 'user-avatar');
 
   if (!user) {
     return null;
@@ -31,16 +28,6 @@ export function UserNav() {
       <DropdownMenuTrigger asChild>
         <Button variant="ghost" className="relative h-10 w-10 rounded-full">
           <Avatar className="h-10 w-10">
-            {avatarImage && (
-              <Image
-                src={avatarImage.imageUrl}
-                alt={avatarImage.description}
-                width={40}
-                height={40}
-                data-ai-hint={avatarImage.imageHint}
-                className="object-cover"
-              />
-            )}
             <AvatarFallback>{userInitial}</AvatarFallback>
           </Avatar>
         </Button>

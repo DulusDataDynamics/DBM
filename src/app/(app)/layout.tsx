@@ -22,8 +22,6 @@ import {
   SidebarTrigger,
   SidebarInset,
 } from '@/components/ui/sidebar';
-import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
-import { Menu } from 'lucide-react';
 
 export default function AppLayout({ children }: { children: React.ReactNode }) {
   const { user, loading } = useAuth();
@@ -47,7 +45,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
 
   return (
     <SidebarProvider>
-      <Sidebar className="border-r bg-background">
+      <Sidebar>
         <SidebarHeader>
           <Logo />
         </SidebarHeader>
@@ -78,7 +76,9 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
           <div className="sm:hidden">
             <SidebarTrigger />
           </div>
-          <UserNav />
+          <div className="hidden sm:block">
+            <UserNav />
+          </div>
         </header>
         <main className="flex-1 p-4 md:p-6 lg:p-8">
             {children}
