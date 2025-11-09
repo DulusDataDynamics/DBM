@@ -11,6 +11,7 @@ import {
 } from 'firebase/auth';
 import { auth } from '@/lib/firebase';
 import { Skeleton } from '@/components/ui/skeleton';
+import { Logo } from '@/components/logo';
 
 interface AuthContextType {
   user: User | null;
@@ -82,10 +83,10 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     return (
       <div className="flex h-screen w-screen items-center justify-center">
         <div className="flex flex-col items-center gap-4">
-          <Skeleton className="h-12 w-12 rounded-full" />
-          <div className="space-y-2">
-            <Skeleton className="h-4 w-[250px]" />
-            <Skeleton className="h-4 w-[200px]" />
+          <Logo />
+          <div className="space-y-2 text-center">
+            <p className="text-lg font-medium">Authenticating...</p>
+            <p className="text-sm text-muted-foreground">Please wait while we check your credentials.</p>
           </div>
         </div>
       </div>

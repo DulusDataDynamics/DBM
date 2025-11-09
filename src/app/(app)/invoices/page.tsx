@@ -59,6 +59,7 @@ export default function InvoicesPage() {
       <CardContent>
         {loading ? (
           <div className="space-y-4">
+            <p className="text-sm text-muted-foreground">Loading invoices...</p>
             {[...Array(5)].map((_, i) => <Skeleton key={i} className="h-12 w-full" />)}
           </div>
         ) : (

@@ -25,8 +25,14 @@ export default function ReportsPage() {
       <h1 className="text-3xl font-bold tracking-tight">Reports & Insights</h1>
       {loading ? (
          <div className="grid grid-cols-1 gap-6 lg:grid-cols-5">
-            <Skeleton className="lg:col-span-3 h-96" />
-            <Skeleton className="lg:col-span-2 h-96" />
+            <div className="lg:col-span-3 space-y-2">
+              <p className="text-sm text-muted-foreground">Loading revenue chart...</p>
+              <Skeleton className="h-96" />
+            </div>
+            <div className="lg:col-span-2 space-y-2">
+              <p className="text-sm text-muted-foreground">Loading status chart...</p>
+              <Skeleton className="h-96" />
+            </div>
         </div>
       ) : (
         <div className="grid grid-cols-1 gap-6 lg:grid-cols-5">
