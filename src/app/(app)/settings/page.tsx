@@ -4,6 +4,7 @@ import {
   Card,
   CardContent,
   CardDescription,
+  CardFooter,
   CardHeader,
   CardTitle,
 } from '@/components/ui/card';
@@ -151,6 +152,9 @@ export default function SettingsPage() {
                        </div>
                      </div>
                   </CardContent>
+                  <CardFooter className="justify-end">
+                      <Button>Save Changes</Button>
+                  </CardFooter>
                 </Card>
             </TabsContent>
 
@@ -215,6 +219,9 @@ export default function SettingsPage() {
                         </div>
                      </div>
                   </CardContent>
+                   <CardFooter className="justify-end">
+                      <Button>Save Changes</Button>
+                  </CardFooter>
                 </Card>
             </TabsContent>
 
