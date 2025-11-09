@@ -23,7 +23,7 @@ import {
   DropdownMenuLabel,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-import { getInventory } from '@/lib/firestore';
+import { subscribeToInventory } from '@/lib/firestore';
 import { InventoryItem } from '@/lib/types';
 import { useEffect, useState } from 'react';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -33,17 +33,12 @@ export default function InventoryPage() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    async function fetchInventory() {
-      try {
-        const inventoryData = await getInventory();
-        setInventory(inventoryData);
-      } catch (error) {
-        console.error("Failed to fetch inventory", error);
-      } finally {
-        setLoading(false);
-      }
-    }
-    fetchInventory();
+    const unsubscribe = subscribeToInventory((inventoryData) => {
+      setInventory(inventoryData);
+      setLoading(false);
+    });
+
+    return () => unsubscribe();
   }, []);
 
   return (

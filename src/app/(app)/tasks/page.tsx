@@ -25,7 +25,7 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { Badge } from '@/components/ui/badge';
 import { Checkbox } from '@/components/ui/checkbox';
-import { getTasks, updateTaskCompletion } from '@/lib/firestore';
+import { subscribeToTasks, updateTaskCompletion } from '@/lib/firestore';
 import { Task } from '@/lib/types';
 import { useEffect, useState, useTransition } from 'react';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -36,25 +36,18 @@ export default function TasksPage() {
   const [isPending, startTransition] = useTransition();
 
   useEffect(() => {
-    async function fetchTasks() {
-      try {
-        const tasksData = await getTasks();
-        setTasks(tasksData.sort((a, b) => new Date(a.dueDate).getTime() - new Date(b.dueDate).getTime()));
-      } catch (error) {
-        console.error("Failed to fetch tasks", error);
-      } finally {
-        setLoading(false);
-      }
-    }
-    fetchTasks();
+    const unsubscribe = subscribeToTasks((tasksData) => {
+      setTasks(tasksData.sort((a, b) => new Date(a.dueDate).getTime() - new Date(b.dueDate).getTime()));
+      setLoading(false);
+    });
+
+    return () => unsubscribe();
   }, []);
 
   const handleTaskChecked = (task: Task, checked: boolean) => {
     startTransition(async () => {
       await updateTaskCompletion(task.id, checked);
-      setTasks(currentTasks => 
-        currentTasks.map(t => t.id === task.id ? {...t, completed: checked} : t)
-      );
+      // The real-time listener will update the state automatically
     });
   }
 

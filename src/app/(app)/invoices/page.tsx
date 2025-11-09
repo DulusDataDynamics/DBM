@@ -24,7 +24,7 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { Badge } from '@/components/ui/badge';
-import { getInvoices } from '@/lib/firestore';
+import { subscribeToInvoices } from '@/lib/firestore';
 import { Invoice } from '@/lib/types';
 import { useEffect, useState } from 'react';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -34,17 +34,12 @@ export default function InvoicesPage() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    async function fetchInvoices() {
-      try {
-        const invoicesData = await getInvoices();
-        setInvoices(invoicesData);
-      } catch (error) {
-        console.error("Failed to fetch invoices", error);
-      } finally {
-        setLoading(false);
-      }
-    }
-    fetchInvoices();
+    const unsubscribe = subscribeToInvoices((invoicesData) => {
+      setInvoices(invoicesData);
+      setLoading(false);
+    });
+
+    return () => unsubscribe();
   }, []);
 
   return (

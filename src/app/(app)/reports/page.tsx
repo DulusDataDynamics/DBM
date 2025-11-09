@@ -2,7 +2,7 @@
 import { RevenueChart } from "@/components/app/revenue-chart";
 import { InvoiceStatusChart } from "@/components/app/invoice-status-chart";
 import { RevenueInsightsGenerator } from "@/components/app/revenue-insights-generator";
-import { getInvoices } from "@/lib/firestore";
+import { subscribeToInvoices } from "@/lib/firestore";
 import { Invoice } from "@/lib/types";
 import { useEffect, useState } from "react";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -12,17 +12,12 @@ export default function ReportsPage() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    async function fetchData() {
-      try {
-        const invoicesData = await getInvoices();
-        setInvoices(invoicesData);
-      } catch (error) {
-        console.error("Failed to fetch invoices", error);
-      } finally {
-        setLoading(false);
-      }
-    }
-    fetchData();
+    const unsubscribe = subscribeToInvoices((invoicesData) => {
+      setInvoices(invoicesData);
+      setLoading(false);
+    });
+
+    return () => unsubscribe();
   }, []);
 
   return (

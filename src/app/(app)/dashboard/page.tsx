@@ -19,7 +19,7 @@ import { StatCard } from '@/components/app/stat-card';
 import { RevenueChart } from '@/components/app/revenue-chart';
 
 import { DollarSign, Users, FileText, CheckCircle2 } from 'lucide-react';
-import { getInvoices, getTasks, getClients } from '@/lib/firestore';
+import { subscribeToInvoices, subscribeToTasks, subscribeToClients } from '@/lib/firestore';
 import { Invoice, Task, Client } from '@/lib/types';
 import { useEffect, useState } from 'react';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -31,24 +31,31 @@ export default function DashboardPage() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    async function fetchData() {
-      try {
-        const [invoicesData, tasksData, clientsData] = await Promise.all([
-          getInvoices(),
-          getTasks(),
-          getClients()
-        ]);
-        setInvoices(invoicesData);
-        setTasks(tasksData);
-        setClients(clientsData);
-      } catch (error) {
-        console.error("Failed to fetch data", error);
-      } finally {
-        setLoading(false);
+    const unsubInvoices = subscribeToInvoices(setInvoices);
+    const unsubTasks = subscribeToTasks(setTasks);
+    const unsubClients = subscribeToClients(setClients);
+
+    // Initial loading state
+    const timer = setTimeout(() => {
+      if (invoices.length === 0 && tasks.length === 0 && clients.length === 0) {
+         setLoading(false);
       }
-    }
-    fetchData();
+    }, 3000); // Failsafe to turn off skeleton if data doesn't come back
+
+    return () => {
+      unsubInvoices();
+      unsubTasks();
+      unsubClients();
+      clearTimeout(timer);
+    };
   }, []);
+
+  useEffect(() => {
+    if(invoices.length > 0 && tasks.length > 0 && clients.length > 0) {
+      setLoading(false);
+    }
+  }, [invoices, tasks, clients]);
+
 
   if (loading) {
     return (
@@ -77,7 +84,7 @@ export default function DashboardPage() {
 
   const tasksToComplete = tasks.filter((task) => !task.completed).length;
 
-  const recentInvoices = invoices.slice(0, 5);
+  const recentInvoices = invoices.sort((a, b) => new Date(b.dueDate).getTime() - new Date(a.dueDate).getTime()).slice(0, 5);
 
   return (
     <div className="flex flex-col gap-8">

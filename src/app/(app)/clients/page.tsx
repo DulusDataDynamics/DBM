@@ -23,7 +23,7 @@ import {
   DropdownMenuLabel,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-import { getClients } from '@/lib/firestore';
+import { subscribeToClients } from '@/lib/firestore';
 import { Client } from '@/lib/types';
 import { useEffect, useState } from 'react';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -33,17 +33,12 @@ export default function ClientsPage() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    async function fetchClients() {
-      try {
-        const clientsData = await getClients();
-        setClients(clientsData);
-      } catch (error) {
-        console.error("Failed to fetch clients", error);
-      } finally {
-        setLoading(false);
-      }
-    }
-    fetchClients();
+    const unsubscribe = subscribeToClients((clientsData) => {
+      setClients(clientsData);
+      setLoading(false);
+    });
+
+    return () => unsubscribe();
   }, []);
 
   return (
