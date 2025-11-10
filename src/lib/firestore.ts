@@ -78,6 +78,15 @@ export const subscribeToInvoices = (callback: (invoices: Invoice[]) => void): ()
   };
 };
 
+export const saveInvoice = async (id: string | undefined, data: Omit<Invoice, 'id' | 'client'>) => {
+  if (id) {
+    const invoiceDoc = doc(db, 'invoices', id);
+    return await updateDoc(invoiceDoc, data);
+  } else {
+    return await addDoc(collection(db, 'invoices'), data);
+  }
+}
+
 
 // Task functions
 export const subscribeToTasks = (callback: (tasks: Task[]) => void) => subscribeToCollection<Task>('tasks', callback);

@@ -1,89 +1,25 @@
 'use client';
 
-import React, { useEffect, useState, useRef } from 'react';
+import React, { useEffect, useState } from 'react';
 import { collection, getDocs, query, orderBy, doc, getDoc } from 'firebase/firestore';
-import { auth, db } from '@/lib/firebase';
+import { db } from '@/lib/firebase';
 import jsPDF from 'jspdf';
 import 'jspdf-autotable';
 import { Button } from '../ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../ui/card';
-import { Download, Mic } from 'lucide-react';
+import { Download } from 'lucide-react';
 import { Invoice, Client } from '@/lib/types';
 import { useToast } from '@/hooks/use-toast';
 
-// Redefine types to match our app structure
 type AppInvoice = Invoice & {
     client?: Client;
 };
 
 export default function DownloadInvoices() {
   const [loading, setLoading] = useState(false);
-  const [listening, setListening] = useState(false);
-  const recognitionRef = useRef<SpeechRecognition | null>(null);
   const { toast } = useToast();
 
-  useEffect(() => {
-    // @ts-ignore - vendor prefix support
-    const SpeechRecognition =
-      (typeof window !== 'undefined' && (window as any).SpeechRecognition) ||
-      (typeof window !== 'undefined' && (window as any).webkitSpeechRecognition);
-
-    if (!SpeechRecognition) {
-        console.warn("Speech recognition not supported in this browser.");
-        return;
-    }
-
-    const recognition = new SpeechRecognition();
-    recognition.lang = 'en-US';
-    recognition.interimResults = false;
-    recognition.maxAlternatives = 1;
-    recognition.continuous = true;
-
-    recognition.onresult = (event: SpeechRecognitionEvent) => {
-      const transcript = event.results[event.results.length - 1][0].transcript
-        .trim()
-        .toLowerCase();
-      
-      if (
-        transcript.includes('download invoices') ||
-        transcript.includes('download invoice') ||
-        transcript.includes('all invoices') ||
-        transcript.includes('download all invoices')
-      ) {
-        handleDownload();
-      }
-    };
-
-    recognition.onstart = () => setListening(true);
-    recognition.onend = () => setListening(false);
-    recognition.onerror = (e) => {
-        if(e.error !== 'no-speech'){
-            toast({
-                variant: 'destructive',
-                title: 'Voice Recognition Error',
-                description: e.error,
-            });
-        }
-        setListening(false);
-    }
-
-    recognitionRef.current = recognition;
-
-    return () => {
-      try {
-        recognition.stop();
-      } catch {
-        // ignore errors
-      }
-      recognitionRef.current = null;
-    };
-  }, [toast]);
-
   async function fetchInvoices(): Promise<AppInvoice[]> {
-    const currentUser = auth.currentUser;
-    if (!currentUser) throw new Error('User not authenticated');
-
-    // Fetch all invoices
     const invoicesRef = collection(db, 'invoices');
     const q = query(invoicesRef, orderBy('dueDate', 'desc'));
     const invoiceSnap = await getDocs(q);
@@ -93,7 +29,6 @@ export default function DownloadInvoices() {
       ...(d.data() as Omit<Invoice, 'id'>),
     }));
 
-    // Fetch associated clients
     const clientPromises = invoicesData.map(inv => {
         if (inv.clientId) {
             const clientRef = doc(db, "clients", inv.clientId);
@@ -157,7 +92,6 @@ export default function DownloadInvoices() {
     const companyEmail = 'dulusdatadynamics@gmail.com';
     const generatedDate = new Date().toLocaleString();
 
-    // Title page/header on first page
     doc.setFontSize(18);
     doc.text(companyName, 40, 50);
     doc.setFontSize(10);
@@ -233,38 +167,12 @@ export default function DownloadInvoices() {
     doc.save(fileName);
   }
 
-  function toggleListening() {
-    const rec = recognitionRef.current;
-    if (!rec) {
-      toast({
-          variant: "destructive",
-          title: "Voice Recognition Not Supported",
-          description: "Your browser does not support voice recognition.",
-      });
-      return;
-    }
-    try {
-      if (listening) {
-        rec.stop();
-      } else {
-        rec.start();
-      }
-    } catch (err) {
-      console.error(err);
-      toast({
-          variant: "destructive",
-          title: "Voice Recognition Error",
-          description: "Could not start listening. Please check microphone permissions.",
-      });
-    }
-  }
-
   return (
     <Card>
         <CardHeader>
             <CardTitle>Export Invoices</CardTitle>
             <CardDescription>
-                Say “download invoices” or click the button to get a PDF.
+                Download a PDF summary of all your invoices.
             </CardDescription>
         </CardHeader>
         <CardContent>
@@ -273,24 +181,7 @@ export default function DownloadInvoices() {
                     <Download className="mr-2 h-4 w-4" />
                     {loading ? 'Preparing PDF...' : 'Download Invoices (PDF)'}
                 </Button>
-
-                {recognitionRef.current && (
-                    <Button
-                        onClick={toggleListening}
-                        variant={listening ? 'secondary' : 'outline'}
-                        size="icon"
-                        aria-label="Toggle voice commands"
-                        className={listening ? 'bg-primary/20 text-primary' : ''}
-                    >
-                        <Mic className="h-4 w-4" />
-                    </Button>
-                )}
             </div>
-            {recognitionRef.current && (
-                 <div className="mt-3 text-xs text-muted-foreground">
-                    <strong>Note:</strong> Browser permission for the microphone is required to use voice commands.
-                </div>
-            )}
         </CardContent>
     </Card>
   );
