@@ -9,6 +9,9 @@ import {
   onSnapshot,
   QuerySnapshot,
   DocumentData,
+  addDoc,
+  deleteDoc,
+  setDoc
 } from 'firebase/firestore';
 import { Client, Invoice, Task, InventoryItem } from './types';
 
@@ -30,6 +33,19 @@ export const getClient = async (id: string) => {
   const docSnap = await getDoc(docRef);
   return docSnap.exists() ? { id: docSnap.id, ...docSnap.data() } as Client : null;
 }
+export const saveClient = async (id: string | undefined, data: Omit<Client, 'id'>) => {
+  if (id) {
+    const clientDoc = doc(db, 'clients', id);
+    return await updateDoc(clientDoc, data);
+  } else {
+    return await addDoc(collection(db, 'clients'), data);
+  }
+}
+export const deleteClient = async (id: string) => {
+    const clientDoc = doc(db, 'clients', id);
+    return await deleteDoc(clientDoc);
+}
+
 
 // Invoice functions
 export const subscribeToInvoices = (callback: (invoices: Invoice[]) => void): () => void => {

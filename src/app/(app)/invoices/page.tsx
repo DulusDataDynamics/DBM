@@ -95,7 +95,7 @@ export default function InvoicesPage() {
                   </Badge>
                 </TableCell>
                 <TableCell>{new Date(invoice.dueDate).toLocaleDateString()}</TableCell>
-                <TableCell className="text-right">${invoice.amount.toLocaleString()}</TableCell>
+                <TableCell className="text-right">R{invoice.amount.toLocaleString()}</TableCell>
                 <TableCell>
                   <DropdownMenu>
                     <DropdownMenuTrigger asChild>

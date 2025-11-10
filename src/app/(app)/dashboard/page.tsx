@@ -92,7 +92,7 @@ export default function DashboardPage() {
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
         <StatCard
           title="Total Revenue"
-          value={`$${totalRevenue.toLocaleString()}`}
+          value={`R${totalRevenue.toLocaleString()}`}
           icon={DollarSign}
           description="Total revenue from paid invoices"
         />
@@ -156,7 +156,7 @@ export default function DashboardPage() {
                         {invoice.status}
                       </Badge>
                     </TableCell>
-                    <TableCell className="text-right">${invoice.amount.toLocaleString()}</TableCell>
+                    <TableCell className="text-right">R{invoice.amount.toLocaleString()}</TableCell>
                   </TableRow>
                 ))}
               </TableBody>
