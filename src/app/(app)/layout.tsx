@@ -48,6 +48,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
         <SidebarHeader>
           <Logo />
         </SidebarHeader>
+        <SidebarSeparator />
         <SidebarContent>
           <SidebarMenu>
             {NAV_LINKS.map((link) => (
