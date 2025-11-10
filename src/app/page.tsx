@@ -122,6 +122,24 @@ export default function LandingPage() {
             </div>
         </section>
       </main>
+      <footer className="border-t">
+        <div className="container mx-auto flex flex-col items-center justify-between gap-4 px-4 py-6 md:flex-row md:px-6">
+          <p className="text-sm text-muted-foreground">
+            © 2024 Dulus Data Dynamics. All rights reserved.
+          </p>
+          <div className="flex items-center gap-4">
+            <Link href="/terms" className="text-sm text-muted-foreground hover:text-foreground">
+              Terms of Service
+            </Link>
+            <Link href="/privacy" className="text-sm text-muted-foreground hover:text-foreground">
+              Privacy Policy
+            </Link>
+             <Link href="https://dulusdatadynamics.netlify.app" target="_blank" rel="noopener noreferrer" className="text-sm text-muted-foreground hover:text-foreground">
+              Website
+            </Link>
+          </div>
+        </div>
+      </footer>
     </div>
   );
 }
