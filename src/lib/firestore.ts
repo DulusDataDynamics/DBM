@@ -78,6 +78,17 @@ export const subscribeToInvoices = (callback: (invoices: Invoice[]) => void): ()
   };
 };
 
+export const getInvoice = async (id: string): Promise<Invoice | null> => {
+    const docRef = doc(db, 'invoices', id);
+    const docSnap = await getDoc(docRef);
+    if (!docSnap.exists()) return null;
+
+    const data = docSnap.data();
+    const client = await getClient(data.clientId);
+
+    return { id: docSnap.id, ...data, client } as Invoice;
+}
+
 export const saveInvoice = async (id: string | undefined, data: Omit<Invoice, 'id' | 'client'>) => {
   if (id) {
     const invoiceDoc = doc(db, 'invoices', id);
@@ -85,6 +96,11 @@ export const saveInvoice = async (id: string | undefined, data: Omit<Invoice, 'i
   } else {
     return await addDoc(collection(db, 'invoices'), data);
   }
+}
+
+export const deleteInvoice = async (id: string) => {
+    const invoiceDoc = doc(db, 'invoices', id);
+    return await deleteDoc(invoiceDoc);
 }
 
 

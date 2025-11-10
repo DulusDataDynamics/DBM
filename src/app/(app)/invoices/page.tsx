@@ -24,19 +24,34 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { Badge } from '@/components/ui/badge';
-import { subscribeToInvoices } from '@/lib/firestore';
+import { deleteInvoice, subscribeToInvoices } from '@/lib/firestore';
 import { Invoice } from '@/lib/types';
 import { useEffect, useState } from 'react';
 import { Skeleton } from '@/components/ui/skeleton';
 import DownloadInvoices from '@/components/app/download-invoices';
 import { InvoiceForm } from '@/components/app/invoice-form';
 import { ScrollArea } from '@/components/ui/scroll-area';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
+import { ViewInvoiceDialog } from '@/components/app/view-invoice-dialog';
 
 export default function InvoicesPage() {
   const [invoices, setInvoices] = useState<Invoice[]>([]);
   const [loading, setLoading] = useState(true);
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [selectedInvoice, setSelectedInvoice] = useState<Invoice | null>(null);
+  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
+  const [invoiceToDelete, setInvoiceToDelete] = useState<Invoice | null>(null);
+  const [isViewDialogOpen, setIsViewDialogOpen] = useState(false);
+  const [invoiceToView, setInvoiceToView] = useState<Invoice | null>(null);
 
   useEffect(() => {
     const unsubscribe = subscribeToInvoices((invoicesData) => {
@@ -52,6 +67,29 @@ export default function InvoicesPage() {
     setIsFormOpen(true);
   };
   
+  const handleEditInvoice = (invoice: Invoice) => {
+    setSelectedInvoice(invoice);
+    setIsFormOpen(true);
+  }
+
+  const handleDeleteInvoice = (invoice: Invoice) => {
+    setInvoiceToDelete(invoice);
+    setIsDeleteDialogOpen(true);
+  }
+
+  const handleViewInvoice = (invoice: Invoice) => {
+    setInvoiceToView(invoice);
+    setIsViewDialogOpen(true);
+  }
+
+  const confirmDelete = async () => {
+    if (invoiceToDelete) {
+      await deleteInvoice(invoiceToDelete.id);
+      setIsDeleteDialogOpen(false);
+      setInvoiceToDelete(null);
+    }
+  };
+
   const handleFormClose = () => {
     setIsFormOpen(false);
     setSelectedInvoice(null);
@@ -128,9 +166,9 @@ export default function InvoicesPage() {
                                 </DropdownMenuTrigger>
                                 <DropdownMenuContent align="end">
                                   <DropdownMenuLabel>Actions</DropdownMenuLabel>
-                                  <DropdownMenuItem>View</DropdownMenuItem>
-                                  <DropdownMenuItem>Edit</DropdownMenuItem>
-                                  <DropdownMenuItem>Delete</DropdownMenuItem>
+                                  <DropdownMenuItem onClick={() => handleViewInvoice(invoice)}>View</DropdownMenuItem>
+                                  <DropdownMenuItem onClick={() => handleEditInvoice(invoice)}>Edit</DropdownMenuItem>
+                                  <DropdownMenuItem onClick={() => handleDeleteInvoice(invoice)} className="text-red-500">Delete</DropdownMenuItem>
                                 </DropdownMenuContent>
                               </DropdownMenu>
                             </TableCell>
@@ -152,6 +190,26 @@ export default function InvoicesPage() {
         isOpen={isFormOpen}
         onClose={handleFormClose}
         invoice={selectedInvoice}
+      />
+      <AlertDialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Are you sure?</AlertDialogTitle>
+            <AlertDialogDescription>
+              This action cannot be undone. This will permanently delete the invoice
+              <strong className="text-foreground"> {invoiceToDelete?.id.substring(0,8)}</strong>.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction onClick={confirmDelete} className="bg-destructive hover:bg-destructive/80">Delete</AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+       <ViewInvoiceDialog
+        isOpen={isViewDialogOpen}
+        onClose={() => setIsViewDialogOpen(false)}
+        invoice={invoiceToView}
       />
     </>
   );
