@@ -23,6 +23,7 @@ import { subscribeToInvoices, subscribeToTasks, subscribeToClients } from '@/lib
 import { Invoice, Task, Client } from '@/lib/types';
 import { useEffect, useState } from 'react';
 import { Skeleton } from '@/components/ui/skeleton';
+import { ScrollArea } from '@/components/ui/scroll-area';
 
 export default function DashboardPage() {
   const [invoices, setInvoices] = useState<Invoice[]>([]);
@@ -128,39 +129,41 @@ export default function DashboardPage() {
             </CardDescription>
           </CardHeader>
           <CardContent>
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Client</TableHead>
-                  <TableHead>Status</TableHead>
-                  <TableHead className="text-right">Amount</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {recentInvoices.map((invoice) => (
-                  <TableRow key={invoice.id}>
-                    <TableCell>
-                      <div className="font-medium">{invoice.client?.name || '...'}</div>
-                      <div className="text-sm text-muted-foreground">{invoice.client?.email || '...'}</div>
-                    </TableCell>
-                    <TableCell>
-                      <Badge 
-                        variant={
-                          invoice.status === 'Paid' ? 'default' : 
-                          invoice.status === 'Overdue' ? 'destructive' : 'secondary'
-                        }
-                        className={
-                          invoice.status === 'Paid' ? 'bg-green-500/20 text-green-700 border-green-500/20 hover:bg-green-500/30' : ''
-                        }
-                      >
-                        {invoice.status}
-                      </Badge>
-                    </TableCell>
-                    <TableCell className="text-right">R{invoice.amount.toLocaleString()}</TableCell>
+            <ScrollArea className="h-[300px]">
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Client</TableHead>
+                    <TableHead>Status</TableHead>
+                    <TableHead className="text-right">Amount</TableHead>
                   </TableRow>
-                ))}
-              </TableBody>
-            </Table>
+                </TableHeader>
+                <TableBody>
+                  {recentInvoices.map((invoice) => (
+                    <TableRow key={invoice.id}>
+                      <TableCell>
+                        <div className="font-medium">{invoice.client?.name || '...'}</div>
+                        <div className="text-sm text-muted-foreground">{invoice.client?.email || '...'}</div>
+                      </TableCell>
+                      <TableCell>
+                        <Badge 
+                          variant={
+                            invoice.status === 'Paid' ? 'default' : 
+                            invoice.status === 'Overdue' ? 'destructive' : 'secondary'
+                          }
+                          className={
+                            invoice.status === 'Paid' ? 'bg-green-500/20 text-green-700 border-green-500/20 hover:bg-green-500/30' : ''
+                          }
+                        >
+                          {invoice.status}
+                        </Badge>
+                      </TableCell>
+                      <TableCell className="text-right">R{invoice.amount.toLocaleString()}</TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </ScrollArea>
           </CardContent>
         </Card>
       </div>

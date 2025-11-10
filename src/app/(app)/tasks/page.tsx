@@ -29,6 +29,7 @@ import { subscribeToTasks, updateTaskCompletion } from '@/lib/firestore';
 import { Task } from '@/lib/types';
 import { useEffect, useState, useTransition } from 'react';
 import { Skeleton } from '@/components/ui/skeleton';
+import { ScrollArea } from '@/components/ui/scroll-area';
 
 export default function TasksPage() {
   const [tasks, setTasks] = useState<Task[]>([]);
@@ -72,60 +73,62 @@ export default function TasksPage() {
               {[...Array(5)].map((_, i) => <Skeleton key={i} className="h-12 w-full" />)}
             </div>
           ) : (
-        <Table>
-          <TableHeader>
-            <TableRow>
-              <TableHead style={{ width: '50px' }}>Done</TableHead>
-              <TableHead>Description</TableHead>
-              <TableHead>Priority</TableHead>
-              <TableHead>Due Date</TableHead>
-              <TableHead>
-                <span className="sr-only">Actions</span>
-              </TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {tasks.map((task) => (
-              <TableRow key={task.id} className={task.completed ? 'text-muted-foreground line-through' : ''}>
-                <TableCell>
-                  <Checkbox 
-                    checked={task.completed} 
-                    onCheckedChange={(checked) => handleTaskChecked(task, !!checked)}
-                    aria-label="Mark task as complete" 
-                    disabled={isPending}
-                  />
-                </TableCell>
-                <TableCell className="font-medium">{task.description}</TableCell>
-                <TableCell>
-                  <Badge
-                    variant={
-                      task.priority === 'High' ? 'destructive' :
-                      task.priority === 'Medium' ? 'secondary' : 'outline'
-                    }
-                  >
-                    {task.priority}
-                  </Badge>
-                </TableCell>
-                <TableCell>{new Date(task.dueDate).toLocaleDateString()}</TableCell>
-                <TableCell>
-                  <DropdownMenu>
-                    <DropdownMenuTrigger asChild>
-                      <Button aria-haspopup="true" size="icon" variant="ghost" disabled={task.completed || isPending}>
-                        <MoreHorizontal className="h-4 w-4" />
-                        <span className="sr-only">Toggle menu</span>
-                      </Button>
-                    </DropdownMenuTrigger>
-                    <DropdownMenuContent align="end">
-                      <DropdownMenuLabel>Actions</DropdownMenuLabel>
-                      <DropdownMenuItem>Edit</DropdownMenuItem>
-                      <DropdownMenuItem>Delete</DropdownMenuItem>
-                    </DropdownMenuContent>
-                  </DropdownMenu>
-                </TableCell>
+        <ScrollArea className="h-[450px]">
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead style={{ width: '50px' }}>Done</TableHead>
+                <TableHead>Description</TableHead>
+                <TableHead>Priority</TableHead>
+                <TableHead>Due Date</TableHead>
+                <TableHead>
+                  <span className="sr-only">Actions</span>
+                </TableHead>
               </TableRow>
-            ))}
-          </TableBody>
-        </Table>
+            </TableHeader>
+            <TableBody>
+              {tasks.map((task) => (
+                <TableRow key={task.id} className={task.completed ? 'text-muted-foreground line-through' : ''}>
+                  <TableCell>
+                    <Checkbox 
+                      checked={task.completed} 
+                      onCheckedChange={(checked) => handleTaskChecked(task, !!checked)}
+                      aria-label="Mark task as complete" 
+                      disabled={isPending}
+                    />
+                  </TableCell>
+                  <TableCell className="font-medium">{task.description}</TableCell>
+                  <TableCell>
+                    <Badge
+                      variant={
+                        task.priority === 'High' ? 'destructive' :
+                        task.priority === 'Medium' ? 'secondary' : 'outline'
+                      }
+                    >
+                      {task.priority}
+                    </Badge>
+                  </TableCell>
+                  <TableCell>{new Date(task.dueDate).toLocaleDateString()}</TableCell>
+                  <TableCell>
+                    <DropdownMenu>
+                      <DropdownMenuTrigger asChild>
+                        <Button aria-haspopup="true" size="icon" variant="ghost" disabled={task.completed || isPending}>
+                          <MoreHorizontal className="h-4 w-4" />
+                          <span className="sr-only">Toggle menu</span>
+                        </Button>
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent align="end">
+                        <DropdownMenuLabel>Actions</DropdownMenuLabel>
+                        <DropdownMenuItem>Edit</DropdownMenuItem>
+                        <DropdownMenuItem>Delete</DropdownMenuItem>
+                      </DropdownMenuContent>
+                    </DropdownMenu>
+                  </TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+        </ScrollArea>
         )}
       </CardContent>
     </Card>
