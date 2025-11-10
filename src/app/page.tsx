@@ -70,7 +70,7 @@ export default function LandingPage() {
               Streamline Your Business with an AI-Powered Manager
             </h1>
             <p className="text-lg text-muted-foreground">
-              Dulus helps you manage tasks, invoices, and clients effortlessly.
+              DBM helps you manage tasks, invoices, and clients effortlessly.
               Automate your workflow, get smart insights, and focus on what
               matters most: growing your business.
             </p>
