@@ -29,3 +29,31 @@ export type InventoryItem = {
   quantity: number;
   price: number;
 };
+
+export type BusinessProfile = {
+  companyName?: string;
+  ownerName?: string;
+  businessEmail?: string;
+  businessPhone?: string;
+  businessAddress?: string;
+  website?: string;
+  taxNumber?: string;
+  bankName?: string;
+  accountHolder?: string;
+  accountNumber?: string;
+  branchCode?: string;
+};
+
+export type InvoiceSettings = {
+  companyLogoUrl?: string;
+  signatureImageUrl?: string;
+  brandColor?: string;
+  invoiceContactName?: string;
+  invoiceContactEmail?: string;
+  invoiceContactPhone?: string;
+  invoicePrefix?: string;
+  defaultDueDays?: number;
+  paymentTerms?: string;
+  footerMessage?: string;
+  showWatermark?: boolean;
+};

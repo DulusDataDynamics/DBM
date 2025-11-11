@@ -15,7 +15,6 @@ import {
   TabsTrigger,
 } from '@/components/ui/tabs';
 import {
-  User,
   Building,
   Users,
   CreditCard,
@@ -30,18 +29,19 @@ import {
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
 import { Separator } from '@/components/ui/separator';
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { useState } from 'react';
+import { Avatar, AvatarImage } from '@/components/ui/avatar';
+import { useEffect, useState } from 'react';
 import { Textarea } from '@/components/ui/textarea';
 import { Switch } from '@/components/ui/switch';
+import { useForm, Controller } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import * as z from 'zod';
+import { getBusinessProfile, saveBusinessProfile, saveInvoiceSettings, getInvoiceSettings } from '@/lib/firestore';
+import { useAuth } from '@/hooks/use-auth';
+import { useToast } from '@/hooks/use-toast';
+import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
+
 
 const settingsSections = [
   { value: 'profile', label: 'Business Profile', icon: Building, content: 'Manage your business details and branding.' },
@@ -56,16 +56,108 @@ const settingsSections = [
   { value: 'developer', label: 'Developer', icon: Code, content: 'Access developer tools and API settings.' },
 ];
 
+const profileSchema = z.object({
+    companyName: z.string().optional(),
+    ownerName: z.string().optional(),
+    businessEmail: z.string().email().optional().or(z.literal('')),
+    businessPhone: z.string().optional(),
+    businessAddress: z.string().optional(),
+    website: z.string().optional(),
+    taxNumber: z.string().optional(),
+    bankName: z.string().optional(),
+    accountHolder: z.string().optional(),
+    accountNumber: z.string().optional(),
+    branchCode: z.string().optional(),
+});
+
+const invoiceSettingsSchema = z.object({
+    brandColor: z.string().optional(),
+    invoiceContactName: z.string().optional(),
+    invoiceContactEmail: z.string().email().optional().or(z.literal('')),
+    invoiceContactPhone: z.string().optional(),
+    invoicePrefix: z.string().optional(),
+    defaultDueDays: z.coerce.number().optional(),
+    paymentTerms: z.string().optional(),
+    footerMessage: z.string().optional(),
+    showWatermark: z.boolean().optional(),
+});
+
+type ProfileFormValues = z.infer<typeof profileSchema>;
+type InvoiceSettingsFormValues = z.infer<typeof invoiceSettingsSchema>;
+
 export default function SettingsPage() {
-  const [profilePicPreview, setProfilePicPreview] = useState<string | null>(null);
+  const { user } = useAuth();
+  const { toast } = useToast();
   const [companyLogoPreview, setCompanyLogoPreview] = useState<string | null>(null);
   const [signaturePreview, setSignaturePreview] = useState<string | null>(null);
+
+  const profileForm = useForm<ProfileFormValues>({
+    resolver: zodResolver(profileSchema),
+    defaultValues: {
+      companyName: '',
+      ownerName: '',
+      businessEmail: '',
+      businessPhone: '',
+      businessAddress: '',
+      website: '',
+      taxNumber: '',
+      bankName: '',
+      accountHolder: '',
+      accountNumber: '',
+      branchCode: '',
+    }
+  });
+
+  const invoiceForm = useForm<InvoiceSettingsFormValues>({
+    resolver: zodResolver(invoiceSettingsSchema),
+     defaultValues: {
+        brandColor: '#2B579A',
+        invoiceContactName: '',
+        invoiceContactEmail: '',
+        invoiceContactPhone: '',
+        invoicePrefix: 'INV-',
+        defaultDueDays: 30,
+        paymentTerms: '',
+        footerMessage: '',
+        showWatermark: true,
+     }
+  });
+
+  useEffect(() => {
+    if (user?.uid) {
+      getBusinessProfile(user.uid).then(profile => {
+        if (profile) {
+          profileForm.reset(profile);
+        }
+      });
+      getInvoiceSettings(user.uid).then(settings => {
+        if(settings) {
+            invoiceForm.reset(settings);
+            // setCompanyLogoPreview(settings.companyLogoUrl || null);
+            // setSignaturePreview(settings.signatureImageUrl || null);
+        }
+      });
+    }
+  }, [user, profileForm, invoiceForm]);
+
 
   const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>, setPreview: (url: string | null) => void) => {
     const file = event.target.files?.[0];
     if (file) {
       setPreview(URL.createObjectURL(file));
     }
+  };
+
+  const onProfileSubmit = async (data: ProfileFormValues) => {
+    if (!user?.uid) return;
+    await saveBusinessProfile(user.uid, data);
+    toast({ title: 'Business profile saved successfully!' });
+  };
+  
+  const onInvoiceSubmit = async (data: InvoiceSettingsFormValues) => {
+    if (!user?.uid) return;
+    await saveInvoiceSettings(user.uid, data);
+    toast({ title: 'Invoice settings saved successfully!' });
   };
   
   return (
@@ -92,186 +184,176 @@ export default function SettingsPage() {
         </TabsList>
         <div className="w-full">
             <TabsContent value="profile" className="mt-0">
-                <Card>
-                  <CardHeader>
-                      <CardTitle>Business Profile</CardTitle>
-                      <CardDescription>This information will automatically appear on all your invoices.</CardDescription>
-                  </CardHeader>
-                  <CardContent className="space-y-8">
-                     {/* Business Information */}
-                    <div className="space-y-4">
-                        <h3 className="text-lg font-medium">Business Information</h3>
-                        <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
-                            <div className="space-y-2">
-                                <Label htmlFor="company-name">Business / Company Name</Label>
-                                <Input id="company-name" defaultValue="Dulus Data Dynamics" />
+              <Form {...profileForm}>
+                <form onSubmit={profileForm.handleSubmit(onProfileSubmit)}>
+                    <Card>
+                      <CardHeader>
+                          <CardTitle>Business Profile</CardTitle>
+                          <CardDescription>This information will automatically appear on all your invoices.</CardDescription>
+                      </CardHeader>
+                      <CardContent className="space-y-8">
+                        <div className="space-y-4">
+                            <h3 className="text-lg font-medium">Business Information</h3>
+                            <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
+                                <FormField control={profileForm.control} name="companyName" render={({ field }) => (
+                                    <FormItem><FormLabel>Business / Company Name</FormLabel><FormControl><Input {...field} /></FormControl></FormItem>
+                                )}/>
+                                <FormField control={profileForm.control} name="ownerName" render={({ field }) => (
+                                    <FormItem><FormLabel>Owner / Contact Person</FormLabel><FormControl><Input {...field} /></FormControl></FormItem>
+                                )}/>
+                                <FormField control={profileForm.control} name="businessEmail" render={({ field }) => (
+                                    <FormItem><FormLabel>Business Email</FormLabel><FormControl><Input type="email" {...field} /></FormControl></FormItem>
+                                )}/>
+                                 <FormField control={profileForm.control} name="businessPhone" render={({ field }) => (
+                                    <FormItem><FormLabel>Business Phone Number</FormLabel><FormControl><Input type="tel" {...field} /></FormControl></FormItem>
+                                )}/>
                             </div>
-                            <div className="space-y-2">
-                                <Label htmlFor="owner-name">Owner / Contact Person</Label>
-                                <Input id="owner-name" placeholder="John Doe" />
-                            </div>
-                            <div className="space-y-2">
-                                <Label htmlFor="business-email">Business Email</Label>
-                                <Input id="business-email" type="email" defaultValue="contact@dulus.com" />
-                            </div>
-                             <div className="space-y-2">
-                                <Label htmlFor="business-phone">Business Phone Number</Label>
-                                <Input id="business-phone" type="tel" placeholder="+27 74 646 1288" />
-                            </div>
-                        </div>
-                        <div className="space-y-2">
-                            <Label htmlFor="business-address">Business Address</Label>
-                            <Input id="business-address" placeholder="Street, City, Postal Code, Country" />
-                        </div>
-                        <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
-                            <div className="space-y-2">
-                                <Label htmlFor="website">Website (optional)</Label>
-                                <Input id="website" placeholder="https://dulus.com" />
-                            </div>
-                            <div className="space-y-2">
-                                <Label htmlFor="fax">Fax (optional)</Label>
-                                <Input id="fax" placeholder="Fax number" />
+                            <FormField control={profileForm.control} name="businessAddress" render={({ field }) => (
+                                <FormItem><FormLabel>Business Address</FormLabel><FormControl><Input placeholder="Street, City, Postal Code, Country" {...field} /></FormControl></FormItem>
+                            )}/>
+                            <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
+                               <FormField control={profileForm.control} name="website" render={({ field }) => (
+                                    <FormItem><FormLabel>Website (optional)</FormLabel><FormControl><Input {...field} /></FormControl></FormItem>
+                                )}/>
+                               <FormItem><FormLabel>Fax (optional)</FormLabel><FormControl><Input placeholder="Fax number" /></FormControl></FormItem>
                             </div>
                         </div>
-                    </div>
-                    <Separator />
-                     {/* Financial & Legal Information */}
-                    <div className="space-y-4">
-                       <h3 className="text-lg font-medium">Financial & Legal Information</h3>
-                       <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
-                           <div className="space-y-2">
-                                <Label htmlFor="tax-number">Tax / VAT Number</Label>
-                                <Input id="tax-number" placeholder="Enter VAT number" />
+                        <Separator />
+                        <div className="space-y-4">
+                           <h3 className="text-lg font-medium">Financial & Legal Information</h3>
+                           <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
+                               <FormField control={profileForm.control} name="taxNumber" render={({ field }) => (
+                                    <FormItem><FormLabel>Tax / VAT Number</FormLabel><FormControl><Input {...field} /></FormControl></FormItem>
+                                )}/>
+                                <FormField control={profileForm.control} name="bankName" render={({ field }) => (
+                                    <FormItem><FormLabel>Bank Name</FormLabel><FormControl><Input {...field} /></FormControl></FormItem>
+                                )}/>
+                                <FormField control={profileForm.control} name="accountHolder" render={({ field }) => (
+                                    <FormItem><FormLabel>Account Holder Name</FormLabel><FormControl><Input {...field} /></FormControl></FormItem>
+                                )}/>
+                                <FormField control={profileForm.control} name="accountNumber" render={({ field }) => (
+                                    <FormItem><FormLabel>Account Number</FormLabel><FormControl><Input {...field} /></FormControl></FormItem>
+                                )}/>
+                                <FormField control={profileForm.control} name="branchCode" render={({ field }) => (
+                                    <FormItem><FormLabel>Branch Code / SWIFT Code</FormLabel><FormControl><Input {...field} /></FormControl></FormItem>
+                                )}/>
                            </div>
-                           <div className="space-y-2">
-                                <Label htmlFor="bank-name">Bank Name</Label>
-                                <Input id="bank-name" placeholder="e.g. FNB" />
-                           </div>
-                           <div className="space-y-2">
-                                <Label htmlFor="account-holder">Account Holder Name</Label>
-                                <Input id="account-holder" placeholder="e.g. Dulus Data Dynamics (Pty) Ltd" />
-                           </div>
-                           <div className="space-y-2">
-                                <Label htmlFor="account-number">Account Number</Label>
-                                <Input id="account-number" placeholder="e.g. 62900001234" />
-                           </div>
-                           <div className="space-y-2">
-                                <Label htmlFor="branch-code">Branch Code / SWIFT Code</Label>
-                                <Input id="branch-code" placeholder="e.g. 250655" />
-                           </div>
-                       </div>
-                    </div>
-                  </CardContent>
-                  <CardFooter className="justify-end">
-                      <Button>Save Business Profile</Button>
-                  </CardFooter>
-                </Card>
+                        </div>
+                      </CardContent>
+                      <CardFooter className="justify-end">
+                          <Button type="submit">Save Business Profile</Button>
+                      </CardFooter>
+                    </Card>
+                </form>
+              </Form>
             </TabsContent>
 
              <TabsContent value="invoicing" className="mt-0">
-                <Card>
-                  <CardHeader>
-                      <CardTitle>Invoicing Settings</CardTitle>
-                      <CardDescription>Customize the appearance and default settings for your invoices.</CardDescription>
-                  </CardHeader>
-                  <CardContent className="space-y-8">
-                     {/* Branding */}
-                    <div className="space-y-4">
-                        <h3 className="text-lg font-medium">Branding</h3>
-                        <div className="flex items-center gap-6">
-                            <Avatar className="h-20 w-20 rounded-md">
-                                {companyLogoPreview ? (
-                                <AvatarImage src={companyLogoPreview} alt="Company Logo" className="object-contain" />
-                                ) : (
-                                <div className="flex h-full w-full items-center justify-center rounded-md border bg-muted">
-                                    <Building className="h-10 w-10 text-muted-foreground" />
+                <Form {...invoiceForm}>
+                <form onSubmit={invoiceForm.handleSubmit(onInvoiceSubmit)}>
+                    <Card>
+                    <CardHeader>
+                        <CardTitle>Invoicing Settings</CardTitle>
+                        <CardDescription>Customize the appearance and default settings for your invoices.</CardDescription>
+                    </CardHeader>
+                    <CardContent className="space-y-8">
+                        <div className="space-y-4">
+                            <h3 className="text-lg font-medium">Branding</h3>
+                            <div className="flex items-center gap-6">
+                                <Avatar className="h-20 w-20 rounded-md">
+                                    {companyLogoPreview ? (
+                                    <AvatarImage src={companyLogoPreview} alt="Company Logo" className="object-contain" />
+                                    ) : (
+                                    <div className="flex h-full w-full items-center justify-center rounded-md border bg-muted">
+                                        <Building className="h-10 w-10 text-muted-foreground" />
+                                    </div>
+                                    )}
+                                </Avatar>
+                                <div className="space-y-2">
+                                    <Label htmlFor="company-logo">Company Logo</Label>
+                                    <Input id="company-logo" type="file" className="max-w-sm" onChange={(e) => handleFileChange(e, setCompanyLogoPreview)} accept="image/*" />
+                                    <p className="text-xs text-muted-foreground">PNG, JPG, SVG. Recommended: 200x80px.</p>
                                 </div>
-                                )}
-                            </Avatar>
-                            <div className="space-y-2">
-                                <Label htmlFor="company-logo">Company Logo</Label>
-                                <Input id="company-logo" type="file" className="max-w-sm" onChange={(e) => handleFileChange(e, setCompanyLogoPreview)} accept="image/*" />
-                                <p className="text-xs text-muted-foreground">PNG, JPG, SVG. Recommended: 200x80px.</p>
+                            </div>
+                            <div className="flex items-center gap-6">
+                                <div className="h-20 w-20 rounded-md border flex items-center justify-center bg-muted">
+                                    {signaturePreview ? (
+                                    <img src={signaturePreview} alt="Signature" className="object-contain h-full w-full" />
+                                    ) : (
+                                    <p className="text-xs text-muted-foreground">Signature</p>
+                                    )}
+                                </div>
+                                <div className="space-y-2">
+                                    <Label htmlFor="signature-image">Signature Image (optional)</Label>
+                                    <Input id="signature-image" type="file" className="max-w-sm" onChange={(e) => handleFileChange(e, setSignaturePreview)} accept="image/png, image/jpeg" />
+                                    <p className="text-xs text-muted-foreground">Upload a transparent PNG for best results.</p>
+                                </div>
+                            </div>
+                            <FormField control={invoiceForm.control} name="brandColor" render={({ field }) => (
+                                <FormItem className="max-w-xs"><FormLabel>Brand Color</FormLabel><FormControl>
+                                <div className="relative">
+                                    <Input {...field} className="pr-10" />
+                                    <Controller
+                                        control={invoiceForm.control}
+                                        name="brandColor"
+                                        render={({ field: { onChange, value } }) => (
+                                            <input type="color" value={value} onChange={onChange} className="absolute right-2 top-1/2 h-6 w-6 -translate-y-1/2 cursor-pointer appearance-none border-none bg-transparent p-0" />
+                                        )}
+                                    />
+                                </div>
+                                </FormControl></FormItem>
+                            )}/>
+                        </div>
+                        <Separator />
+                        <div className="space-y-4">
+                            <h3 className="text-lg font-medium">Invoice Contact Details</h3>
+                            <p className="text-sm text-muted-foreground">Displayed at the bottom of each invoice for client queries.</p>
+                            <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
+                                <FormField control={invoiceForm.control} name="invoiceContactName" render={({ field }) => (
+                                    <FormItem><FormLabel>Contact Person Name</FormLabel><FormControl><Input placeholder="e.g. Accounts Department" {...field} /></FormControl></FormItem>
+                                )}/>
+                                <FormField control={invoiceForm.control} name="invoiceContactEmail" render={({ field }) => (
+                                    <FormItem><FormLabel>Contact Email</FormLabel><FormControl><Input type="email" placeholder="e.g. accounts@dulus.com" {...field} /></FormControl></FormItem>
+                                )}/>
+                                <FormField control={invoiceForm.control} name="invoiceContactPhone" render={({ field }) => (
+                                    <FormItem><FormLabel>Contact Phone Number</FormLabel><FormControl><Input type="tel" placeholder="e.g. 0800 123 4567" {...field} /></FormControl></FormItem>
+                                )}/>
                             </div>
                         </div>
-                         <div className="flex items-center gap-6">
-                            <div className="h-20 w-20 rounded-md border flex items-center justify-center bg-muted">
-                                {signaturePreview ? (
-                                <img src={signaturePreview} alt="Signature" className="object-contain h-full w-full" />
-                                ) : (
-                                <p className="text-xs text-muted-foreground">Signature</p>
-                                )}
+                        <Separator />
+                        <div className="space-y-4">
+                            <h3 className="text-lg font-medium">Invoice Generation</h3>
+                            <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
+                                <FormField control={invoiceForm.control} name="invoicePrefix" render={({ field }) => (
+                                    <FormItem><FormLabel>Invoice Number Prefix</FormLabel><FormControl><Input placeholder="e.g. INV-" {...field} /></FormControl></FormItem>
+                                )}/>
+                                <FormField control={invoiceForm.control} name="defaultDueDays" render={({ field }) => (
+                                    <FormItem><FormLabel>Default Due Days</FormLabel><FormControl><Input type="number" placeholder="e.g. 30" {...field} /></FormControl></FormItem>
+                                )}/>
                             </div>
-                            <div className="space-y-2">
-                                <Label htmlFor="signature-image">Signature Image (optional)</Label>
-                                <Input id="signature-image" type="file" className="max-w-sm" onChange={(e) => handleFileChange(e, setSignaturePreview)} accept="image/png, image/jpeg" />
-                                <p className="text-xs text-muted-foreground">Upload a transparent PNG for best results.</p>
-                            </div>
+                            <FormField control={invoiceForm.control} name="paymentTerms" render={({ field }) => (
+                                <FormItem><FormLabel>Default Payment Terms</FormLabel><FormControl><Textarea placeholder="e.g. Payment due within 30 days." {...field} /></FormControl></FormItem>
+                            )}/>
+                            <FormField control={invoiceForm.control} name="footerMessage" render={({ field }) => (
+                                <FormItem><FormLabel>Footer Message</FormLabel><FormControl><Textarea placeholder="e.g. Thank you for your business!" {...field} /></FormControl></FormItem>
+                            )}/>
+                            <FormField control={invoiceForm.control} name="showWatermark" render={({ field }) => (
+                                <FormItem className="flex items-center justify-between rounded-lg border p-4">
+                                    <div>
+                                    <FormLabel>Show DBM Watermark</FormLabel>
+                                    <p className="text-xs text-muted-foreground">Display "Generated by Dulus Business Manager" on invoices.</p>
+                                    </div>
+                                    <FormControl><Switch checked={field.value} onCheckedChange={field.onChange} /></FormControl>
+                                </FormItem>
+                             )}/>
                         </div>
-                        <div className="space-y-2 max-w-xs">
-                            <Label htmlFor="brand-color">Brand Color</Label>
-                            <div className="relative">
-                                <Input id="brand-color" defaultValue="#2B579A" className="pr-10" />
-                                <input type="color" defaultValue="#2B579A" className="absolute right-2 top-1/2 h-6 w-6 -translate-y-1/2 cursor-pointer appearance-none border-none bg-transparent p-0" />
-                            </div>
-                        </div>
-                    </div>
-                    <Separator />
-                    {/* Invoice Contact Details */}
-                    <div className="space-y-4">
-                        <h3 className="text-lg font-medium">Invoice Contact Details</h3>
-                        <p className="text-sm text-muted-foreground">Displayed at the bottom of each invoice for client queries.</p>
-                         <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
-                            <div className="space-y-2">
-                                <Label htmlFor="invoice-contact-name">Contact Person Name</Label>
-                                <Input id="invoice-contact-name" placeholder="e.g. Accounts Department" />
-                            </div>
-                             <div className="space-y-2">
-                                <Label htmlFor="invoice-contact-email">Contact Email</Label>
-                                <Input id="invoice-contact-email" type="email" placeholder="e.g. accounts@dulus.com" />
-                            </div>
-                             <div className="space-y-2">
-                                <Label htmlFor="invoice-contact-phone">Contact Phone Number</Label>
-                                <Input id="invoice-contact-phone" type="tel" placeholder="e.g. 0800 123 4567" />
-                            </div>
-                        </div>
-                    </div>
-                     <Separator />
-                    {/* Invoice Settings */}
-                    <div className="space-y-4">
-                        <h3 className="text-lg font-medium">Invoice Generation</h3>
-                         <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
-                            <div className="space-y-2">
-                                <Label htmlFor="invoice-prefix">Invoice Number Prefix</Label>
-                                <Input id="invoice-prefix" placeholder="e.g. INV-" defaultValue="INV-" />
-                            </div>
-                            <div className="space-y-2">
-                                <Label htmlFor="default-due-days">Default Due Days</Label>
-                                <Input id="default-due-days" type="number" placeholder="e.g. 30" defaultValue="30" />
-                            </div>
-                        </div>
-                        <div className="space-y-2">
-                            <Label htmlFor="payment-terms">Default Payment Terms</Label>
-                             <Textarea id="payment-terms" placeholder="e.g. Payment due within 30 days." />
-                        </div>
-                         <div className="space-y-2">
-                            <Label htmlFor="footer-message">Footer Message</Label>
-                             <Textarea id="footer-message" placeholder="e.g. Thank you for your business!" />
-                        </div>
-                        <div className="flex items-center justify-between rounded-lg border p-4">
-                            <div>
-                                <Label htmlFor="show-watermark">Show DBM Watermark</Label>
-                                <p className="text-xs text-muted-foreground">Display "Generated by Dulus Business Manager" on invoices.</p>
-                            </div>
-                            <Switch id="show-watermark" defaultChecked={true} />
-                        </div>
-                    </div>
-
-                  </CardContent>
-                   <CardFooter className="justify-end">
-                      <Button>Save Invoice Settings</Button>
-                  </CardFooter>
-                </Card>
+                    </CardContent>
+                    <CardFooter className="justify-end">
+                        <Button type="submit">Save Invoice Settings</Button>
+                    </CardFooter>
+                    </Card>
+                </form>
+                </Form>
             </TabsContent>
 
             {settingsSections.filter(s => !['profile', 'invoicing'].includes(s.value)).map((section) => (

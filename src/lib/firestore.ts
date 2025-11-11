@@ -13,7 +13,7 @@ import {
   deleteDoc,
   setDoc
 } from 'firebase/firestore';
-import { Client, Invoice, Task, InventoryItem } from './types';
+import { Client, Invoice, Task, InventoryItem, BusinessProfile, InvoiceSettings } from './types';
 
 // Generic fetch function for real-time updates
 function subscribeToCollection<T>(collectionName: string, callback: (data: T[]) => void): () => void {
@@ -114,3 +114,26 @@ export const updateTaskCompletion = (id: string, completed: boolean) => {
 
 // Inventory functions
 export const subscribeToInventory = (callback: (inventory: InventoryItem[]) => void) => subscribeToCollection<InventoryItem>('inventory', callback);
+
+// Settings functions
+export const saveBusinessProfile = async (userId: string, data: BusinessProfile) => {
+    const profileDoc = doc(db, 'profiles', userId);
+    return await setDoc(profileDoc, data, { merge: true });
+}
+
+export const getBusinessProfile = async (userId: string): Promise<BusinessProfile | null> => {
+    const docRef = doc(db, 'profiles', userId);
+    const docSnap = await getDoc(docRef);
+    return docSnap.exists() ? docSnap.data() as BusinessProfile : null;
+}
+
+export const saveInvoiceSettings = async (userId: string, data: InvoiceSettings) => {
+    const settingsDoc = doc(db, 'profiles', userId, 'settings', 'invoice');
+    return await setDoc(settingsDoc, data, { merge: true });
+}
+
+export const getInvoiceSettings = async (userId: string): Promise<InvoiceSettings | null> => {
+    const docRef = doc(db, 'profiles', userId, 'settings', 'invoice');
+    const docSnap = await getDoc(docRef);
+    return docSnap.exists() ? docSnap.data() as InvoiceSettings : null;
+}
