@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button';
 import Image from 'next/image';
 import Link from 'next/link';
 import { PlaceHolderImages } from '@/lib/placeholder-images';
-import { Zap, ClipboardCheck, FileText, Users, Shield, BookUser } from 'lucide-react';
+import { Zap, ClipboardCheck, FileText, Users, Shield, BookUser, Check } from 'lucide-react';
 
 export default function LandingPage() {
   const heroImage = PlaceHolderImages && PlaceHolderImages.find((p) => p.id === 'landing-hero');
@@ -121,6 +121,60 @@ export default function LandingPage() {
                 </div>
             </div>
         </section>
+        
+        <section className="py-12 lg:py-24">
+          <div className="container mx-auto px-4 md:px-6">
+            <div className="mx-auto max-w-3xl text-center">
+              <h2 className="text-3xl font-bold tracking-tight md:text-4xl">Simple, Transparent Pricing</h2>
+              <p className="mt-4 text-lg text-muted-foreground">
+                Start for free and scale as you grow. No hidden fees.
+              </p>
+            </div>
+            <div className="mt-12 flex justify-center">
+              <div className="w-full max-w-md rounded-2xl border bg-card text-card-foreground shadow-lg">
+                <div className="p-8">
+                  <h3 className="text-2xl font-bold">Unlimited Plan</h3>
+                  <p className="mt-2 text-sm text-muted-foreground">
+                    14‑day free trial (up to 20 clients + 20 invoices).
+                  </p>
+                  <div className="mt-6">
+                    <span className="text-5xl font-bold">R349</span>
+                    <span className="ml-1 text-xl font-medium text-muted-foreground">/month</span>
+                  </div>
+                  <p className="mt-2 text-sm text-muted-foreground">
+                    or approx. $20/month
+                  </p>
+                  <Button asChild size="lg" className="mt-6 w-full">
+                    <Link href="/signup">Get Started</Link>
+                  </Button>
+                  <ul className="mt-8 space-y-4 text-sm">
+                    <li className="flex items-center">
+                      <Check className="mr-2 h-4 w-4 text-green-500" />
+                      Unlimited Clients
+                    </li>
+                    <li className="flex items-center">
+                      <Check className="mr-2 h-4 w-4 text-green-500" />
+                      Unlimited Invoices
+                    </li>
+                    <li className="flex items-center">
+                      <Check className="mr-2 h-4 w-4 text-green-500" />
+                      AI-Powered Insights
+                    </li>
+                    <li className="flex items-center">
+                      <Check className="mr-2 h-4 w-4 text-green-500" />
+                      Task & Inventory Management
+                    </li>
+                     <li className="flex items-center">
+                      <Check className="mr-2 h-4 w-4 text-green-500" />
+                      Email & WhatsApp Support
+                    </li>
+                  </ul>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+
       </main>
       <footer className="border-t">
         <div className="container mx-auto flex flex-col items-center justify-between gap-4 px-4 py-6 md:flex-row md:px-6">
