@@ -2,7 +2,7 @@
 
 import { useAuth } from '@/hooks/use-auth';
 
-import { Avatar, AvatarFallback } from '@/components/ui/avatar';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
 import {
   DropdownMenu,
@@ -14,6 +14,7 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import Link from 'next/link';
+import { User as UserIcon } from 'lucide-react';
 
 export function UserNav() {
   const { user, logout } = useAuth();
@@ -22,14 +23,17 @@ export function UserNav() {
     return null;
   }
 
-  const userInitial = user.displayName ? user.displayName.charAt(0).toUpperCase() : (user.email ? user.email.charAt(0).toUpperCase() : 'U');
+  const userInitial = user.displayName ? user.displayName.charAt(0).toUpperCase() : null;
 
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
         <Button variant="ghost" className="relative h-10 w-10 rounded-full">
           <Avatar className="h-10 w-10">
-            <AvatarFallback>{userInitial}</AvatarFallback>
+            {user.photoURL && <AvatarImage src={user.photoURL} alt={user.displayName || ''} />}
+            <AvatarFallback>
+              {userInitial ? userInitial : <UserIcon className="h-5 w-5" />}
+            </AvatarFallback>
           </Avatar>
         </Button>
       </DropdownMenuTrigger>
