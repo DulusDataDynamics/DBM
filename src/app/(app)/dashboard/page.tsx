@@ -91,9 +91,6 @@ export default function DashboardPage() {
 
   return (
     <div className="flex flex-col gap-8">
-      <div>
-        <RevenueInsightsGenerator invoices={invoices} />
-      </div>
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
         <StatCard
           title="Total Revenue"
@@ -170,6 +167,9 @@ export default function DashboardPage() {
             </ScrollArea>
           </CardContent>
         </Card>
+      </div>
+      <div>
+        <RevenueInsightsGenerator invoices={invoices} />
       </div>
     </div>
   );
