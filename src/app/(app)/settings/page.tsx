@@ -25,6 +25,7 @@ import {
   ShieldCheck,
   LifeBuoy,
   Code,
+  FileText,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -39,10 +40,12 @@ import {
 import { Separator } from '@/components/ui/separator';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { useState } from 'react';
+import { Textarea } from '@/components/ui/textarea';
+import { Switch } from '@/components/ui/switch';
 
 const settingsSections = [
-  { value: 'profile', label: 'Profile', icon: User, content: 'Manage your personal account information.' },
-  { value: 'company', label: 'Company', icon: Building, content: 'Manage your business details and branding.' },
+  { value: 'profile', label: 'Business Profile', icon: Building, content: 'Manage your business details and branding.' },
+  { value: 'invoicing', label: 'Invoicing', icon: FileText, content: 'Customize your invoice settings and appearance.' },
   { value: 'team', label: 'Team & Roles', icon: Users, content: 'Control who has access and what they can do.' },
   { value: 'billing', label: 'Billing & Subscription', icon: CreditCard, content: 'Manage your subscription plan and payment methods.' },
   { value: 'preferences', label: 'App Preferences', icon: Palette, content: 'Personalize how the app looks and works.' },
@@ -56,27 +59,15 @@ const settingsSections = [
 export default function SettingsPage() {
   const [profilePicPreview, setProfilePicPreview] = useState<string | null>(null);
   const [companyLogoPreview, setCompanyLogoPreview] = useState<string | null>(null);
+  const [signaturePreview, setSignaturePreview] = useState<string | null>(null);
 
-  const handleProfilePictureChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+  const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>, setPreview: (url: string | null) => void) => {
     const file = event.target.files?.[0];
     if (file) {
-      setProfilePicPreview(URL.createObjectURL(file));
-    }
-  };
-
-  const handleCompanyLogoChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0];
-    if (file) {
-      setCompanyLogoPreview(URL.createObjectURL(file));
+      setPreview(URL.createObjectURL(file));
     }
   };
   
-  const handleRemoveProfilePic = () => {
-    setProfilePicPreview(null);
-    const input = document.getElementById('profile-picture') as HTMLInputElement;
-    if (input) input.value = '';
-  }
-
   return (
     <div className="space-y-6">
       <div>
@@ -103,129 +94,187 @@ export default function SettingsPage() {
             <TabsContent value="profile" className="mt-0">
                 <Card>
                   <CardHeader>
-                      <CardTitle>Profile Settings</CardTitle>
-                      <CardDescription>Manage your personal account information.</CardDescription>
+                      <CardTitle>Business Profile</CardTitle>
+                      <CardDescription>This information will automatically appear on all your invoices.</CardDescription>
                   </CardHeader>
-                  <CardContent className="space-y-6">
-                    <div className="flex items-center gap-6">
-                      <Avatar className="h-20 w-20">
-                        <AvatarImage src={profilePicPreview || ''} alt="User Avatar" className="object-cover" />
-                        <AvatarFallback>U</AvatarFallback>
-                      </Avatar>
-                      <div className="space-y-2">
-                        <Label htmlFor="profile-picture">Profile Picture</Label>
-                         <div className="flex items-center gap-2">
-                            <Input id="profile-picture" type="file" className="max-w-sm" onChange={handleProfilePictureChange} accept="image/*" />
-                            <Button variant="outline" size="sm" onClick={handleRemoveProfilePic} disabled={!profilePicPreview}>Remove</Button>
+                  <CardContent className="space-y-8">
+                     {/* Business Information */}
+                    <div className="space-y-4">
+                        <h3 className="text-lg font-medium">Business Information</h3>
+                        <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
+                            <div className="space-y-2">
+                                <Label htmlFor="company-name">Business / Company Name</Label>
+                                <Input id="company-name" defaultValue="Dulus Data Dynamics" />
+                            </div>
+                            <div className="space-y-2">
+                                <Label htmlFor="owner-name">Owner / Contact Person</Label>
+                                <Input id="owner-name" placeholder="John Doe" />
+                            </div>
+                            <div className="space-y-2">
+                                <Label htmlFor="business-email">Business Email</Label>
+                                <Input id="business-email" type="email" defaultValue="contact@dulus.com" />
+                            </div>
+                             <div className="space-y-2">
+                                <Label htmlFor="business-phone">Business Phone Number</Label>
+                                <Input id="business-phone" type="tel" placeholder="+27 74 646 1288" />
+                            </div>
                         </div>
-                        <p className="text-xs text-muted-foreground">PNG, JPG, GIF up to 5MB.</p>
-                      </div>
+                        <div className="space-y-2">
+                            <Label htmlFor="business-address">Business Address</Label>
+                            <Input id="business-address" placeholder="Street, City, Postal Code, Country" />
+                        </div>
+                        <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
+                            <div className="space-y-2">
+                                <Label htmlFor="website">Website (optional)</Label>
+                                <Input id="website" placeholder="https://dulus.com" />
+                            </div>
+                            <div className="space-y-2">
+                                <Label htmlFor="fax">Fax (optional)</Label>
+                                <Input id="fax" placeholder="Fax number" />
+                            </div>
+                        </div>
                     </div>
                     <Separator />
-                    <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
-                      <div className="space-y-2">
-                        <Label htmlFor="name">Name</Label>
-                        <Input id="name" defaultValue="Current User" />
-                      </div>
-                      <div className="space-y-2">
-                        <Label htmlFor="email">Email</Label>
-                        <Input id="email" type="email" defaultValue="user@example.com" />
-                      </div>
-                      <div className="space-y-2">
-                        <Label htmlFor="phone">Phone Number</Label>
-                        <Input id="phone" type="tel" placeholder="+1 (555) 000-0000" />
-                      </div>
-                      <div className="space-y-2">
-                        <Label htmlFor="role">Role</Label>
-                        <Input id="role" defaultValue="Manager" disabled />
-                      </div>
-                    </div>
-                     <Separator />
-                     <div className="space-y-4">
-                       <h3 className="text-lg font-medium">Security</h3>
-                       <div className="flex items-center justify-between rounded-lg border p-4">
-                         <div>
-                            <p className="font-medium">Change Password</p>
-                            <p className="text-sm text-muted-foreground">Update your password to a new one.</p>
-                         </div>
-                         <Button variant="outline">Change Password</Button>
+                     {/* Financial & Legal Information */}
+                    <div className="space-y-4">
+                       <h3 className="text-lg font-medium">Financial & Legal Information</h3>
+                       <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
+                           <div className="space-y-2">
+                                <Label htmlFor="tax-number">Tax / VAT Number</Label>
+                                <Input id="tax-number" placeholder="Enter VAT number" />
+                           </div>
+                           <div className="space-y-2">
+                                <Label htmlFor="bank-name">Bank Name</Label>
+                                <Input id="bank-name" placeholder="e.g. FNB" />
+                           </div>
+                           <div className="space-y-2">
+                                <Label htmlFor="account-holder">Account Holder Name</Label>
+                                <Input id="account-holder" placeholder="e.g. Dulus Data Dynamics (Pty) Ltd" />
+                           </div>
+                           <div className="space-y-2">
+                                <Label htmlFor="account-number">Account Number</Label>
+                                <Input id="account-number" placeholder="e.g. 62900001234" />
+                           </div>
+                           <div className="space-y-2">
+                                <Label htmlFor="branch-code">Branch Code / SWIFT Code</Label>
+                                <Input id="branch-code" placeholder="e.g. 250655" />
+                           </div>
                        </div>
-                     </div>
+                    </div>
                   </CardContent>
                   <CardFooter className="justify-end">
-                      <Button>Save Changes</Button>
+                      <Button>Save Business Profile</Button>
                   </CardFooter>
                 </Card>
             </TabsContent>
 
-             <TabsContent value="company" className="mt-0">
+             <TabsContent value="invoicing" className="mt-0">
                 <Card>
                   <CardHeader>
-                      <CardTitle>Company Settings</CardTitle>
-                      <CardDescription>Manage your business details and branding.</CardDescription>
+                      <CardTitle>Invoicing Settings</CardTitle>
+                      <CardDescription>Customize the appearance and default settings for your invoices.</CardDescription>
                   </CardHeader>
-                  <CardContent className="space-y-6">
-                    <div className="flex items-center gap-6">
-                      <Avatar className="h-20 w-20 rounded-md">
-                        {companyLogoPreview ? (
-                          <AvatarImage src={companyLogoPreview} alt="Company Logo" className="object-cover rounded-md" />
-                        ) : (
-                           <div className="flex h-full w-full items-center justify-center rounded-md border bg-muted">
-                            <Building className="h-10 w-10 text-muted-foreground" />
-                          </div>
-                        )}
-                        <AvatarFallback className="rounded-md">DB</AvatarFallback>
-                      </Avatar>
-                      
-                      <div className="space-y-2">
-                        <Label htmlFor="company-logo">Company Logo</Label>
-                        <Input id="company-logo" type="file" className="max-w-sm" onChange={handleCompanyLogoChange} accept="image/*" />
-                        <p className="text-xs text-muted-foreground">PNG, JPG, SVG. Recommended size: 200x80px.</p>
-                      </div>
+                  <CardContent className="space-y-8">
+                     {/* Branding */}
+                    <div className="space-y-4">
+                        <h3 className="text-lg font-medium">Branding</h3>
+                        <div className="flex items-center gap-6">
+                            <Avatar className="h-20 w-20 rounded-md">
+                                {companyLogoPreview ? (
+                                <AvatarImage src={companyLogoPreview} alt="Company Logo" className="object-contain" />
+                                ) : (
+                                <div className="flex h-full w-full items-center justify-center rounded-md border bg-muted">
+                                    <Building className="h-10 w-10 text-muted-foreground" />
+                                </div>
+                                )}
+                            </Avatar>
+                            <div className="space-y-2">
+                                <Label htmlFor="company-logo">Company Logo</Label>
+                                <Input id="company-logo" type="file" className="max-w-sm" onChange={(e) => handleFileChange(e, setCompanyLogoPreview)} accept="image/*" />
+                                <p className="text-xs text-muted-foreground">PNG, JPG, SVG. Recommended: 200x80px.</p>
+                            </div>
+                        </div>
+                         <div className="flex items-center gap-6">
+                            <div className="h-20 w-20 rounded-md border flex items-center justify-center bg-muted">
+                                {signaturePreview ? (
+                                <img src={signaturePreview} alt="Signature" className="object-contain h-full w-full" />
+                                ) : (
+                                <p className="text-xs text-muted-foreground">Signature</p>
+                                )}
+                            </div>
+                            <div className="space-y-2">
+                                <Label htmlFor="signature-image">Signature Image (optional)</Label>
+                                <Input id="signature-image" type="file" className="max-w-sm" onChange={(e) => handleFileChange(e, setSignaturePreview)} accept="image/png, image/jpeg" />
+                                <p className="text-xs text-muted-foreground">Upload a transparent PNG for best results.</p>
+                            </div>
+                        </div>
+                        <div className="space-y-2 max-w-xs">
+                            <Label htmlFor="brand-color">Brand Color</Label>
+                            <div className="relative">
+                                <Input id="brand-color" defaultValue="#2B579A" className="pr-10" />
+                                <input type="color" defaultValue="#2B579A" className="absolute right-2 top-1/2 h-6 w-6 -translate-y-1/2 cursor-pointer appearance-none border-none bg-transparent p-0" />
+                            </div>
+                        </div>
                     </div>
                     <Separator />
-                    <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
-                        <div className="space-y-2">
-                          <Label htmlFor="company-name">Company Name</Label>
-                          <Input id="company-name" defaultValue="Dulus Data Dynamics" />
-                        </div>
-                        <div className="space-y-2">
-                          <Label htmlFor="company-contact">Contact Email</Label>
-                          <Input id="company-contact" type="email" defaultValue="contact@dulus.com" />
+                    {/* Invoice Contact Details */}
+                    <div className="space-y-4">
+                        <h3 className="text-lg font-medium">Invoice Contact Details</h3>
+                        <p className="text-sm text-muted-foreground">Displayed at the bottom of each invoice for client queries.</p>
+                         <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
+                            <div className="space-y-2">
+                                <Label htmlFor="invoice-contact-name">Contact Person Name</Label>
+                                <Input id="invoice-contact-name" placeholder="e.g. Accounts Department" />
+                            </div>
+                             <div className="space-y-2">
+                                <Label htmlFor="invoice-contact-email">Contact Email</Label>
+                                <Input id="invoice-contact-email" type="email" placeholder="e.g. accounts@dulus.com" />
+                            </div>
+                             <div className="space-y-2">
+                                <Label htmlFor="invoice-contact-phone">Contact Phone Number</Label>
+                                <Input id="invoice-contact-phone" type="tel" placeholder="e.g. 0800 123 4567" />
+                            </div>
                         </div>
                     </div>
-                    <div className="space-y-2">
-                      <Label htmlFor="company-address">Company Address</Label>
-                      <Input id="company-address" placeholder="123 Business Rd, Suite 100, Business City, 12345" />
-                    </div>
-                    <Separator />
-                     <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
+                     <Separator />
+                    {/* Invoice Settings */}
+                    <div className="space-y-4">
+                        <h3 className="text-lg font-medium">Invoice Generation</h3>
+                         <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
+                            <div className="space-y-2">
+                                <Label htmlFor="invoice-prefix">Invoice Number Prefix</Label>
+                                <Input id="invoice-prefix" placeholder="e.g. INV-" defaultValue="INV-" />
+                            </div>
+                            <div className="space-y-2">
+                                <Label htmlFor="default-due-days">Default Due Days</Label>
+                                <Input id="default-due-days" type="number" placeholder="e.g. 30" defaultValue="30" />
+                            </div>
+                        </div>
                         <div className="space-y-2">
-                            <Label htmlFor="currency">Currency</Label>
-                            <Select defaultValue="ZAR">
-                                <SelectTrigger>
-                                <SelectValue placeholder="Select a currency" />
-                                </SelectTrigger>
-                                <SelectContent>
-                                    <SelectItem value="ZAR">ZAR - South African Rand</SelectItem>
-                                    <SelectItem value="USD">USD - US Dollar</SelectItem>
-                                    <SelectItem value="EUR">EUR - Euro</SelectItem>
-                                </SelectContent>
-                            </Select>
+                            <Label htmlFor="payment-terms">Default Payment Terms</Label>
+                             <Textarea id="payment-terms" placeholder="e.g. Payment due within 30 days." />
                         </div>
                          <div className="space-y-2">
-                            <Label htmlFor="tax-number">Tax Number / VAT</Label>
-                            <Input id="tax-number" placeholder="Enter your VAT number" />
+                            <Label htmlFor="footer-message">Footer Message</Label>
+                             <Textarea id="footer-message" placeholder="e.g. Thank you for your business!" />
                         </div>
-                     </div>
+                        <div className="flex items-center justify-between rounded-lg border p-4">
+                            <div>
+                                <Label htmlFor="show-watermark">Show DBM Watermark</Label>
+                                <p className="text-xs text-muted-foreground">Display "Generated by Dulus Business Manager" on invoices.</p>
+                            </div>
+                            <Switch id="show-watermark" defaultChecked={true} />
+                        </div>
+                    </div>
+
                   </CardContent>
                    <CardFooter className="justify-end">
-                      <Button>Save Changes</Button>
+                      <Button>Save Invoice Settings</Button>
                   </CardFooter>
                 </Card>
             </TabsContent>
 
-            {settingsSections.filter(s => s.value !== 'profile' && s.value !== 'company').map((section) => (
+            {settingsSections.filter(s => !['profile', 'invoicing'].includes(s.value)).map((section) => (
               <TabsContent key={section.value} value={section.value} className="mt-0">
                   <Card>
                   <CardHeader>
