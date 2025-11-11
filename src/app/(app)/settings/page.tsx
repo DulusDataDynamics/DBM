@@ -27,6 +27,9 @@ import {
   FileText,
   Mail,
   MessageSquare,
+  Moon,
+  Sun,
+  Laptop
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -44,6 +47,7 @@ import { useAuth } from '@/hooks/use-auth';
 import { useToast } from '@/hooks/use-toast';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import Link from 'next/link';
+import { useTheme } from 'next-themes';
 
 
 const settingsSections = [
@@ -90,13 +94,14 @@ const invoiceSettingsSchema = z.object({
 type ProfileFormValues = z.infer<typeof profileSchema>;
 type InvoiceSettingsFormValues = z.infer<typeof invoiceSettingsSchema>;
 
-const comingSoonSections = ['team', 'billing', 'integrations', 'developer', 'preferences', 'data', 'security'];
+const comingSoonSections = ['team', 'billing', 'integrations', 'developer', 'data', 'security'];
 
 export default function SettingsPage() {
   const { user } = useAuth();
   const { toast } = useToast();
   const [companyLogoPreview, setCompanyLogoPreview] = useState<string | null>(null);
   const [signaturePreview, setSignaturePreview] = useState<string | null>(null);
+  const { setTheme } = useTheme();
 
   const profileForm = useForm<ProfileFormValues>({
     resolver: zodResolver(profileSchema),
@@ -369,6 +374,35 @@ export default function SettingsPage() {
                     </Card>
                 </form>
                 </Form>
+            </TabsContent>
+
+            <TabsContent value="preferences" className="mt-0">
+                <Card>
+                    <CardHeader>
+                        <CardTitle>App Preferences</CardTitle>
+                        <CardDescription>Personalize how the app looks and works for you.</CardDescription>
+                    </CardHeader>
+                    <CardContent className="space-y-6">
+                        <div className="space-y-2">
+                            <Label>Theme</Label>
+                            <p className="text-sm text-muted-foreground">Select the appearance of the application.</p>
+                        </div>
+                         <div className="grid grid-cols-3 gap-4">
+                            <Button variant="outline" className="flex-col h-24" onClick={() => setTheme('light')}>
+                                <Sun className="mb-2"/>
+                                Light
+                            </Button>
+                            <Button variant="outline" className="flex-col h-24" onClick={() => setTheme('dark')}>
+                                <Moon className="mb-2"/>
+                                Dark
+                            </Button>
+                            <Button variant="outline" className="flex-col h-24" onClick={() => setTheme('system')}>
+                                <Laptop className="mb-2"/>
+                                System
+                            </Button>
+                        </div>
+                    </CardContent>
+                </Card>
             </TabsContent>
 
             <TabsContent value="support" className="mt-0">
