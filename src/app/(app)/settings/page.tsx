@@ -90,8 +90,7 @@ const invoiceSettingsSchema = z.object({
 type ProfileFormValues = z.infer<typeof profileSchema>;
 type InvoiceSettingsFormValues = z.infer<typeof invoiceSettingsSchema>;
 
-const contactSections = ['preferences', 'data', 'security', 'support'];
-const comingSoonSections = ['team', 'billing', 'integrations', 'developer'];
+const comingSoonSections = ['team', 'billing', 'integrations', 'developer', 'preferences', 'data', 'security'];
 
 export default function SettingsPage() {
   const { user } = useAuth();
@@ -372,18 +371,14 @@ export default function SettingsPage() {
                 </Form>
             </TabsContent>
 
-            {contactSections.map((sectionName) => {
-              const section = settingsSections.find(s => s.value === sectionName);
-              if (!section) return null;
-              return (
-              <TabsContent key={section.value} value={section.value} className="mt-0">
-                  <Card>
+            <TabsContent value="support" className="mt-0">
+                <Card>
                     <CardHeader>
-                        <CardTitle>{section.label}</CardTitle>
-                        <CardDescription>{section.content}</CardDescription>
+                        <CardTitle>Support & Feedback</CardTitle>
+                        <CardDescription>Get help and provide feedback to improve the application.</CardDescription>
                     </CardHeader>
                     <CardContent className="space-y-4">
-                        <p className="text-sm text-muted-foreground">For assistance with {section.label.toLowerCase()} or to request new features, please contact our support team. We're here to help you get the most out of Dulus Business Manager.</p>
+                        <p className="text-sm text-muted-foreground">For assistance, feature requests, or to report a bug, please contact our support team. We're here to help you get the most out of Dulus Business Manager.</p>
                         <div className="flex flex-col sm:flex-row gap-4">
                             <Button asChild className="w-full sm:w-auto">
                                 <Link href="mailto:dulusdatadynamics@gmail.com">
@@ -399,9 +394,8 @@ export default function SettingsPage() {
                             </Button>
                         </div>
                     </CardContent>
-                  </Card>
-              </TabsContent>
-            )})}
+                </Card>
+            </TabsContent>
 
             {comingSoonSections.map((sectionName) => {
               const section = settingsSections.find(s => s.value === sectionName);
@@ -426,5 +420,3 @@ export default function SettingsPage() {
     </div>
   );
 }
-
-    
