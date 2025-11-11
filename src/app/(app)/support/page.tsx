@@ -12,7 +12,6 @@ import {
   CardHeader,
   CardTitle,
 } from '@/components/ui/card';
-import { Separator } from '@/components/ui/separator';
 
 const faqItems = [
   {
@@ -23,12 +22,22 @@ const faqItems = [
   {
     question: "Why isn't my invoice data showing up?",
     answer:
-      "Data can sometimes take a few moments to sync. Try refreshing the page. If the problem persists, check your internet connection or contact support.",
+      "Data can sometimes take a few moments to sync. Try refreshing the page by pressing Ctrl+R (or Cmd+R on Mac). If the problem persists, check your internet connection or contact support. The app will sync automatically when you're back online.",
   },
   {
     question: 'How do I add a new client?',
     answer:
       "Navigate to the 'Clients' page from the sidebar and click the 'Add Client' button. Fill in the required details and save.",
+  },
+  {
+    question: 'Why are the AI Revenue Insights not generating?',
+    answer:
+      "This can happen if there is not enough invoice data to analyze. Ensure you have at least one 'Paid' invoice, as the AI needs this to calculate revenue. If you have sufficient data and it still fails, please try again after a few moments or contact support.",
+  },
+  {
+    question: "Why can't I download a PDF of my invoices?",
+    answer:
+      "PDF generation requires your Business Profile to be complete. Please go to Settings > Business Profile and ensure all fields, especially your company name and contact details, are filled in. You also need to have at least one invoice in the system to export.",
   },
   {
     question: 'Can I use the app offline?',
@@ -57,7 +66,7 @@ export default function SupportPage() {
                 <strong>Email:</strong> dulusdatadynamics@gmail.com
               </li>
               <li>
-                <strong>Phone:</strong> 074 646 1288
+                <strong>Phone:</strong> 073 646 1288
               </li>
               <li>
                 <strong>Website:</strong> <a href="https://dulusdatadynamics.netlify.app" target="_blank" rel="noopener noreferrer" className="text-primary hover:underline">dulusdatadynamics.netlify.app</a>
