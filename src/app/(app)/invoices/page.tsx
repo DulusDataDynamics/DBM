@@ -28,7 +28,6 @@ import { deleteInvoice, subscribeToInvoices } from '@/lib/firestore';
 import { Invoice } from '@/lib/types';
 import { useEffect, useState } from 'react';
 import { Skeleton } from '@/components/ui/skeleton';
-import DownloadInvoices from '@/components/app/download-invoices';
 import { InvoiceForm } from '@/components/app/invoice-form';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import {
@@ -108,83 +107,77 @@ export default function InvoicesPage() {
               Add Invoice
             </Button>
           </div>
-        <div className="grid gap-6 md:grid-cols-3">
-          <div className="md:col-span-2">
-              <Card>
-                <CardHeader>
-                    <CardTitle>All Invoices</CardTitle>
-                    <CardDescription>A list of all your invoices.</CardDescription>
-                </CardHeader>
-                <CardContent>
-                  {loading ? (
-                    <div className="space-y-4">
-                      <p className="text-sm text-muted-foreground animate-pulse">Loading invoices...</p>
-                      {[...Array(5)].map((_, i) => <Skeleton key={i} className="h-12 w-full" />)}
-                    </div>
-                  ) : (
-                  <ScrollArea className="h-[450px]">
-                    <Table>
-                      <TableHeader>
-                        <TableRow>
-                          <TableHead>Invoice ID</TableHead>
-                          <TableHead>Client</TableHead>
-                          <TableHead>Status</TableHead>
-                          <TableHead>Due Date</TableHead>
-                          <TableHead className="text-right">Amount</TableHead>
-                          <TableHead>
-                            <span className="sr-only">Actions</span>
-                          </TableHead>
-                        </TableRow>
-                      </TableHeader>
-                      <TableBody>
-                        {invoices.map((invoice) => (
-                          <TableRow key={invoice.id}>
-                            <TableCell className="font-medium">{invoice.id.substring(0,8)}</TableCell>
-                            <TableCell>{invoice.client?.name || '...'}</TableCell>
-                            <TableCell>
-                              <Badge 
-                                variant={
-                                  invoice.status === 'Paid' ? 'default' : 
-                                  invoice.status === 'Overdue' ? 'destructive' : 'secondary'
-                                }
-                                className={
-                                  invoice.status === 'Paid' ? 'bg-green-500/20 text-green-700 border-green-500/20 hover:bg-green-500/30' : ''
-                                }
-                              >
-                                {invoice.status}
-                              </Badge>
-                            </TableCell>
-                            <TableCell>{new Date(invoice.dueDate).toLocaleDateString()}</TableCell>
-                            <TableCell className="text-right">R{invoice.amount.toLocaleString()}</TableCell>
-                            <TableCell>
-                              <DropdownMenu>
-                                <DropdownMenuTrigger asChild>
-                                  <Button aria-haspopup="true" size="icon" variant="ghost">
-                                    <MoreHorizontal className="h-4 w-4" />
-                                    <span className="sr-only">Toggle menu</span>
-                                  </Button>
-                                </DropdownMenuTrigger>
-                                <DropdownMenuContent align="end">
-                                  <DropdownMenuLabel>Actions</DropdownMenuLabel>
-                                  <DropdownMenuItem onClick={() => handleViewInvoice(invoice)}>View</DropdownMenuItem>
-                                  <DropdownMenuItem onClick={() => handleEditInvoice(invoice)}>Edit</DropdownMenuItem>
-                                  <DropdownMenuItem onClick={() => handleDeleteInvoice(invoice)} className="text-red-500">Delete</DropdownMenuItem>
-                                </DropdownMenuContent>
-                              </DropdownMenu>
-                            </TableCell>
-                          </TableRow>
-                        ))}
-                      </TableBody>
-                    </Table>
-                  </ScrollArea>
-                  )}
-                </CardContent>
-              </Card>
-          </div>
-          <div className="md:col-span-1">
-              <DownloadInvoices />
-          </div>
-        </div>
+        
+          <Card>
+            <CardHeader>
+                <CardTitle>All Invoices</CardTitle>
+                <CardDescription>A list of all your invoices.</CardDescription>
+            </CardHeader>
+            <CardContent>
+              {loading ? (
+                <div className="space-y-4">
+                  <p className="text-sm text-muted-foreground animate-pulse">Loading invoices...</p>
+                  {[...Array(5)].map((_, i) => <Skeleton key={i} className="h-12 w-full" />)}
+                </div>
+              ) : (
+              <ScrollArea className="h-[calc(100vh-22rem)]">
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Invoice ID</TableHead>
+                      <TableHead>Client</TableHead>
+                      <TableHead>Status</TableHead>
+                      <TableHead>Due Date</TableHead>
+                      <TableHead className="text-right">Amount</TableHead>
+                      <TableHead>
+                        <span className="sr-only">Actions</span>
+                      </TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {invoices.map((invoice) => (
+                      <TableRow key={invoice.id}>
+                        <TableCell className="font-medium">{invoice.id.substring(0,8)}</TableCell>
+                        <TableCell>{invoice.client?.name || '...'}</TableCell>
+                        <TableCell>
+                          <Badge 
+                            variant={
+                              invoice.status === 'Paid' ? 'default' : 
+                              invoice.status === 'Overdue' ? 'destructive' : 'secondary'
+                            }
+                            className={
+                              invoice.status === 'Paid' ? 'bg-green-500/20 text-green-700 border-green-500/20 hover:bg-green-500/30' : ''
+                            }
+                          >
+                            {invoice.status}
+                          </Badge>
+                        </TableCell>
+                        <TableCell>{new Date(invoice.dueDate).toLocaleDateString()}</TableCell>
+                        <TableCell className="text-right">R{invoice.amount.toLocaleString()}</TableCell>
+                        <TableCell>
+                          <DropdownMenu>
+                            <DropdownMenuTrigger asChild>
+                              <Button aria-haspopup="true" size="icon" variant="ghost">
+                                <MoreHorizontal className="h-4 w-4" />
+                                <span className="sr-only">Toggle menu</span>
+                              </Button>
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent align="end">
+                              <DropdownMenuLabel>Actions</DropdownMenuLabel>
+                              <DropdownMenuItem onClick={() => handleViewInvoice(invoice)}>View</DropdownMenuItem>
+                              <DropdownMenuItem onClick={() => handleEditInvoice(invoice)}>Edit</DropdownMenuItem>
+                              <DropdownMenuItem onClick={() => handleDeleteInvoice(invoice)} className="text-red-500">Delete</DropdownMenuItem>
+                            </DropdownMenuContent>
+                          </DropdownMenu>
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </ScrollArea>
+              )}
+            </CardContent>
+          </Card>
       </div>
       <InvoiceForm 
         isOpen={isFormOpen}

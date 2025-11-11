@@ -29,7 +29,8 @@ import {
   MessageSquare,
   Moon,
   Sun,
-  Laptop
+  Laptop,
+  LogOut,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -48,6 +49,7 @@ import { useToast } from '@/hooks/use-toast';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import Link from 'next/link';
 import { useTheme } from 'next-themes';
+import DownloadInvoices from '@/components/app/download-invoices';
 
 
 const settingsSections = [
@@ -94,10 +96,10 @@ const invoiceSettingsSchema = z.object({
 type ProfileFormValues = z.infer<typeof profileSchema>;
 type InvoiceSettingsFormValues = z.infer<typeof invoiceSettingsSchema>;
 
-const comingSoonSections = ['team', 'billing', 'integrations', 'developer', 'data', 'security'];
+const comingSoonSections = ['team', 'billing', 'integrations', 'developer'];
 
 export default function SettingsPage() {
-  const { user } = useAuth();
+  const { user, logout } = useAuth();
   const { toast } = useToast();
   const [companyLogoPreview, setCompanyLogoPreview] = useState<string | null>(null);
   const [signaturePreview, setSignaturePreview] = useState<string | null>(null);
@@ -400,6 +402,34 @@ export default function SettingsPage() {
                                 <Laptop className="mb-2"/>
                                 System
                             </Button>
+                        </div>
+                    </CardContent>
+                </Card>
+            </TabsContent>
+
+            <TabsContent value="data" className="mt-0">
+                <DownloadInvoices />
+            </TabsContent>
+
+            <TabsContent value="security" className="mt-0">
+                <Card>
+                    <CardHeader>
+                        <CardTitle>Security & Access</CardTitle>
+                        <CardDescription>Manage your account security and sessions.</CardDescription>
+                    </CardHeader>
+                    <CardContent className="space-y-4">
+                         <div className="space-y-2 rounded-lg border p-4">
+                            <h3 className="font-medium">Account Information</h3>
+                            <p className="text-sm text-muted-foreground">
+                                You are currently logged in as: <strong className="text-foreground">{user?.email}</strong>
+                            </p>
+                            <Button variant="destructive" onClick={logout}>
+                                <LogOut className="mr-2 h-4 w-4"/>
+                                Log Out
+                            </Button>
+                        </div>
+                        <div className="flex min-h-[200px] items-center justify-center rounded-lg border-2 border-dashed bg-muted/50 p-6 text-center">
+                            <p className="text-muted-foreground">Advanced security features like two-factor authentication (2FA) will be available here soon.</p>
                         </div>
                     </CardContent>
                 </Card>
