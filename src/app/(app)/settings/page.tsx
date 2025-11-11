@@ -25,6 +25,8 @@ import {
   LifeBuoy,
   Code,
   FileText,
+  Mail,
+  MessageSquare,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -41,6 +43,7 @@ import { getBusinessProfile, saveBusinessProfile, saveInvoiceSettings, getInvoic
 import { useAuth } from '@/hooks/use-auth';
 import { useToast } from '@/hooks/use-toast';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
+import Link from 'next/link';
 
 
 const settingsSections = [
@@ -86,6 +89,9 @@ const invoiceSettingsSchema = z.object({
 
 type ProfileFormValues = z.infer<typeof profileSchema>;
 type InvoiceSettingsFormValues = z.infer<typeof invoiceSettingsSchema>;
+
+const contactSections = ['preferences', 'data', 'security', 'support'];
+const comingSoonSections = ['team', 'billing', 'integrations', 'developer'];
 
 export default function SettingsPage() {
   const { user } = useAuth();
@@ -366,7 +372,41 @@ export default function SettingsPage() {
                 </Form>
             </TabsContent>
 
-            {settingsSections.filter(s => !['profile', 'invoicing'].includes(s.value)).map((section) => (
+            {contactSections.map((sectionName) => {
+              const section = settingsSections.find(s => s.value === sectionName);
+              if (!section) return null;
+              return (
+              <TabsContent key={section.value} value={section.value} className="mt-0">
+                  <Card>
+                    <CardHeader>
+                        <CardTitle>{section.label}</CardTitle>
+                        <CardDescription>{section.content}</CardDescription>
+                    </CardHeader>
+                    <CardContent className="space-y-4">
+                        <p className="text-sm text-muted-foreground">For assistance with {section.label.toLowerCase()} or to request new features, please contact our support team. We're here to help you get the most out of Dulus Business Manager.</p>
+                        <div className="flex flex-col sm:flex-row gap-4">
+                            <Button asChild className="w-full sm:w-auto">
+                                <Link href="mailto:dulusdatadynamics@gmail.com">
+                                    <Mail className="mr-2 h-4 w-4" />
+                                    Contact via Email
+                                </Link>
+                            </Button>
+                            <Button asChild variant="outline" className="w-full sm:w-auto">
+                                <Link href="https://wa.me/27736461288" target="_blank">
+                                    <MessageSquare className="mr-2 h-4 w-4" />
+                                    Chat on WhatsApp
+                                </Link>
+                            </Button>
+                        </div>
+                    </CardContent>
+                  </Card>
+              </TabsContent>
+            )})}
+
+            {comingSoonSections.map((sectionName) => {
+              const section = settingsSections.find(s => s.value === sectionName);
+              if (!section) return null;
+              return (
               <TabsContent key={section.value} value={section.value} className="mt-0">
                   <Card>
                   <CardHeader>
@@ -380,9 +420,11 @@ export default function SettingsPage() {
                   </CardContent>
                   </Card>
               </TabsContent>
-            ))}
+            )})}
         </div>
       </Tabs>
     </div>
   );
 }
+
+    
