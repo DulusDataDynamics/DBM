@@ -2,21 +2,21 @@
 
 import { generateRevenueInsights } from "@/ai/flows/generate-revenue-insights";
 import { Invoice } from "./types";
+import { mapToAISchema } from "./utils";
 
 export async function getRevenueInsights(invoices: Invoice[]) {
   try {
-    const revenueData = invoices
-      .filter(i => i.status === 'Paid')
-      .map(i => ({
-        clientId: i.clientId,
-        amount: i.amount,
-      }));
+    // Revenue data: only include fields the AI expects (paid invoices)
+    const revenueData = mapToAISchema(
+      invoices.filter(i => i.status === 'Paid'), 
+      ['clientId', 'amount']
+    );
 
-    const invoiceData = invoices.map(i => ({
-      clientId: i.clientId,
-      status: i.status,
-      amount: i.amount,
-    }));
+    // Invoice data: include all fields required by the AI flow for all invoices
+    const invoiceData = mapToAISchema(
+      invoices, 
+      ['clientId', 'status', 'amount']
+    );
 
     const result = await generateRevenueInsights({ revenueData, invoiceData });
     return result;
