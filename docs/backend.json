@@ -112,7 +112,9 @@
         "bankName": { "type": "string" },
         "accountHolder": { "type": "string" },
         "accountNumber": { "type": "string" },
-        "branchCode": { "type": "string" }
+        "branchCode": { "type": "string" },
+        "defaultCurrency": { "type": "string" },
+        "defaultTaxRate": { "type": "number" }
       }
     },
     "invoiceSettings": {

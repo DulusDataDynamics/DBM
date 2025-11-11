@@ -68,6 +68,8 @@ const profileSchema = z.object({
     accountHolder: z.string().optional(),
     accountNumber: z.string().optional(),
     branchCode: z.string().optional(),
+    defaultCurrency: z.string().optional(),
+    defaultTaxRate: z.coerce.number().optional(),
 });
 
 const invoiceSettingsSchema = z.object({
@@ -105,6 +107,8 @@ export default function SettingsPage() {
       accountHolder: '',
       accountNumber: '',
       branchCode: '',
+      defaultCurrency: 'ZAR',
+      defaultTaxRate: 15,
     }
   });
 
@@ -117,8 +121,8 @@ export default function SettingsPage() {
         invoiceContactPhone: '',
         invoicePrefix: 'INV-',
         defaultDueDays: 30,
-        paymentTerms: '',
-        footerMessage: '',
+        paymentTerms: 'Payment due within 30 days.',
+        footerMessage: 'Thank you for your business!',
         showWatermark: true,
      }
   });
@@ -236,6 +240,12 @@ export default function SettingsPage() {
                                 )}/>
                                 <FormField control={profileForm.control} name="branchCode" render={({ field }) => (
                                     <FormItem><FormLabel>Branch Code / SWIFT Code</FormLabel><FormControl><Input {...field} /></FormControl></FormItem>
+                                )}/>
+                                <FormField control={profileForm.control} name="defaultCurrency" render={({ field }) => (
+                                    <FormItem><FormLabel>Default Currency</FormLabel><FormControl><Input placeholder="e.g. ZAR, USD" {...field} /></FormControl></FormItem>
+                                )}/>
+                                 <FormField control={profileForm.control} name="defaultTaxRate" render={({ field }) => (
+                                    <FormItem><FormLabel>Default Tax Rate (%)</FormLabel><FormControl><Input type="number" placeholder="e.g. 15" {...field} /></FormControl></FormItem>
                                 )}/>
                            </div>
                         </div>

@@ -42,6 +42,8 @@ export type BusinessProfile = {
   accountHolder?: string;
   accountNumber?: string;
   branchCode?: string;
+  defaultCurrency?: string;
+  defaultTaxRate?: number;
 };
 
 export type InvoiceSettings = {
