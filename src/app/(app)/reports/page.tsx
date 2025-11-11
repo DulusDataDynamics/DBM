@@ -1,11 +1,11 @@
 'use client';
 import { RevenueChart } from "@/components/app/revenue-chart";
 import { InvoiceStatusChart } from "@/components/app/invoice-status-chart";
-import { RevenueInsightsGenerator } from "@/components/app/revenue-insights-generator";
 import { subscribeToInvoices } from "@/lib/firestore";
 import { Invoice } from "@/lib/types";
 import { useEffect, useState } from "react";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 
 export default function ReportsPage() {
   const [invoices, setInvoices] = useState<Invoice[]>([]);
@@ -44,9 +44,17 @@ export default function ReportsPage() {
           </div>
         </div>
       )}
-      <div>
-        <RevenueInsightsGenerator invoices={invoices} />
-      </div>
+       <Card>
+        <CardHeader>
+            <CardTitle>Additional Reports</CardTitle>
+            <CardDescription>More detailed reports and data exports will be available here soon.</CardDescription>
+        </CardHeader>
+        <CardContent>
+            <div className="flex min-h-[200px] items-center justify-center rounded-lg border-2 border-dashed bg-muted/50 p-6 text-center">
+                <p className="text-muted-foreground">Coming soon...</p>
+            </div>
+        </CardContent>
+      </Card>
     </div>
   );
 }

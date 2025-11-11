@@ -24,6 +24,7 @@ import { Invoice, Task, Client } from '@/lib/types';
 import { useEffect, useState } from 'react';
 import { Skeleton } from '@/components/ui/skeleton';
 import { ScrollArea } from '@/components/ui/scroll-area';
+import { RevenueInsightsGenerator } from '@/components/app/revenue-insights-generator';
 
 export default function DashboardPage() {
   const [invoices, setInvoices] = useState<Invoice[]>([]);
@@ -84,12 +85,15 @@ export default function DashboardPage() {
     (invoice) => invoice.status === 'Unpaid' || invoice.status === 'Overdue'
   ).length;
 
-  const tasksToComplete = tasks.filter((task) => !task.completed).length;
+  const tasksToComplete = tasks.filter((task) => task.status !== 'Completed').length;
 
   const recentInvoices = invoices.sort((a, b) => new Date(b.dueDate).getTime() - new Date(a.dueDate).getTime()).slice(0, 5);
 
   return (
     <div className="flex flex-col gap-8">
+      <div>
+        <RevenueInsightsGenerator invoices={invoices} />
+      </div>
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
         <StatCard
           title="Total Revenue"

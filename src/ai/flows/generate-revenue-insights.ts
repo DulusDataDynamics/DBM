@@ -41,19 +41,16 @@ const generateRevenueInsightsPrompt = ai.definePrompt({
   name: 'generateRevenueInsightsPrompt',
   input: {schema: GenerateRevenueInsightsInputSchema},
   output: {schema: GenerateRevenueInsightsOutputSchema},
-  prompt: `You are a business intelligence expert tasked with generating revenue insights.
+  prompt: `You are an AI financial analyst for a business app called Dulus Business Manager.
+Your task is to analyze the provided business data and generate a professional, multi-sentence summary of the business performance.
 
-  Analyze the provided data and provide a concise, actionable insight regarding revenue, client revenue, and outstanding payments.
+Focus on key metrics like total revenue, outstanding payments, and client activity.
 
-  If the data is insufficient to generate a meaningful insight, respond with a message stating that an insight cannot be provided due to data limitations.
+Here is the data:
+- Revenue Data (from paid invoices): {{#if revenueData}}{{{JSON.stringify revenueData}}}{{else}}No revenue data available.{{/if}}
+- Invoice Data (all statuses): {{#if invoiceData}}{{{JSON.stringify invoiceData}}}{{else}}No invoice data available.{{/if}}
 
-  Consider these aspects:
-  - Total revenue generated.
-  - Revenue distribution across clients.
-  - Outstanding payments and their potential impact.
-
-  Revenue Data: {{#if revenueData}}{{{JSON.stringify revenueData}}}{{else}}No revenue data available.{{/if}}
-  Invoice Data: {{#if invoiceData}}{{{JSON.stringify invoiceData}}}{{else}}No invoice data available.{{/if}}
+Based on this, provide a clear and concise summary. If data is insufficient, state that more data is needed to generate insights.
 `,
 });
 
