@@ -52,9 +52,18 @@
       "description": "A task to be completed.",
       "type": "object",
       "properties": {
+        "title": {
+          "type": "string",
+          "description": "The title of the task."
+        },
         "description": {
           "type": "string",
           "description": "The description of the task."
+        },
+        "status": {
+          "type": "string",
+          "enum": ["Pending", "In Progress", "Completed"],
+          "description": "The current status of the task."
         },
         "priority": {
           "type": "string",
@@ -66,12 +75,12 @@
           "format": "date",
           "description": "The due date of the task."
         },
-        "completed": {
-          "type": "boolean",
-          "description": "Whether the task is completed."
+        "assignedTo": {
+          "type": "string",
+          "description": "Who the task is assigned to."
         }
       },
-      "required": ["description", "priority", "dueDate", "completed"]
+      "required": ["title", "status", "priority", "dueDate"]
     },
     "inventoryItem": {
       "title": "Inventory Item",
@@ -86,6 +95,10 @@
           "type": "string",
           "description": "The name of the inventory item."
         },
+        "category": {
+            "type": "string",
+            "description": "The category of the item."
+        },
         "quantity": {
           "type": "number",
           "description": "The quantity of the inventory item."
@@ -93,6 +106,10 @@
         "price": {
           "type": "number",
           "description": "The price of the inventory item."
+        },
+        "reorderLevel": {
+            "type": "number",
+            "description": "The minimum quantity before a restock is needed."
         }
       },
       "required": ["sku", "name", "quantity", "price"]

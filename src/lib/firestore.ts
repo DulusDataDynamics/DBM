@@ -13,7 +13,7 @@ import {
   deleteDoc,
   setDoc
 } from 'firebase/firestore';
-import { Client, Invoice, Task, InventoryItem, BusinessProfile, InvoiceSettings } from './types';
+import { Client, Invoice, Task, TaskStatus, TaskPriority, InventoryItem, BusinessProfile, InvoiceSettings } from './types';
 
 // Generic fetch function for real-time updates
 function subscribeToCollection<T>(collectionName: string, callback: (data: T[]) => void): () => void {
@@ -106,14 +106,43 @@ export const deleteInvoice = async (id: string) => {
 
 // Task functions
 export const subscribeToTasks = (callback: (tasks: Task[]) => void) => subscribeToCollection<Task>('tasks', callback);
-export const updateTaskCompletion = (id: string, completed: boolean) => {
+export const saveTask = async (id: string | undefined, data: Omit<Task, 'id'>) => {
+  if (id) {
     const taskDoc = doc(db, 'tasks', id);
-    return updateDoc(taskDoc, { completed });
+    return await updateDoc(taskDoc, data);
+  } else {
+    return await addDoc(collection(db, 'tasks'), data);
+  }
+}
+export const deleteTask = async (id: string) => {
+    const taskDoc = doc(db, 'tasks', id);
+    return await deleteDoc(taskDoc);
+}
+export const updateTaskStatus = (id: string, status: TaskStatus) => {
+    const taskDoc = doc(db, 'tasks', id);
+    return updateDoc(taskDoc, { status });
+}
+export const updateTaskPriority = (id: string, priority: TaskPriority) => {
+    const taskDoc = doc(db, 'tasks', id);
+    return updateDoc(taskDoc, { priority });
 }
 
 
 // Inventory functions
 export const subscribeToInventory = (callback: (inventory: InventoryItem[]) => void) => subscribeToCollection<InventoryItem>('inventory', callback);
+export const saveInventoryItem = async (id: string | undefined, data: Omit<InventoryItem, 'id'>) => {
+    if (id) {
+        const itemDoc = doc(db, 'inventory', id);
+        return await updateDoc(itemDoc, data);
+    } else {
+        return await addDoc(collection(db, 'inventory'), data);
+    }
+};
+export const deleteInventoryItem = async (id: string) => {
+    const itemDoc = doc(db, 'inventory', id);
+    return await deleteDoc(itemDoc);
+};
+
 
 // Settings functions
 export const saveBusinessProfile = async (userId: string, data: BusinessProfile) => {

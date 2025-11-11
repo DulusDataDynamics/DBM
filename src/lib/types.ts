@@ -14,20 +14,27 @@ export type Invoice = {
   dueDate: string;
 };
 
+export type TaskStatus = 'Pending' | 'In Progress' | 'Completed';
+export type TaskPriority = 'Low' | 'Medium' | 'High';
+
 export type Task = {
   id: string;
-  description: string;
-  priority: 'Low' | 'Medium' | 'High';
+  title: string;
+  description?: string;
+  status: TaskStatus;
+  priority: TaskPriority;
   dueDate: string;
-  completed: boolean;
+  assignedTo?: string;
 };
 
 export type InventoryItem = {
   id: string;
   sku: string;
   name: string;
+  category?: string;
   quantity: number;
   price: number;
+  reorderLevel: number;
 };
 
 export type BusinessProfile = {
