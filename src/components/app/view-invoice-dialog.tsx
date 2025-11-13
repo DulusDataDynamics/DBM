@@ -8,10 +8,13 @@ import {
   DialogFooter,
 } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
-import { Separator } from '@/components/ui/separator';
 import { Invoice } from '@/lib/types';
 import { Skeleton } from '../ui/skeleton';
+import { Download } from 'lucide-react';
+import jsPDF from 'jspdf';
+import html2canvas from 'html2canvas';
+import { useState } from 'react';
+import { InvoicePDFView } from './invoice-pdf-view';
 
 interface ViewInvoiceDialogProps {
   isOpen: boolean;
@@ -20,58 +23,71 @@ interface ViewInvoiceDialogProps {
 }
 
 export function ViewInvoiceDialog({ isOpen, onClose, invoice }: ViewInvoiceDialogProps) {
+  const [isDownloading, setIsDownloading] = useState(false);
 
-  const DetailRow = ({ label, value }: { label: string; value: React.ReactNode }) => (
-    <div className="flex justify-between items-center py-2">
-      <p className="text-sm text-muted-foreground">{label}</p>
-      <p className="text-sm font-medium text-right">{value}</p>
-    </div>
-  );
+  const downloadPdf = async () => {
+    if (!invoice) return;
+    setIsDownloading(true);
+
+    const element = document.getElementById(`invoice-pdf-view-${invoice.id}`);
+    if (!element) {
+        setIsDownloading(false);
+        return;
+    }
+
+    const canvas = await html2canvas(element, { scale: 2, useCORS: true });
+    const imgData = canvas.toDataURL('image/png');
+    
+    const pdf = new jsPDF('p', 'mm', 'a4');
+    const pageWidth = pdf.internal.pageSize.getWidth();
+    const pageHeight = pdf.internal.pageSize.getHeight();
+    const imgWidth = pageWidth;
+    const imgHeight = (canvas.height * imgWidth) / canvas.width;
+
+    let heightLeft = imgHeight;
+    let position = 0;
+
+    pdf.addImage(imgData, 'PNG', 0, position, imgWidth, imgHeight);
+    heightLeft -= pageHeight;
+
+    while (heightLeft > 0) {
+      position = heightLeft - imgHeight;
+      pdf.addPage();
+      pdf.addImage(imgData, 'PNG', 0, position, imgWidth, imgHeight);
+      heightLeft -= pageHeight;
+    }
+
+    pdf.save(`Invoice-${invoice.id.substring(0, 8)}.pdf`);
+    setIsDownloading(false);
+  };
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="sm:max-w-md">
+      <DialogContent className="sm:max-w-2xl">
         <DialogHeader>
           <DialogTitle>Invoice Details</DialogTitle>
           <DialogDescription>
-            A read-only view of invoice {invoice?.id.substring(0, 8)}.
+            A preview of invoice {invoice?.id.substring(0, 8)}. You can download it as a PDF.
           </DialogDescription>
         </DialogHeader>
-        <div className="space-y-4 py-4">
-            {invoice ? (
-                <>
-                <DetailRow label="Client Name" value={invoice.client?.name || 'N/A'} />
-                <DetailRow label="Client Email" value={invoice.client?.email || 'N/A'} />
-                <Separator />
-                <DetailRow label="Amount" value={`R${invoice.amount.toLocaleString()}`} />
-                <DetailRow label="Due Date" value={new Date(invoice.dueDate).toLocaleDateString()} />
-                <DetailRow label="Status" value={
-                    <Badge 
-                        variant={
-                        invoice.status === 'Paid' ? 'default' : 
-                        invoice.status === 'Overdue' ? 'destructive' : 'secondary'
-                        }
-                        className={
-                        invoice.status === 'Paid' ? 'bg-green-500/20 text-green-700 border-green-500/20' : ''
-                        }
-                    >
-                        {invoice.status}
-                    </Badge>
-                } />
-                </>
-            ) : (
-                <div className="space-y-3">
-                    <Skeleton className="h-5 w-full" />
-                    <Skeleton className="h-5 w-full" />
-                     <Separator />
-                    <Skeleton className="h-5 w-3/4" />
-                    <Skeleton className="h-5 w-1/2" />
-                </div>
-            )}
+        <div className="py-4">
+          {invoice ? (
+            <InvoicePDFView invoice={invoice} />
+          ) : (
+            <div className="space-y-3">
+              <Skeleton className="h-40 w-full" />
+              <Skeleton className="h-20 w-full" />
+              <Skeleton className="h-10 w-1/2" />
+            </div>
+          )}
         </div>
         <DialogFooter>
-          <Button type="button" onClick={onClose}>
+          <Button type="button" variant="outline" onClick={onClose}>
             Close
+          </Button>
+          <Button type="button" onClick={downloadPdf} disabled={isDownloading}>
+            <Download className="mr-2 h-4 w-4" />
+            {isDownloading ? 'Downloading...' : 'Download as PDF'}
           </Button>
         </DialogFooter>
       </DialogContent>
