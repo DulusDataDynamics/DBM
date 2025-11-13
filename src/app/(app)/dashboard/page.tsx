@@ -19,8 +19,8 @@ import { StatCard } from '@/components/app/stat-card';
 import { RevenueChart } from '@/components/app/revenue-chart';
 
 import { DollarSign, Users, FileText, CheckCircle2 } from 'lucide-react';
-import { subscribeToInvoices, subscribeToTasks, subscribeToClients } from '@/lib/firestore';
-import { Invoice, Task, Client } from '@/lib/types';
+import { subscribeToInvoices, subscribeToTasks, subscribeToClients, subscribeToInventory } from '@/lib/firestore';
+import { Invoice, Task, Client, InventoryItem } from '@/lib/types';
 import { useEffect, useState } from 'react';
 import { Skeleton } from '@/components/ui/skeleton';
 import { ScrollArea } from '@/components/ui/scroll-area';
@@ -30,12 +30,14 @@ export default function DashboardPage() {
   const [invoices, setInvoices] = useState<Invoice[]>([]);
   const [tasks, setTasks] = useState<Task[]>([]);
   const [clients, setClients] = useState<Client[]>([]);
+  const [inventory, setInventory] = useState<InventoryItem[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     const unsubInvoices = subscribeToInvoices(setInvoices);
     const unsubTasks = subscribeToTasks(setTasks);
     const unsubClients = subscribeToClients(setClients);
+    const unsubInventory = subscribeToInventory(setInventory);
 
     // Initial loading state
     const timer = setTimeout(() => {
@@ -48,6 +50,7 @@ export default function DashboardPage() {
       unsubInvoices();
       unsubTasks();
       unsubClients();
+      unsubInventory();
       clearTimeout(timer);
     };
   }, []);
@@ -169,7 +172,7 @@ export default function DashboardPage() {
         </Card>
       </div>
       <div>
-        <RevenueInsightsGenerator invoices={invoices} />
+        <RevenueInsightsGenerator invoices={invoices} inventory={inventory} />
       </div>
     </div>
   );

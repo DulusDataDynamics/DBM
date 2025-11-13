@@ -4,24 +4,28 @@ import { generateRevenueInsights } from "@/ai/flows/generate-revenue-insights";
 import { Invoice } from "./types";
 import { mapToAISchema } from "./utils";
 
-export async function getRevenueInsights(invoices: Invoice[]) {
+export async function getRevenueInsights(invoices: Invoice[], inventory: any[]) {
   try {
-    // Revenue data: only include fields the AI expects (paid invoices)
-    const revenueData = mapToAISchema(
-      invoices.filter(i => i.status === 'Paid'), 
-      ['clientId', 'amount']
-    );
+    // Map paid invoices to the salesData format the AI expects.
+    const salesData = invoices
+      .filter(i => i.status === 'Paid')
+      .map(invoice => {
+          // Attempt to find the product name from inventory. This is a simplification.
+          // In a real app, invoices would likely store item IDs.
+          const product = inventory.find(item => item.price === invoice.amount) || { name: `Service/Product at R${invoice.amount}`, quantity: 1 };
+          return {
+            id: invoice.id,
+            product: product.name,
+            amount: invoice.amount,
+            quantity: 1, // Assuming 1 unit per invoice for this simplified model
+            date: invoice.dueDate,
+          };
+      });
 
-    // Invoice data: include all fields required by the AI flow for all invoices
-    const invoiceData = mapToAISchema(
-      invoices, 
-      ['clientId', 'status', 'amount']
-    );
-
-    const result = await generateRevenueInsights({ revenueData, invoiceData });
-    return result;
+    const result = await generateRevenueInsights({ sales: salesData });
+    return { success: true, insights: result };
   } catch (error) {
     console.error('Error generating revenue insights:', error);
-    return { insight: 'An error occurred while generating insights. Please try again.' };
+    return { success: false, error: 'An error occurred while generating insights. Please try again.' };
   }
 }

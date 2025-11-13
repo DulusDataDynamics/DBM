@@ -1,9 +1,9 @@
 'use server';
 
 /**
- * @fileOverview A flow for generating revenue insights.
+ * @fileOverview A flow for generating detailed revenue and sales insights.
  *
- * - generateRevenueInsights - A function that generates revenue insights based on available data.
+ * - generateRevenueInsights - A function that generates insights based on sales data.
  * - GenerateRevenueInsightsInput - The input type for the generateRevenueInsights function.
  * - GenerateRevenueInsightsOutput - The return type for the generateRevenueInsights function.
  */
@@ -12,62 +12,27 @@ import {ai} from '@/ai/genkit';
 import {z} from 'genkit';
 
 const GenerateRevenueInsightsInputSchema = z.object({
-  revenueData: z.array(
+  sales: z.array(
     z.object({
-      clientId: z.string().describe('The ID of the client.'),
-      amount: z.number().describe('The revenue amount from the client.'),
+      id: z.string(),
+      product: z.string(),
+      amount: z.number(),
+      quantity: z.number(),
+      date: z.string(),
     })
-  ).optional().describe('Revenue data for each client from paid invoices.'),
-  invoiceData: z.array(
-    z.object({
-      clientId: z.string().describe('The ID of the client associated with the invoice.'),
-      status: z.enum(['Paid', 'Unpaid', 'Overdue']).describe('The status of the invoice.'),
-      amount: z.number().describe('The invoice amount.'),
-    })
-  ).optional().describe('Invoice data including status and amount.'),
+  ).describe('Array of sales data from paid invoices.'),
 });
 export type GenerateRevenueInsightsInput = z.infer<typeof GenerateRevenueInsightsInputSchema>;
 
 const GenerateRevenueInsightsOutputSchema = z.object({
-  insight: z.string().describe('A summary of revenue insights.'),
+  totalRevenue: z.number().describe('The total revenue calculated from all sales.'),
+  topProducts: z.array(z.string()).describe('A list of the best-selling product names.'),
+  bestMonth: z.string().describe('The month with the highest sales revenue.'),
+  revenueTrend: z.string().describe('A brief analysis of the revenue trend (e.g., "upward", "stable", "downward").'),
+  predictions: z.string().describe('A short-term prediction for sales or revenue based on the data.'),
+  actions: z.string().describe('A concrete, actionable suggestion for the business owner to improve sales or operations.'),
 });
 export type GenerateRevenueInsightsOutput = z.infer<typeof GenerateRevenueInsightsOutputSchema>;
-
-// Tool to find the top client
-const getTopClient = ai.defineTool(
-  {
-    name: 'getTopClient',
-    description: 'Identifies the client with the highest total revenue from a list of transactions.',
-    inputSchema: z.object({
-      revenueData: z.array(
-        z.object({
-          clientId: z.string(),
-          amount: z.number(),
-        })
-      ),
-    }),
-    outputSchema: z.object({
-      topClientId: z.string(),
-      totalRevenue: z.number(),
-    }),
-  },
-  async ({ revenueData }) => {
-    if (!revenueData || revenueData.length === 0) {
-      throw new Error('Revenue data is empty.');
-    }
-    const clientTotals = revenueData.reduce((acc, item) => {
-      acc[item.clientId] = (acc[item.clientId] || 0) + item.amount;
-      return acc;
-    }, {} as Record<string, number>);
-
-    const topClient = Object.entries(clientTotals).reduce(
-      (top, [clientId, total]) => (total > top.totalRevenue ? { topClientId: clientId, totalRevenue: total } : top),
-      { topClientId: '', totalRevenue: 0 }
-    );
-
-    return topClient;
-  }
-);
 
 
 export async function generateRevenueInsights(input: GenerateRevenueInsightsInput): Promise<GenerateRevenueInsightsOutput> {
@@ -78,18 +43,22 @@ const generateRevenueInsightsPrompt = ai.definePrompt({
   name: 'generateRevenueInsightsPrompt',
   input: {schema: GenerateRevenueInsightsInputSchema},
   output: {schema: GenerateRevenueInsightsOutputSchema},
-  tools: [getTopClient],
-  prompt: `You are an AI financial analyst for a business app called Dulus Business Manager.
-Your task is to analyze the provided business data and generate a professional, multi-sentence summary of the business performance.
+  prompt: `You are an AI financial analyst for a business management system called Dulus Business Manager (DBM).
+Analyze the following sales data and produce clear, actionable insights.
 
-Focus on key metrics like total revenue, outstanding payments, and client activity.
-If revenue data is available, use the getTopClient tool to identify the top client and include their performance in your analysis.
+DATA:
+{{#if sales}}
+{{{JSON.stringify sales}}}
+{{else}}
+No sales data available.
+{{/if}}
 
-Here is the data:
-- Revenue Data (from paid invoices): {{#if revenueData}}{{{JSON.stringify revenueData}}}{{else}}No revenue data available.{{/if}}
-- Invoice Data (all statuses): {{#if invoiceData}}{{{JSON.stringify invoiceData}}}{{else}}No invoice data available.{{/if}}
-
-Based on this, provide a clear and concise summary. If data is insufficient, state that more data is needed to generate insights.
+Respond with JSON ONLY in the structure defined by the output schema.
+The response should be concise and professional.
+- For 'bestMonth', return the month and year (e.g., "July 2024").
+- For 'revenueTrend', analyze the revenue over the months.
+- For 'predictions', provide a realistic forecast for the next period.
+- For 'actions', suggest a specific, practical step the user can take.
 `,
 });
 
@@ -100,6 +69,17 @@ const generateRevenueInsightsFlow = ai.defineFlow(
     outputSchema: GenerateRevenueInsightsOutputSchema,
   },
   async input => {
+    if (!input.sales || input.sales.length === 0) {
+      // Return a default empty state if there's no data to analyze
+      return {
+        totalRevenue: 0,
+        topProducts: [],
+        bestMonth: "N/A",
+        revenueTrend: "No trend data available.",
+        predictions: "Insufficient data to make predictions.",
+        actions: "Record more sales to generate insights."
+      };
+    }
     const {output} = await generateRevenueInsightsPrompt(input);
     return output!;
   }
