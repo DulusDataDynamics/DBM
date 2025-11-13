@@ -15,13 +15,14 @@ import {
   CardTitle,
 } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { MoreHorizontal, PlusCircle } from 'lucide-react';
+import { MoreHorizontal, PlusCircle, MessageSquare } from 'lucide-react';
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuLabel,
   DropdownMenuTrigger,
+  DropdownMenuSeparator,
 } from '@/components/ui/dropdown-menu';
 import { deleteClient, subscribeToClients } from '@/lib/firestore';
 import { Client } from '@/lib/types';
@@ -39,6 +40,7 @@ import {
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
 import { ScrollArea } from '@/components/ui/scroll-area';
+import { useToast } from '@/hooks/use-toast';
 
 export default function ClientsPage() {
   const [clients, setClients] = useState<Client[]>([]);
@@ -47,6 +49,7 @@ export default function ClientsPage() {
   const [selectedClient, setSelectedClient] = useState<Client | null>(null);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [clientToDelete, setClientToDelete] = useState<Client | null>(null);
+  const { toast } = useToast();
 
   useEffect(() => {
     const unsubscribe = subscribeToClients((clientsData) => {
@@ -70,6 +73,20 @@ export default function ClientsPage() {
   const handleDeleteClient = (client: Client) => {
     setClientToDelete(client);
     setIsDeleteDialogOpen(true);
+  };
+
+  const handleSendMessage = (client: Client) => {
+    if (!client.phone) {
+      toast({
+        variant: 'destructive',
+        title: 'No Phone Number',
+        description: `Client ${client.name} does not have a phone number saved.`,
+      });
+      return;
+    }
+    const phoneNumber = client.phone.replace(/\D/g, '');
+    const url = `https://wa.me/${phoneNumber}`;
+    window.open(url, '_blank');
   };
 
   const confirmDelete = async () => {
@@ -137,6 +154,11 @@ export default function ClientsPage() {
                         <DropdownMenuContent align="end">
                           <DropdownMenuLabel>Actions</DropdownMenuLabel>
                           <DropdownMenuItem onClick={() => handleEditClient(client)}>Edit</DropdownMenuItem>
+                           <DropdownMenuItem onClick={() => handleSendMessage(client)}>
+                            <MessageSquare className="mr-2 h-4 w-4" />
+                            Message on WhatsApp
+                          </DropdownMenuItem>
+                          <DropdownMenuSeparator />
                           <DropdownMenuItem onClick={() => handleDeleteClient(client)} className="text-red-500">Delete</DropdownMenuItem>
                         </DropdownMenuContent>
                       </DropdownMenu>

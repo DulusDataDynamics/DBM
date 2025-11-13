@@ -15,7 +15,7 @@ import {
   CardTitle,
 } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { MoreHorizontal, PlusCircle, MessageSquare } from 'lucide-react';
+import { MoreHorizontal, PlusCircle, MessageSquare, BellRing } from 'lucide-react';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -42,6 +42,7 @@ import {
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
 import { ViewInvoiceDialog } from '@/components/app/view-invoice-dialog';
+import { useToast } from '@/hooks/use-toast';
 
 export default function InvoicesPage() {
   const [invoices, setInvoices] = useState<Invoice[]>([]);
@@ -52,6 +53,7 @@ export default function InvoicesPage() {
   const [invoiceToDelete, setInvoiceToDelete] = useState<Invoice | null>(null);
   const [isViewDialogOpen, setIsViewDialogOpen] = useState(false);
   const [invoiceToView, setInvoiceToView] = useState<Invoice | null>(null);
+  const { toast } = useToast();
 
   useEffect(() => {
     const unsubscribe = subscribeToInvoices((invoicesData) => {
@@ -82,13 +84,25 @@ export default function InvoicesPage() {
     setIsViewDialogOpen(true);
   }
 
-  const handleSendWhatsApp = (invoice: Invoice) => {
+  const handleWhatsAppAction = (invoice: Invoice, action: 'send' | 'remind') => {
     if (!invoice.client?.phone) {
-      alert("This client does not have a phone number saved.");
+       toast({
+        variant: 'destructive',
+        title: 'No Phone Number',
+        description: `Client ${invoice.client.name} does not have a phone number saved.`,
+      });
       return;
     }
     const phoneNumber = invoice.client.phone.replace(/\D/g, ''); // Remove non-numeric characters
-    const message = `Hi ${invoice.client.name}, here is your invoice for R${invoice.amount.toLocaleString()}. You can view it here: ${window.location.origin}/invoices/${invoice.id}`;
+    let message = '';
+    
+    if(action === 'send') {
+        const invoiceUrl = `${window.location.origin}/invoices/${invoice.id}`;
+        message = `Hello ${invoice.client.name},\n\nYour invoice (#${invoice.id.substring(0,8)}) is ready.\nAmount: R${invoice.amount.toLocaleString()}\n\nYou can view it here:\n${invoiceUrl}\n\nThank you!`;
+    } else { // remind
+        message = `🔔 PAYMENT REMINDER\n\nHello ${invoice.client.name},\nThis is a friendly reminder that your invoice (#${invoice.id.substring(0,8)}) for R${invoice.amount.toLocaleString()} is due.\n\nPlease make payment soon to avoid any late penalties.\n\nThank you.`;
+    }
+
     const url = `https://wa.me/${phoneNumber}?text=${encodeURIComponent(message)}`;
     window.open(url, '_blank');
   };
@@ -178,10 +192,16 @@ export default function InvoicesPage() {
                               <DropdownMenuLabel>Actions</DropdownMenuLabel>
                               <DropdownMenuItem onClick={() => handleViewInvoice(invoice)}>View</DropdownMenuItem>
                               <DropdownMenuItem onClick={() => handleEditInvoice(invoice)}>Edit</DropdownMenuItem>
-                               <DropdownMenuItem onClick={() => handleSendWhatsApp(invoice)}>
+                               <DropdownMenuItem onClick={() => handleWhatsAppAction(invoice, 'send')}>
                                 <MessageSquare className="mr-2 h-4 w-4" />
                                 Send via WhatsApp
                               </DropdownMenuItem>
+                              {(invoice.status === 'Unpaid' || invoice.status === 'Overdue') && (
+                                <DropdownMenuItem onClick={() => handleWhatsAppAction(invoice, 'remind')}>
+                                  <BellRing className="mr-2 h-4 w-4" />
+                                  Send Payment Reminder
+                                </DropdownMenuItem>
+                              )}
                               <DropdownMenuSeparator />
                               <DropdownMenuItem onClick={() => handleDeleteInvoice(invoice)} className="text-red-500">Delete</DropdownMenuItem>
                             </DropdownMenuContent>

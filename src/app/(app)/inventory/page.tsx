@@ -15,7 +15,7 @@ import {
   CardTitle,
 } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { MoreHorizontal, PlusCircle } from 'lucide-react';
+import { MoreHorizontal, PlusCircle, AlertTriangle } from 'lucide-react';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -23,8 +23,8 @@ import {
   DropdownMenuLabel,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-import { deleteInventoryItem, subscribeToInventory } from '@/lib/firestore';
-import { InventoryItem } from '@/lib/types';
+import { deleteInventoryItem, subscribeToInventory, getBusinessProfile } from '@/lib/firestore';
+import { InventoryItem, BusinessProfile } from '@/lib/types';
 import { useEffect, useState } from 'react';
 import { Skeleton } from '@/components/ui/skeleton';
 import { ScrollArea } from '@/components/ui/scroll-area';
@@ -40,6 +40,8 @@ import {
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
 import { InventoryForm } from '@/components/app/inventory-form';
+import { useAuth } from '@/hooks/use-auth';
+import { useToast } from '@/hooks/use-toast';
 
 export default function InventoryPage() {
   const [inventory, setInventory] = useState<InventoryItem[]>([]);
@@ -48,15 +50,22 @@ export default function InventoryPage() {
   const [selectedItem, setSelectedItem] = useState<InventoryItem | null>(null);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [itemToDelete, setItemToDelete] = useState<InventoryItem | null>(null);
+  const [businessProfile, setBusinessProfile] = useState<BusinessProfile | null>(null);
+  const { user } = useAuth();
+  const { toast } = useToast();
 
   useEffect(() => {
     const unsubscribe = subscribeToInventory((inventoryData) => {
       setInventory(inventoryData);
       setLoading(false);
     });
+    
+    if (user?.uid) {
+        getBusinessProfile(user.uid).then(setBusinessProfile);
+    }
 
     return () => unsubscribe();
-  }, []);
+  }, [user]);
 
   const handleAddItem = () => {
     setSelectedItem(null);
@@ -71,6 +80,22 @@ export default function InventoryPage() {
   const handleDeleteItem = (item: InventoryItem) => {
     setItemToDelete(item);
     setIsDeleteDialogOpen(true);
+  };
+  
+  const handleSendLowStockAlert = (item: InventoryItem) => {
+    const ownerPhone = businessProfile?.businessPhone;
+    if (!ownerPhone) {
+      toast({
+        variant: 'destructive',
+        title: 'Phone Number Missing',
+        description: 'Please set a business phone number in your profile settings to receive alerts.',
+      });
+      return;
+    }
+    const phoneNumber = ownerPhone.replace(/\D/g, '');
+    const message = `⚠️ LOW STOCK ALERT\n\nProduct: ${item.name}\nSKU: ${item.sku}\nRemaining Quantity: ${item.quantity}`;
+    const url = `https://wa.me/${phoneNumber}?text=${encodeURIComponent(message)}`;
+    window.open(url, '_blank');
   };
 
   const confirmDelete = async () => {
@@ -124,14 +149,16 @@ export default function InventoryPage() {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {inventory.map((item) => (
-                  <TableRow key={item.id} className={item.quantity <= item.reorderLevel ? 'bg-destructive/10' : ''}>
+                {inventory.map((item) => {
+                  const isLowStock = item.quantity <= item.reorderLevel;
+                  return(
+                  <TableRow key={item.id} className={isLowStock ? 'bg-destructive/10' : ''}>
                     <TableCell className="font-mono text-xs">{item.sku}</TableCell>
                     <TableCell className="font-medium">{item.name}</TableCell>
                     <TableCell><Badge variant="outline">{item.category}</Badge></TableCell>
                     <TableCell>
-                      {item.quantity <= item.reorderLevel ? (
-                        <Badge variant="destructive">Low Stock</Badge>
+                      {isLowStock ? (
+                        <Badge variant="destructive">Low Stock ({item.quantity})</Badge>
                       ) : (
                         item.quantity
                       )}
@@ -149,12 +176,18 @@ export default function InventoryPage() {
                         <DropdownMenuContent align="end">
                           <DropdownMenuLabel>Actions</DropdownMenuLabel>
                           <DropdownMenuItem onClick={() => handleEditItem(item)}>Edit</DropdownMenuItem>
+                          {isLowStock && (
+                            <DropdownMenuItem onClick={() => handleSendLowStockAlert(item)}>
+                               <AlertTriangle className="mr-2 h-4 w-4" />
+                               Send Low Stock Alert
+                            </DropdownMenuItem>
+                          )}
                           <DropdownMenuItem onClick={() => handleDeleteItem(item)} className="text-red-500">Delete</DropdownMenuItem>
                         </DropdownMenuContent>
                       </DropdownMenu>
                     </TableCell>
                   </TableRow>
-                ))}
+                )})}
               </TableBody>
             </Table>
           </ScrollArea>
