@@ -15,13 +15,14 @@ import {
   CardTitle,
 } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { MoreHorizontal, PlusCircle } from 'lucide-react';
+import { MoreHorizontal, PlusCircle, MessageSquare } from 'lucide-react';
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuLabel,
   DropdownMenuTrigger,
+  DropdownMenuSeparator,
 } from '@/components/ui/dropdown-menu';
 import { Badge } from '@/components/ui/badge';
 import { deleteInvoice, subscribeToInvoices } from '@/lib/firestore';
@@ -80,6 +81,17 @@ export default function InvoicesPage() {
     setInvoiceToView(invoice);
     setIsViewDialogOpen(true);
   }
+
+  const handleSendWhatsApp = (invoice: Invoice) => {
+    if (!invoice.client?.phone) {
+      alert("This client does not have a phone number saved.");
+      return;
+    }
+    const phoneNumber = invoice.client.phone.replace(/\D/g, ''); // Remove non-numeric characters
+    const message = `Hi ${invoice.client.name}, here is your invoice for R${invoice.amount.toLocaleString()}. You can view it here: ${window.location.origin}/invoices/${invoice.id}`;
+    const url = `https://wa.me/${phoneNumber}?text=${encodeURIComponent(message)}`;
+    window.open(url, '_blank');
+  };
 
   const confirmDelete = async () => {
     if (invoiceToDelete) {
@@ -166,6 +178,11 @@ export default function InvoicesPage() {
                               <DropdownMenuLabel>Actions</DropdownMenuLabel>
                               <DropdownMenuItem onClick={() => handleViewInvoice(invoice)}>View</DropdownMenuItem>
                               <DropdownMenuItem onClick={() => handleEditInvoice(invoice)}>Edit</DropdownMenuItem>
+                               <DropdownMenuItem onClick={() => handleSendWhatsApp(invoice)}>
+                                <MessageSquare className="mr-2 h-4 w-4" />
+                                Send via WhatsApp
+                              </DropdownMenuItem>
+                              <DropdownMenuSeparator />
                               <DropdownMenuItem onClick={() => handleDeleteInvoice(invoice)} className="text-red-500">Delete</DropdownMenuItem>
                             </DropdownMenuContent>
                           </DropdownMenu>

@@ -12,6 +12,10 @@ import {
   CardHeader,
   CardTitle,
 } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import Link from 'next/link';
+import { Mail, MessageSquare } from 'lucide-react';
+
 
 const faqItems = [
   {
@@ -44,6 +48,11 @@ const faqItems = [
     answer:
       'Yes! Our app has offline support. Any changes you make while offline will automatically sync with the server once your connection is restored.',
   },
+  {
+    question: "How do I send an invoice via WhatsApp?",
+    answer:
+      "On the 'Invoices' page, click the three-dots menu next to any invoice and select 'Send via WhatsApp'. This will open a pre-filled WhatsApp chat. Please note, the client must have a valid phone number saved in their profile for this to work.",
+  },
 ];
 
 export default function SupportPage() {
@@ -57,22 +66,21 @@ export default function SupportPage() {
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
-          <div className="flex flex-col space-y-2">
-            <p>
-              For technical issues or account inquiries, you can reach us through the following channels:
-            </p>
-            <ul className="list-disc list-inside text-sm text-muted-foreground space-y-1">
-              <li>
-                <strong>Email:</strong> dulusdatadynamics@gmail.com
-              </li>
-              <li>
-                <strong>Phone:</strong> 073 646 1288
-              </li>
-              <li>
-                <strong>Website:</strong> <a href="https://dulusdatadynamics.netlify.app" target="_blank" rel="noopener noreferrer" className="text-primary hover:underline">dulusdatadynamics.netlify.app</a>
-              </li>
-            </ul>
-          </div>
+           <p className="text-sm text-muted-foreground">For assistance, feature requests, or to report a bug, please contact our support team. We're here to help you get the most out of Dulus Business Manager.</p>
+            <div className="flex flex-col sm:flex-row gap-4">
+                <Button asChild className="w-full sm:w-auto">
+                    <Link href="mailto:dulusdatadynamics@gmail.com">
+                        <Mail className="mr-2 h-4 w-4" />
+                        Contact via Email
+                    </Link>
+                </Button>
+                <Button asChild variant="outline" className="w-full sm:w-auto">
+                    <Link href="https://wa.me/27736461288" target="_blank">
+                        <MessageSquare className="mr-2 h-4 w-4" />
+                        Chat on WhatsApp
+                    </Link>
+                </Button>
+            </div>
         </CardContent>
       </Card>
       <Card>
