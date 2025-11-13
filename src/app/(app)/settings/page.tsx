@@ -231,7 +231,6 @@ export default function SettingsPage() {
                                <FormField control={profileForm.control} name="website" render={({ field }) => (
                                     <FormItem><FormLabel>Website (optional)</FormLabel><FormControl><Input {...field} /></FormControl></FormItem>
                                 )}/>
-                               <FormItem><FormLabel>Fax (optional)</FormLabel><FormControl><Input placeholder="Fax number" /></FormControl></FormItem>
                             </div>
                         </div>
                         <Separator />
@@ -413,7 +412,12 @@ export default function SettingsPage() {
                         <CardTitle>Reports & Data</CardTitle>
                         <CardDescription>Manage and export your business data.</CardDescription>
                     </CardHeader>
-                    <CardContent>
+                     <CardContent className="space-y-4">
+                        <div className="rounded-lg border p-4">
+                             <h3 className="font-medium mb-2">Export Invoices</h3>
+                             <p className="text-sm text-muted-foreground mb-4">Download a PDF summary of all your invoices.</p>
+                            <DownloadInvoices />
+                        </div>
                        <div className="flex min-h-[200px] items-center justify-center rounded-lg border-2 border-dashed bg-muted/50 p-6 text-center">
                             <p className="text-muted-foreground">Advanced reporting and data import/export features are coming soon.</p>
                         </div>
