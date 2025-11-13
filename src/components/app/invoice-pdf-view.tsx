@@ -1,18 +1,9 @@
 'use client';
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardFooter,
-  CardHeader,
-  CardTitle,
-} from '@/components/ui/card';
-import { Separator } from '@/components/ui/separator';
-import { Badge } from '@/components/ui/badge';
 import { Invoice, BusinessProfile, InvoiceSettings } from '@/lib/types';
 import { useAuth } from '@/hooks/use-auth';
 import { useEffect, useState } from 'react';
 import { getBusinessProfile, getInvoiceSettings } from '@/lib/firestore';
+import { Building } from 'lucide-react';
 
 interface InvoicePDFViewProps {
   invoice: Invoice;
@@ -28,100 +19,85 @@ export function InvoicePDFView({ invoice }: InvoicePDFViewProps) {
             getBusinessProfile(user.uid).then(setProfile);
             getInvoiceSettings(user.uid).then(setSettings);
         }
-    }, [user]);
-
-  const brandColor = settings?.brandColor || '#000000';
-
-  const DetailRow = ({ label, value }: { label: string, value: string | React.ReactNode }) => (
-    <div className="flex justify-between">
-      <p className="text-sm text-muted-foreground">{label}</p>
-      <p className="text-sm font-medium">{value}</p>
-    </div>
-  );
+    }, [user, invoice]);
 
   return (
-    <div id={`invoice-pdf-view-${invoice.id}`} className="p-8 bg-background text-foreground rounded-lg border">
-        <header className="grid grid-cols-2 gap-8 pb-8">
-            <div>
-                 <h1 className="text-2xl font-bold" style={{ color: brandColor }}>
-                    {profile?.companyName || "Your Company"}
-                 </h1>
-                <p className="text-xs text-muted-foreground">{profile?.businessAddress}</p>
-                <p className="text-xs text-muted-foreground">{profile?.businessEmail}</p>
-                <p className="text-xs text-muted-foreground">{profile?.businessPhone}</p>
-                {profile?.taxNumber && <p className="text-xs text-muted-foreground">Tax No: {profile.taxNumber}</p>}
+    <div id={`invoice-pdf-view-${invoice.id}`} className="p-6 bg-white text-gray-800 font-sans text-sm" style={{width: '800px', margin: 'auto'}}>
+        {/* Header */}
+        <header className="flex justify-between items-start mb-6">
+            <div className="company-info text-xs">
+                {settings?.companyLogoUrl ? (
+                    <img src={settings.companyLogoUrl} alt="Company Logo" className="w-20 h-auto mb-2" />
+                ) : (
+                    <div className="w-20 h-20 mb-2 bg-gray-100 flex items-center justify-center rounded">
+                        <Building className="w-10 h-10 text-gray-400" />
+                    </div>
+                )}
+                <h2 className="text-lg font-bold text-gray-900">{profile?.companyName || "Your Company"}</h2>
+                <p>{profile?.businessAddress}</p>
+                <p>Email: {profile?.businessEmail}</p>
+                <p>Phone: {profile?.businessPhone}</p>
+                {profile?.website && <p>Website: {profile.website}</p>}
+                {profile?.taxNumber && <p>TAX/VAT No: {profile.taxNumber}</p>}
             </div>
-             <div className="text-right">
-                <h2 className="text-3xl font-bold tracking-tight">INVOICE</h2>
-                <DetailRow label="Invoice #" value={`${settings?.invoicePrefix || 'INV-'}${invoice.id.substring(0,6).toUpperCase()}`} />
-                <DetailRow label="Date" value={new Date().toLocaleDateString()} />
-                <DetailRow label="Due Date" value={new Date(invoice.dueDate).toLocaleDateString()} />
-             </div>
+            <div className="invoice-info text-right text-xs">
+                <h1 className="text-3xl font-bold text-gray-900 mb-2">INVOICE</h1>
+                <p><strong>Invoice #:</strong> {`${settings?.invoicePrefix || ''}${invoice.id.substring(0,6).toUpperCase()}`}</p>
+                <p><strong>Date Issued:</strong> {new Date().toLocaleDateString()}</p>
+                <p><strong>Due Date:</strong> {new Date(invoice.dueDate).toLocaleDateString()}</p>
+            </div>
         </header>
-        <Separator />
-        <section className="py-8">
-            <h3 className="font-semibold text-sm mb-2">BILL TO</h3>
-            <p className="font-medium">{invoice.client?.name}</p>
-            <p className="text-sm text-muted-foreground">{invoice.client?.email}</p>
-        </section>
 
-        <section>
-            <div className="rounded-lg border">
-                <div className="flex justify-between font-semibold p-3 bg-muted/50 border-b">
-                    <p>Description</p>
-                    <p>Amount</p>
-                </div>
-                <div className="flex justify-between p-3">
-                    <p>Services Rendered / Product</p>
-                    <p>R {invoice.amount.toLocaleString()}</p>
-                </div>
-            </div>
-        </section>
+        {/* Bill To */}
+        <div className="bill-to my-5">
+            <h3 className="text-base font-bold underline mb-1">BILL TO</h3>
+            <p>{invoice.client?.name}</p>
+            <p>{invoice.client?.email}</p>
+            <p>{invoice.client?.phone}</p>
+        </div>
 
-        <section className="flex justify-end py-8">
-            <div className="w-full max-w-xs space-y-2">
-                <DetailRow label="Subtotal" value={`R ${invoice.amount.toLocaleString()}`} />
-                <Separator />
-                <div className="flex justify-between">
-                    <p className="text-base font-bold">Total</p>
-                    <p className="text-base font-bold">R {invoice.amount.toLocaleString()}</p>
-                </div>
-                <Badge
-                    variant={
-                        invoice.status === 'Paid' ? 'default' :
-                        invoice.status === 'Overdue' ? 'destructive' : 'secondary'
-                    }
-                    className={`
-                        w-full justify-center mt-2
-                        ${invoice.status === 'Paid' ? 'bg-green-500/20 text-green-700 border-green-500/20' : ''}
-                    `}
-                >
-                    {invoice.status}
-                </Badge>
-            </div>
-        </section>
+        {/* Items Table */}
+        <table className="w-full border-collapse mb-6">
+            <thead>
+                <tr>
+                    <th className="bg-[#1D3557] text-white p-2.5 text-left">Description</th>
+                    <th className="bg-[#1D3557] text-white p-2.5 text-left">Amount</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td className="p-2.5 border-b border-gray-300">Service/Product Rendered</td>
+                    <td className="p-2.5 border-b border-gray-300">R {invoice.amount.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
+                </tr>
+            </tbody>
+        </table>
 
-        <Separator />
+        {/* Total */}
+        <div className="text-right mb-4">
+            <h2 className="text-xl font-bold">Total: R {invoice.amount.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</h2>
+        </div>
         
-        <footer className="pt-8 grid grid-cols-1 md:grid-cols-2 gap-8 text-xs">
-            <div>
-                 <h4 className="font-semibold mb-2">Payment Details</h4>
-                 <p>Bank: {profile?.bankName}</p>
-                 <p>Account Name: {profile?.accountHolder}</p>
-                 <p>Account Number: {profile?.accountNumber}</p>
-                 <p>Branch Code: {profile?.branchCode}</p>
-            </div>
-             <div className="space-y-1">
-                 <h4 className="font-semibold">Thank You!</h4>
-                 <p className="text-muted-foreground">{settings?.paymentTerms}</p>
-                 <p className="text-muted-foreground">{settings?.footerMessage}</p>
-             </div>
-        </footer>
-        {settings?.showWatermark && (
-            <p className="text-center text-xs text-muted-foreground/50 pt-8">
-                Generated by Dulus Business Manager
-            </p>
-        )}
+        {/* Payment Instructions */}
+        <div className="text-sm italic my-2">
+            <p>{settings?.paymentTerms || 'Please make payment within the specified due date.'}</p>
+            <p>Use the invoice number as your payment reference.</p>
+        </div>
+
+        {/* Banking Details */}
+        <div className="mt-6 border-t-2 border-gray-300 pt-2 text-sm">
+            <h3 className="text-base font-bold mb-1">BANKING DETAILS</h3>
+            <p><strong>Bank:</strong> {profile?.bankName}</p>
+            <p><strong>Account Holder:</strong> {profile?.accountHolder}</p>
+            <p><strong>Account Number:</strong> {profile?.accountNumber}</p>
+            <p><strong>Branch Code:</strong> {profile?.branchCode}</p>
+        </div>
+
+        {/* Footer */}
+        <p className="text-center text-gray-500 text-xs mt-8">
+            Thank you for your business!
+            <br />
+            {settings?.showWatermark && `Generated by Dulus Business Manager © ${new Date().getFullYear()} Dulus Data Dynamics`}
+        </p>
     </div>
   );
 }
