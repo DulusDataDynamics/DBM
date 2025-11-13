@@ -47,7 +47,7 @@ const generateRevenueInsightsPrompt = ai.definePrompt({
 Analyze the following sales data and produce clear, actionable insights.
 
 DATA:
-{{#if sales}}
+{{#if sales.length}}
 {{{JSON.stringify sales}}}
 {{else}}
 No sales data available.
@@ -81,6 +81,9 @@ const generateRevenueInsightsFlow = ai.defineFlow(
       };
     }
     const {output} = await generateRevenueInsightsPrompt(input);
-    return output!;
+    if (!output) {
+      throw new Error("AI failed to generate a valid response. The output was empty.");
+    }
+    return output;
   }
 );
