@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useRouter, redirect } from 'next/navigation';
 import Link from 'next/link';
 
@@ -16,12 +16,34 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useAuth } from '@/hooks/use-auth';
 
+
+const loadingMessages = [
+    'Creating your secure account...',
+    'Setting up your workspace...',
+    'Just a few seconds more...',
+    'Welcome aboard!'
+];
+
+
 export default function SignupPage() {
   const router = useRouter();
   const { user, signup } = useAuth();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
+  const [loadingMessage, setLoadingMessage] = useState(loadingMessages[0]);
+
+  useEffect(() => {
+    let interval: NodeJS.Timeout;
+    if (loading) {
+      let i = 0;
+      interval = setInterval(() => {
+        i = (i + 1) % loadingMessages.length;
+        setLoadingMessage(loadingMessages[i]);
+      }, 2000);
+    }
+    return () => clearInterval(interval);
+  }, [loading]);
 
   const handleSignup = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -73,7 +95,7 @@ export default function SignupPage() {
             />
           </div>
           <Button type="submit" className="w-full" disabled={loading}>
-            {loading ? 'Creating account...' : 'Create account'}
+            {loading ? loadingMessage : 'Create account'}
           </Button>
         </CardContent>
       </form>

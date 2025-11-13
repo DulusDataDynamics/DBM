@@ -79,14 +79,14 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     }
   };
 
-  if (loading) {
+  if (loading && !user) {
     return (
       <div className="flex h-screen w-screen items-center justify-center">
         <div className="flex flex-col items-center gap-4">
           <Logo />
           <div className="space-y-2 text-center">
-            <p className="text-lg font-medium">Authenticating...</p>
-            <p className="text-sm text-muted-foreground">Please wait while we check your credentials.</p>
+            <p className="text-lg font-medium">Getting things ready...</p>
+            <p className="text-sm text-muted-foreground">Please wait a moment while we load the app.</p>
           </div>
         </div>
       </div>

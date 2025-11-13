@@ -15,7 +15,7 @@ import {
   CardTitle,
 } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { MoreHorizontal, PlusCircle, MessageSquare, BellRing } from 'lucide-react';
+import { MoreHorizontal, PlusCircle, MessageSquare, BellRing, Download } from 'lucide-react';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -43,6 +43,7 @@ import {
 } from '@/components/ui/alert-dialog';
 import { ViewInvoiceDialog } from '@/components/app/view-invoice-dialog';
 import { useToast } from '@/hooks/use-toast';
+import DownloadInvoices from '@/components/app/download-invoices';
 
 export default function InvoicesPage() {
   const [invoices, setInvoices] = useState<Invoice[]>([]);
@@ -128,10 +129,13 @@ export default function InvoicesPage() {
               <h1 className="text-3xl font-bold tracking-tight">Invoices</h1>
               <p className="text-muted-foreground">Manage your invoices and track payments.</p>
             </div>
-            <Button size="sm" onClick={handleAddInvoice}>
-              <PlusCircle className="mr-2 h-4 w-4" />
-              Add Invoice
-            </Button>
+            <div className="flex items-center gap-2">
+                <DownloadInvoices />
+                <Button size="sm" onClick={handleAddInvoice}>
+                  <PlusCircle className="mr-2 h-4 w-4" />
+                  Add Invoice
+                </Button>
+            </div>
           </div>
         
           <Card>

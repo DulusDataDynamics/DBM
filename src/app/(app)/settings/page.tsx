@@ -408,7 +408,17 @@ export default function SettingsPage() {
             </TabsContent>
 
             <TabsContent value="data" className="mt-0">
-                <DownloadInvoices />
+                <Card>
+                    <CardHeader>
+                        <CardTitle>Reports & Data</CardTitle>
+                        <CardDescription>Manage and export your business data.</CardDescription>
+                    </CardHeader>
+                    <CardContent>
+                       <div className="flex min-h-[200px] items-center justify-center rounded-lg border-2 border-dashed bg-muted/50 p-6 text-center">
+                            <p className="text-muted-foreground">Advanced reporting and data import/export features are coming soon.</p>
+                        </div>
+                    </CardContent>
+                </Card>
             </TabsContent>
 
             <TabsContent value="security" className="mt-0">

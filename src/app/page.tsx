@@ -166,7 +166,7 @@ export default function LandingPage() {
                     </li>
                      <li className="flex items-center">
                       <Check className="mr-2 h-4 w-4 text-green-500" />
-                      Email & WhatsApp Support
+                      WhatsApp Support
                     </li>
                   </ul>
                 </div>

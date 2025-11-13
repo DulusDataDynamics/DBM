@@ -249,21 +249,9 @@ export default function DownloadInvoices() {
   }
 
   return (
-    <Card>
-        <CardHeader>
-            <CardTitle>Export Invoices</CardTitle>
-            <CardDescription>
-                Download a PDF summary of all your invoices.
-            </CardDescription>
-        </CardHeader>
-        <CardContent>
-            <div className="flex gap-2 items-center">
-                <Button onClick={handleDownload} disabled={loading}>
-                    <Download className="mr-2 h-4 w-4" />
-                    {loading ? 'Preparing PDF...' : 'Download Invoices (PDF)'}
-                </Button>
-            </div>
-        </CardContent>
-    </Card>
+    <Button onClick={handleDownload} disabled={loading} variant="outline" size="sm">
+        <Download className="mr-2 h-4 w-4" />
+        {loading ? 'Preparing PDF...' : 'Download All'}
+    </Button>
   );
 }
