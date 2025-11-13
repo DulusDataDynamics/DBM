@@ -5,7 +5,7 @@
  *
  * - generateRevenueInsights - A function that generates insights based on sales data.
  * - GenerateRevenueInsightsInput - The input type for the generateRevenueInsights function.
- * - GenerateRevenueInsightsOutput - The return type for the generateRevenueInsights function.
+ * - GenerateRevenueInsightsOutput - The return type for the generateRevenueinsights function.
  */
 
 import {ai} from '@/ai/genkit';
