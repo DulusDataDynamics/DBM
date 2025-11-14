@@ -1,13 +1,42 @@
 'use client';
 
+import { useEffect } from 'react';
+import { useRouter } from 'next/navigation';
+import { useAuth } from '@/hooks/use-auth';
 import { Logo } from '@/components/logo';
 import { Button } from '@/components/ui/button';
 import Image from 'next/image';
 import Link from 'next/link';
 import { PlaceHolderImages } from '@/lib/placeholder-images';
 import { Zap, ClipboardCheck, FileText, Users, Shield, BookUser, Check } from 'lucide-react';
+import { Skeleton } from '@/components/ui/skeleton';
 
 export default function LandingPage() {
+  const { user, loading } = useAuth();
+  const router = useRouter();
+
+  useEffect(() => {
+    if (!loading && user) {
+      router.replace('/dashboard');
+    }
+  }, [user, loading, router]);
+  
+  if (loading || user) {
+    return (
+      <div className="flex h-screen w-screen flex-col items-center justify-center gap-4 bg-background">
+        <Logo />
+        <div className="text-center">
+          <p className="text-lg font-medium text-foreground">
+            Loading your dashboard
+            <span className="animate-pulse">.</span>
+            <span className="animate-pulse" style={{ animationDelay: '200ms' }}>.</span>
+            <span className="animate-pulse" style={{ animationDelay: '400ms' }}>.</span>
+          </p>
+        </div>
+      </div>
+    );
+  }
+
   const heroImage = PlaceHolderImages && PlaceHolderImages.find((p) => p.id === 'landing-hero');
 
   const features = [
@@ -84,7 +113,7 @@ export default function LandingPage() {
             </div>
           </div>
           <div className="flex items-center justify-center">
-            {heroImage && (
+            {heroImage ? (
               <Image
                 src={heroImage.imageUrl}
                 alt={heroImage.description}
@@ -93,7 +122,7 @@ export default function LandingPage() {
                 data-ai-hint={heroImage.imageHint}
                 className="rounded-lg object-cover shadow-xl"
               />
-            )}
+            ) : <Skeleton className="w-[600px] h-[400px] rounded-lg"/>}
           </div>
         </section>
 

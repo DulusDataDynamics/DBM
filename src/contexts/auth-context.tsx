@@ -10,7 +10,6 @@ import {
   signOut
 } from 'firebase/auth';
 import { auth, db } from '@/lib/firebase';
-import { Logo } from '@/components/logo';
 import { BusinessProfile } from '@/lib/types';
 import { doc, getDoc, setDoc } from 'firebase/firestore';
 
@@ -30,11 +29,9 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [user, setUser] = useState<User | null>(null);
   const [profile, setProfile] = useState<BusinessProfile | null>(null);
   const [loading, setLoading] = useState(true);
-  const [isClient, setIsClient] = useState(false);
   const router = useRouter();
 
   useEffect(() => {
-    setIsClient(true);
     const unsubscribe = onAuthStateChanged(auth, async (user) => {
       setUser(user);
       if (user) {
@@ -55,7 +52,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     setLoading(true);
     try {
       await signInWithEmailAndPassword(auth, email, password);
-      router.push('/dashboard');
+      // Let the main layout handle the redirect
     } catch (error) {
       console.error("Login failed:", error);
       setLoading(false);
@@ -76,7 +73,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       };
       await setDoc(doc(db, 'profiles', newUser.uid), initialProfile);
       setProfile(initialProfile);
-      router.push('/dashboard');
+      // Let the main layout handle the redirect
     } catch (error) {
       console.error("Signup failed:", error);
       setLoading(false);
@@ -96,27 +93,12 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     }
   };
 
-  // Only show loading screen on the client to avoid hydration errors
-  if (loading && isClient) {
-    return (
-       <div className="flex h-screen w-screen flex-col items-center justify-center gap-4 bg-background">
-        <Logo />
-        <div className="text-center">
-          <p className="text-lg font-medium text-foreground">
-            Getting things ready
-            <span className="animate-pulse">.</span>
-            <span className="animate-pulse" style={{ animationDelay: '200ms' }}>.</span>
-            <span className="animate-pulse" style={{ animationDelay: '400ms' }}>.</span>
-          </p>
-          <p className="text-sm text-muted-foreground">Please wait a moment while we load the app.</p>
-        </div>
-      </div>
-    );
-  }
-
   return (
     <AuthContext.Provider value={{ user, profile, loading, login, logout, signup, setProfile }}>
-      {children}
+      {!loading ? children : (
+         <div className="flex h-screen w-screen flex-col items-center justify-center gap-4 bg-background">
+         </div>
+      )}
     </AuthContext.Provider>
   );
 };
