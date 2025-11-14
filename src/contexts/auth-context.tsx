@@ -66,14 +66,25 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       const userCredential = await createUserWithEmailAndPassword(auth, email, password);
       const newUser = userCredential.user;
       const initialProfile: BusinessProfile = {
+        companyName: '',
+        ownerName: '',
         businessEmail: newUser.email || '',
+        businessPhone: '',
+        businessAddress: '',
+        website: '',
+        taxNumber: '',
+        bankName: '',
+        accountHolder: '',
+        accountNumber: '',
+        branchCode: '',
+        defaultCurrency: 'ZAR',
+        defaultTaxRate: 15,
         trialStart: Date.now(),
         trialActive: true,
         subscribed: false,
       };
       await setDoc(doc(db, 'profiles', newUser.uid), initialProfile);
       setProfile(initialProfile);
-      // Let the main layout handle the redirect
     } catch (error) {
       console.error("Signup failed:", error);
       setLoading(false);
@@ -89,16 +100,13 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     } catch (error) {
       console.error("Logout failed:", error);
     } finally {
-      setLoading(false);
+      // Don't set loading to false here, as the router will trigger a re-render
     }
   };
 
   return (
     <AuthContext.Provider value={{ user, profile, loading, login, logout, signup, setProfile }}>
-      {!loading ? children : (
-         <div className="flex h-screen w-screen flex-col items-center justify-center gap-4 bg-background">
-         </div>
-      )}
+      {children}
     </AuthContext.Provider>
   );
 };

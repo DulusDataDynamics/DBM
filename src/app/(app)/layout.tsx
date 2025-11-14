@@ -46,7 +46,7 @@ function TrialBanner() {
     }
   }, [profile, user, setProfile]);
 
-  if (daysRemaining === null) return null; // Don't render on server or initial client render
+  if (daysRemaining === null || !profile?.trialActive) return null;
 
   if (daysRemaining <= 0) {
     return (
