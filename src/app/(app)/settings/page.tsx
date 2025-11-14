@@ -31,6 +31,7 @@ import {
   Sun,
   Laptop,
   LogOut,
+  Check,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -105,6 +106,9 @@ export default function SettingsPage() {
   const [signaturePreview, setSignaturePreview] = useState<string | null>(null);
   const { setTheme } = useTheme();
 
+  const [profileSaveState, setProfileSaveState] = useState<'idle' | 'saving' | 'saved'>('idle');
+  const [invoiceSaveState, setInvoiceSaveState] = useState<'idle' | 'saving' | 'saved'>('idle');
+
   const profileForm = useForm<ProfileFormValues>({
     resolver: zodResolver(profileSchema),
     defaultValues: {
@@ -166,14 +170,20 @@ export default function SettingsPage() {
 
   const onProfileSubmit = async (data: ProfileFormValues) => {
     if (!user?.uid) return;
+    setProfileSaveState('saving');
     await saveBusinessProfile(user.uid, data);
     toast({ title: 'Business profile saved successfully!' });
+    setProfileSaveState('saved');
+    setTimeout(() => setProfileSaveState('idle'), 2000);
   };
   
   const onInvoiceSubmit = async (data: InvoiceSettingsFormValues) => {
     if (!user?.uid) return;
+    setInvoiceSaveState('saving');
     await saveInvoiceSettings(user.uid, data);
     toast({ title: 'Invoice settings saved successfully!' });
+    setInvoiceSaveState('saved');
+    setTimeout(() => setInvoiceSaveState('idle'), 2000);
   };
   
   return (
@@ -262,7 +272,11 @@ export default function SettingsPage() {
                         </div>
                       </CardContent>
                       <CardFooter className="justify-end">
-                          <Button type="submit">Save Business Profile</Button>
+                          <Button type="submit" disabled={profileSaveState === 'saving' || profileSaveState === 'saved'}>
+                            {profileSaveState === 'saving' && 'Saving...'}
+                            {profileSaveState === 'saved' && <><Check className="mr-2 h-4 w-4" /> Saved!</>}
+                            {profileSaveState === 'idle' && 'Save Business Profile'}
+                          </Button>
                       </CardFooter>
                     </Card>
                 </form>
@@ -370,7 +384,11 @@ export default function SettingsPage() {
                         </div>
                     </CardContent>
                     <CardFooter className="justify-end">
-                        <Button type="submit">Save Invoice Settings</Button>
+                        <Button type="submit" disabled={invoiceSaveState === 'saving' || invoiceSaveState === 'saved'}>
+                          {invoiceSaveState === 'saving' && 'Saving...'}
+                          {invoiceSaveState === 'saved' && <><Check className="mr-2 h-4 w-4" /> Saved!</>}
+                          {invoiceSaveState === 'idle' && 'Save Invoice Settings'}
+                        </Button>
                     </CardFooter>
                     </Card>
                 </form>
