@@ -96,7 +96,8 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     }
   };
 
-  if (loading && !user && isClient) {
+  // Only show loading screen on the client to avoid hydration errors
+  if (loading && isClient) {
     return (
        <div className="flex h-screen w-screen flex-col items-center justify-center gap-4 bg-background">
         <Logo />

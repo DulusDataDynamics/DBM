@@ -46,7 +46,7 @@ function TrialBanner() {
     }
   }, [profile, user, setProfile]);
 
-  if (!profile || profile.subscribed || daysRemaining === null) return null;
+  if (daysRemaining === null) return null; // Don't render on server or initial client render
 
   if (daysRemaining <= 0) {
     return (
@@ -84,8 +84,17 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
 
   if (loading || !user) {
     return (
-      <div className="flex h-screen w-screen items-center justify-center">
-        Loading...
+      <div className="flex h-screen w-screen flex-col items-center justify-center gap-4 bg-background">
+        <Logo />
+        <div className="text-center">
+          <p className="text-lg font-medium text-foreground">
+            Getting things ready
+            <span className="animate-pulse">.</span>
+            <span className="animate-pulse" style={{ animationDelay: '200ms' }}>.</span>
+            <span className="animate-pulse" style={{ animationDelay: '400ms' }}>.</span>
+          </p>
+          <p className="text-sm text-muted-foreground">Please wait a moment while we load the app.</p>
+        </div>
       </div>
     );
   }
