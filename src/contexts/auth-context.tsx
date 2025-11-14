@@ -10,7 +10,6 @@ import {
   signOut
 } from 'firebase/auth';
 import { auth, db } from '@/lib/firebase';
-import { Skeleton } from '@/components/ui/skeleton';
 import { Logo } from '@/components/logo';
 import { BusinessProfile } from '@/lib/types';
 import { doc, getDoc, setDoc } from 'firebase/firestore';
@@ -97,13 +96,16 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
   if (loading && !user) {
     return (
-      <div className="flex h-screen w-screen items-center justify-center">
-        <div className="flex flex-col items-center gap-4">
-          <Logo />
-          <div className="space-y-2 text-center">
-            <p className="text-lg font-medium">Getting things ready...</p>
-            <p className="text-sm text-muted-foreground">Please wait a moment while we load the app.</p>
-          </div>
+       <div className="flex h-screen w-screen flex-col items-center justify-center gap-4 bg-background">
+        <Logo />
+        <div className="text-center">
+          <p className="text-lg font-medium text-foreground">
+            Getting things ready
+            <span className="animate-pulse">.</span>
+            <span className="animate-pulse" style={{ animationDelay: '200ms' }}>.</span>
+            <span className="animate-pulse" style={{ animationDelay: '400ms' }}>.</span>
+          </p>
+          <p className="text-sm text-muted-foreground">Please wait a moment while we load the app.</p>
         </div>
       </div>
     );
