@@ -131,7 +131,10 @@
         "accountNumber": { "type": "string" },
         "branchCode": { "type": "string" },
         "defaultCurrency": { "type": "string" },
-        "defaultTaxRate": { "type": "number" }
+        "defaultTaxRate": { "type": "number" },
+        "trialStart": { "type": "number" },
+        "trialActive": { "type": "boolean" },
+        "subscribed": { "type": "boolean" }
       }
     },
     "invoiceSettings": {

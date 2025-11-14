@@ -44,6 +44,7 @@ import {
 import { ViewInvoiceDialog } from '@/components/app/view-invoice-dialog';
 import { useToast } from '@/hooks/use-toast';
 import DownloadInvoices from '@/components/app/download-invoices';
+import { useAuth } from '@/hooks/use-auth';
 
 export default function InvoicesPage() {
   const [invoices, setInvoices] = useState<Invoice[]>([]);
@@ -55,6 +56,7 @@ export default function InvoicesPage() {
   const [isViewDialogOpen, setIsViewDialogOpen] = useState(false);
   const [invoiceToView, setInvoiceToView] = useState<Invoice | null>(null);
   const { toast } = useToast();
+  const { profile } = useAuth();
 
   useEffect(() => {
     const unsubscribe = subscribeToInvoices((invoicesData) => {
@@ -66,6 +68,14 @@ export default function InvoicesPage() {
   }, []);
 
   const handleAddInvoice = () => {
+    if (profile && !profile.trialActive && !profile.subscribed) {
+      toast({
+        variant: 'destructive',
+        title: 'Trial Expired',
+        description: 'Your free trial has ended. Please subscribe to create new invoices.',
+      });
+      return;
+    }
     setSelectedInvoice(null);
     setIsFormOpen(true);
   };
@@ -120,6 +130,8 @@ export default function InvoicesPage() {
     setIsFormOpen(false);
     setSelectedInvoice(null);
   };
+  
+  const isAddDisabled = profile && !profile.trialActive && !profile.subscribed;
 
   return (
     <>
@@ -131,7 +143,7 @@ export default function InvoicesPage() {
             </div>
             <div className="flex items-center gap-2">
                 <DownloadInvoices />
-                <Button size="sm" onClick={handleAddInvoice}>
+                <Button size="sm" onClick={handleAddInvoice} disabled={isAddDisabled}>
                   <PlusCircle className="mr-2 h-4 w-4" />
                   Add Invoice
                 </Button>

@@ -9,33 +9,42 @@ import {
   signInWithEmailAndPassword,
   signOut
 } from 'firebase/auth';
-import { auth } from '@/lib/firebase';
+import { auth, db } from '@/lib/firebase';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Logo } from '@/components/logo';
+import { BusinessProfile } from '@/lib/types';
+import { doc, getDoc, setDoc } from 'firebase/firestore';
 
 interface AuthContextType {
   user: User | null;
+  profile: BusinessProfile | null;
   loading: boolean;
   login: (email: string, password: string) => Promise<void>;
   signup: (email: string, password: string) => Promise<void>;
   logout: () => Promise<void>;
+  setProfile: React.Dispatch<React.SetStateAction<BusinessProfile | null>>;
 }
 
 export const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [user, setUser] = useState<User | null>(null);
+  const [profile, setProfile] = useState<BusinessProfile | null>(null);
   const [loading, setLoading] = useState(true);
   const router = useRouter();
 
   useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, (user) => {
+    const unsubscribe = onAuthStateChanged(auth, async (user) => {
       setUser(user);
-      setLoading(false);
       if (user) {
-        // If user is logged in, you can add logic to redirect them
-        // For example, if they are on a login page
+        const profileDoc = await getDoc(doc(db, 'profiles', user.uid));
+        if (profileDoc.exists()) {
+          setProfile(profileDoc.data() as BusinessProfile);
+        }
+      } else {
+        setProfile(null);
       }
+      setLoading(false);
     });
 
     return () => unsubscribe();
@@ -48,17 +57,24 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       router.push('/dashboard');
     } catch (error) {
       console.error("Login failed:", error);
-      // You might want to show a toast or message to the user
       setLoading(false);
       throw error;
     }
-    // setLoading is handled by onAuthStateChanged
   };
 
   const signup = async (email: string, password: string) => {
     setLoading(true);
     try {
-      await createUserWithEmailAndPassword(auth, email, password);
+      const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+      const newUser = userCredential.user;
+      const initialProfile: BusinessProfile = {
+        businessEmail: newUser.email || '',
+        trialStart: Date.now(),
+        trialActive: true,
+        subscribed: false,
+      };
+      await setDoc(doc(db, 'profiles', newUser.uid), initialProfile);
+      setProfile(initialProfile);
       router.push('/dashboard');
     } catch (error) {
       console.error("Signup failed:", error);
@@ -94,7 +110,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   }
 
   return (
-    <AuthContext.Provider value={{ user, loading, login, logout, signup }}>
+    <AuthContext.Provider value={{ user, profile, loading, login, logout, signup, setProfile }}>
       {children}
     </AuthContext.Provider>
   );

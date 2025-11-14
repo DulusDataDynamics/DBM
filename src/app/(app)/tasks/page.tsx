@@ -38,6 +38,8 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { TaskForm } from '@/components/app/task-form';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
 import { cn } from '@/lib/utils';
+import { useAuth } from '@/hooks/use-auth';
+import { useToast } from '@/hooks/use-toast';
 
 export default function TasksPage() {
   const [tasks, setTasks] = useState<Task[]>([]);
@@ -47,6 +49,8 @@ export default function TasksPage() {
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [taskToDelete, setTaskToDelete] = useState<Task | null>(null);
   const [isPending, startTransition] = useTransition();
+  const { profile } = useAuth();
+  const { toast } = useToast();
 
   useEffect(() => {
     const unsubscribe = subscribeToTasks((tasksData) => {
@@ -78,6 +82,14 @@ export default function TasksPage() {
   };
 
   const handleAddTask = () => {
+    if (profile && !profile.trialActive && !profile.subscribed) {
+      toast({
+        variant: 'destructive',
+        title: 'Trial Expired',
+        description: 'Your free trial has ended. Please subscribe to add new tasks.',
+      });
+      return;
+    }
     setSelectedTask(null);
     setIsFormOpen(true);
   };
@@ -122,6 +134,7 @@ export default function TasksPage() {
     }
   };
 
+  const isAddDisabled = profile && !profile.trialActive && !profile.subscribed;
 
   return (
     <>
@@ -132,7 +145,7 @@ export default function TasksPage() {
             <CardTitle>Tasks</CardTitle>
             <CardDescription>Manage your tasks and track your workload.</CardDescription>
           </div>
-          <Button size="sm" onClick={handleAddTask}>
+          <Button size="sm" onClick={handleAddTask} disabled={isAddDisabled}>
             <PlusCircle className="mr-2 h-4 w-4" />
             Add Task
           </Button>
