@@ -15,31 +15,18 @@ export default function ReportsPage() {
   useEffect(() => {
     const unsubInvoices = subscribeToInvoices((invoicesData) => {
       setInvoices(invoicesData);
-      if (inventory.length > 0) setLoading(false);
+      setLoading(false);
     });
 
     const unsubInventory = subscribeToInventory((inventoryData) => {
         setInventory(inventoryData);
-        if (invoices.length > 0) setLoading(false);
     });
-
-    const timer = setTimeout(() => {
-        setLoading(false);
-    }, 3000);
-
 
     return () => {
         unsubInvoices();
         unsubInventory();
-        clearTimeout(timer);
     };
   }, []);
-
-   useEffect(() => {
-    if(invoices.length > 0 && inventory.length > 0) {
-      setLoading(false);
-    }
-  }, [invoices, inventory]);
 
   return (
     <div className="space-y-6">
@@ -47,19 +34,14 @@ export default function ReportsPage() {
       {loading ? (
          <div className="space-y-6">
             <div className="grid grid-cols-1 gap-6 lg:grid-cols-5">
-                <div className="lg:col-span-3 space-y-2">
-                <p className="text-sm text-muted-foreground animate-pulse">Analyzing revenue data...</p>
-                <Skeleton className="h-96" />
+                <div className="lg:col-span-3">
+                  <Skeleton className="h-96" />
                 </div>
-                <div className="lg:col-span-2 space-y-2">
-                <p className="text-sm text-muted-foreground animate-pulse">Checking invoice statuses...</p>
-                <Skeleton className="h-96" />
+                <div className="lg:col-span-2">
+                  <Skeleton className="h-96" />
                 </div>
             </div>
-             <div className="space-y-2">
-                <p className="text-sm text-muted-foreground animate-pulse">Preparing AI analyst...</p>
-                <Skeleton className="h-48" />
-             </div>
+            <Skeleton className="h-48" />
         </div>
       ) : (
         <div className="space-y-6">

@@ -19,12 +19,14 @@ import { StatCard } from '@/components/app/stat-card';
 import { RevenueChart } from '@/components/app/revenue-chart';
 
 import { DollarSign, Users, FileText, CheckCircle2 } from 'lucide-react';
-import { subscribeToInvoices, subscribeToTasks, subscribeToClients, subscribeToInventory } from '@/lib/firestore';
-import { Invoice, Task, Client, InventoryItem } from '@/lib/types';
+import { subscribeToInvoices, subscribeToTasks, subscribeToClients } from '@/lib/firestore';
+import { Invoice, Task, Client } from '@/lib/types';
 import { useEffect, useState } from 'react';
 import { Skeleton } from '@/components/ui/skeleton';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { RevenueInsightsGenerator } from '@/components/app/revenue-insights-generator';
+import { subscribeToInventory } from '@/lib/firestore';
+import { InventoryItem } from '@/lib/types';
 
 export default function DashboardPage() {
   const [invoices, setInvoices] = useState<Invoice[]>([]);
@@ -34,51 +36,21 @@ export default function DashboardPage() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const unsubInvoices = subscribeToInvoices(setInvoices);
+    const unsubInvoices = subscribeToInvoices((invoicesData) => {
+      setInvoices(invoicesData);
+      setLoading(false);
+    });
     const unsubTasks = subscribeToTasks(setTasks);
     const unsubClients = subscribeToClients(setClients);
     const unsubInventory = subscribeToInventory(setInventory);
-
-    // Initial loading state
-    const timer = setTimeout(() => {
-      if (invoices.length === 0 && tasks.length === 0 && clients.length === 0) {
-         setLoading(false);
-      }
-    }, 3000); // Failsafe to turn off skeleton if data doesn't come back
 
     return () => {
       unsubInvoices();
       unsubTasks();
       unsubClients();
       unsubInventory();
-      clearTimeout(timer);
     };
   }, []);
-
-  useEffect(() => {
-    if(invoices.length > 0 && tasks.length > 0 && clients.length > 0) {
-      setLoading(false);
-    }
-  }, [invoices, tasks, clients]);
-
-
-  if (loading) {
-    return (
-       <div className="flex flex-col gap-8">
-        <p className="text-sm text-muted-foreground animate-pulse">Compiling your dashboard, one moment...</p>
-        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-          <Skeleton className="h-32" />
-          <Skeleton className="h-32" />
-          <Skeleton className="h-32" />
-          <Skeleton className="h-32" />
-        </div>
-        <div className="grid grid-cols-1 gap-4 lg:grid-cols-7">
-          <Skeleton className="lg:col-span-4 h-96" />
-          <Skeleton className="lg:col-span-3 h-96" />
-        </div>
-      </div>
-    );
-  }
 
   const totalRevenue = invoices
     .filter((invoice) => invoice.status === 'Paid')
@@ -123,7 +95,7 @@ export default function DashboardPage() {
 
       <div className="grid grid-cols-1 gap-4 lg:grid-cols-7">
         <div className="lg:col-span-4">
-          <RevenueChart invoices={invoices} />
+           {loading ? <Skeleton className="h-96" /> : <RevenueChart invoices={invoices} />}
         </div>
         <Card className="lg:col-span-3">
           <CardHeader>
@@ -133,41 +105,47 @@ export default function DashboardPage() {
             </CardDescription>
           </CardHeader>
           <CardContent>
-            <ScrollArea className="h-[300px]">
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>Client</TableHead>
-                    <TableHead>Status</TableHead>
-                    <TableHead className="text-right">Amount</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {recentInvoices.map((invoice) => (
-                    <TableRow key={invoice.id}>
-                      <TableCell>
-                        <div className="font-medium">{invoice.client?.name || '...'}</div>
-                        <div className="text-sm text-muted-foreground">{invoice.client?.email || '...'}</div>
-                      </TableCell>
-                      <TableCell>
-                        <Badge 
-                          variant={
-                            invoice.status === 'Paid' ? 'default' : 
-                            invoice.status === 'Overdue' ? 'destructive' : 'secondary'
-                          }
-                          className={
-                            invoice.status === 'Paid' ? 'bg-green-500/20 text-green-700 border-green-500/20 hover:bg-green-500/30' : ''
-                          }
-                        >
-                          {invoice.status}
-                        </Badge>
-                      </TableCell>
-                      <TableCell className="text-right">R{invoice.amount.toLocaleString()}</TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
-            </ScrollArea>
+            {loading ? (
+                <div className="space-y-4">
+                  {[...Array(5)].map((_, i) => <Skeleton key={i} className="h-12 w-full" />)}
+                </div>
+              ) : (
+                <ScrollArea className="h-[300px]">
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead>Client</TableHead>
+                        <TableHead>Status</TableHead>
+                        <TableHead className="text-right">Amount</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {recentInvoices.map((invoice) => (
+                        <TableRow key={invoice.id}>
+                          <TableCell>
+                            <div className="font-medium">{invoice.client?.name || '...'}</div>
+                            <div className="text-sm text-muted-foreground">{invoice.client?.email || '...'}</div>
+                          </TableCell>
+                          <TableCell>
+                            <Badge 
+                              variant={
+                                invoice.status === 'Paid' ? 'default' : 
+                                invoice.status === 'Overdue' ? 'destructive' : 'secondary'
+                              }
+                              className={
+                                invoice.status === 'Paid' ? 'bg-green-500/20 text-green-700 border-green-500/20 hover:bg-green-500/30' : ''
+                              }
+                            >
+                              {invoice.status}
+                            </Badge>
+                          </TableCell>
+                          <TableCell className="text-right">R{invoice.amount.toLocaleString()}</TableCell>
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
+                </ScrollArea>
+            )}
           </CardContent>
         </Card>
       </div>

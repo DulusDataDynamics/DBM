@@ -138,12 +138,11 @@ export default function InventoryPage() {
         </CardHeader>
         <CardContent>
           {loading ? (
-              <div className="space-y-4">
-                <p className="text-sm text-muted-foreground animate-pulse">Fetching inventory data...</p>
+              <div className="space-y-2">
                 {[...Array(5)].map((_, i) => <Skeleton key={i} className="h-12 w-full" />)}
               </div>
             ) : (
-          <ScrollArea className="h-[450px]">
+          <ScrollArea className="h-[calc(100vh-22rem)]">
             <Table>
               <TableHeader>
                 <TableRow>
@@ -160,7 +159,7 @@ export default function InventoryPage() {
               </TableHeader>
               <TableBody>
                 {inventory.map((item) => {
-                  const isLowStock = item.quantity <= item.reorderLevel;
+                  const isLowStock = item.reorderLevel > 0 && item.quantity <= item.reorderLevel;
                   return(
                   <TableRow key={item.id} className={isLowStock ? 'bg-destructive/10' : ''}>
                     <TableCell className="font-mono text-xs">{item.sku}</TableCell>

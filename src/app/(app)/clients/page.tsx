@@ -132,12 +132,11 @@ export default function ClientsPage() {
         </CardHeader>
         <CardContent>
            {loading ? (
-            <div className="space-y-4">
-              <p className="text-sm text-muted-foreground animate-pulse">Loading clients, please wait...</p>
+            <div className="space-y-2">
               {[...Array(5)].map((_, i) => <Skeleton key={i} className="h-12 w-full" />)}
             </div>
           ) : (
-          <ScrollArea className="h-[450px]">
+          <ScrollArea className="h-[calc(100vh-22rem)]">
             <Table>
               <TableHeader>
                 <TableRow>
