@@ -7,6 +7,20 @@ import { mapToAISchema } from "./utils";
 export async function getRevenueInsights(invoices: Invoice[], inventory: InventoryItem[]) {
   try {
     const salesData = mapToAISchema(invoices, inventory);
+    
+    if (!salesData.sales || salesData.sales.length === 0) {
+      return {
+        success: true,
+        insights: {
+          totalRevenue: 0,
+          topProducts: [],
+          bestMonth: 'N/A',
+          revenueTrend: 'No sales data available to analyze trends.',
+          predictions: 'Cannot make predictions without sales data.',
+          actions: 'Record some paid invoices to start generating insights.'
+        }
+      };
+    }
 
     const result = await generateRevenueInsights(salesData);
     return { success: true, insights: result };

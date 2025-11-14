@@ -10,7 +10,7 @@ export function cn(...inputs: ClassValue[]) {
  * Maps raw invoice and inventory data to a structured format for the AI.
  * @param invoices Array of invoice objects
  * @param inventory Array of inventory item objects
- * @returns An object containing mapped invoices and inventory
+ * @returns An object containing mapped sales data
  */
 export function mapToAISchema(invoices: Invoice[], inventory: InventoryItem[]) {
   // Map paid invoices to the salesData format the AI expects.
