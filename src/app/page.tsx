@@ -1,7 +1,6 @@
-
 'use client';
 
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/hooks/use-auth';
 import { Logo } from '@/components/logo';
@@ -11,24 +10,12 @@ import Link from 'next/link';
 import { PlaceHolderImages } from '@/lib/placeholder-images';
 import { Zap, ClipboardCheck, FileText, Users, Shield, BookUser, Check } from 'lucide-react';
 import { Skeleton } from '@/components/ui/skeleton';
+import { LoadingScreen } from '@/components/app/LoadingScreen';
 
 export default function LandingPage() {
-  const { user, loading } = useAuth();
+  const { user, loading: authLoading } = useAuth();
   const router = useRouter();
-
-  useEffect(() => {
-    // If the auth state is not loading and a user exists, redirect to the dashboard.
-    // This runs after the initial render, preventing the flash of the landing page for logged-in users.
-    if (!loading && user) {
-      router.replace('/dashboard');
-    }
-  }, [user, loading, router]);
-  
-  // If the user is logged in, we render null to avoid a flash of the landing page
-  // while the redirect is in progress. The AuthProvider will show a loading screen anyway.
-  if (loading || user) {
-      return null;
-  }
+  const [redirecting, setRedirecting] = useState(false);
   
   const heroImage = PlaceHolderImages && PlaceHolderImages.find((p) => p.id === 'landing-hero');
 
@@ -65,6 +52,28 @@ export default function LandingPage() {
     },
   ];
 
+  useEffect(() => {
+    // If auth is done loading and we have a user, start the redirect.
+    if (!authLoading && user) {
+      setRedirecting(true);
+      router.replace('/dashboard');
+    }
+  }, [user, authLoading, router]);
+
+  // While the initial auth check is happening, show a full loading screen.
+  // This prevents the landing page from flashing.
+  if (authLoading) {
+    return <LoadingScreen />;
+  }
+
+  // If we have a user and are in the process of redirecting, show the loading screen.
+  if (redirecting) {
+    return <LoadingScreen message="Redirecting to dashboard..." />;
+  }
+  
+  // If auth is done and there's no user, show the landing page.
+  // Also, if a user is logged in but we haven't started redirecting yet, this will flash briefly.
+  // The redirecting state helps manage this.
   return (
     <div className="flex min-h-screen flex-col bg-background">
       <header className="sticky top-0 z-40 w-full border-b bg-background/80 backdrop-blur-sm">
