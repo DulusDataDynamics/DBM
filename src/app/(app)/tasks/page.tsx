@@ -49,8 +49,6 @@ export default function TasksPage() {
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [taskToDelete, setTaskToDelete] = useState<Task | null>(null);
   const [isPending, startTransition] = useTransition();
-  const { profile } = useAuth();
-  const { toast } = useToast();
 
   useEffect(() => {
     const unsubscribe = subscribeToTasks((tasksData) => {
@@ -82,14 +80,6 @@ export default function TasksPage() {
   };
 
   const handleAddTask = () => {
-    if (profile && !profile.trialActive && !profile.subscribed) {
-      toast({
-        variant: 'destructive',
-        title: 'Trial Expired',
-        description: 'Your free trial has ended. Please subscribe to add new tasks.',
-      });
-      return;
-    }
     setSelectedTask(null);
     setIsFormOpen(true);
   };
@@ -134,8 +124,6 @@ export default function TasksPage() {
     }
   };
 
-  const isAddDisabled = profile && !profile.trialActive && !profile.subscribed;
-
   return (
     <>
     <Card>
@@ -145,7 +133,7 @@ export default function TasksPage() {
             <CardTitle>Tasks</CardTitle>
             <CardDescription>Manage your tasks and track your workload.</CardDescription>
           </div>
-          <Button size="sm" onClick={handleAddTask} disabled={isAddDisabled}>
+          <Button size="sm" onClick={handleAddTask}>
             <PlusCircle className="mr-2 h-4 w-4" />
             Add Task
           </Button>

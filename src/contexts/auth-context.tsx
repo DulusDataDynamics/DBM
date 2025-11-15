@@ -52,7 +52,6 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     setLoading(true);
     try {
       await signInWithEmailAndPassword(auth, email, password);
-      // Let the main layout handle the redirect
     } catch (error) {
       console.error("Login failed:", error);
       setLoading(false);
@@ -79,9 +78,6 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         branchCode: '',
         defaultCurrency: 'ZAR',
         defaultTaxRate: 15,
-        trialStart: Date.now(),
-        trialActive: true,
-        subscribed: false,
       };
       await setDoc(doc(db, 'profiles', newUser.uid), initialProfile);
       setProfile(initialProfile);
@@ -99,8 +95,6 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       router.push('/login');
     } catch (error) {
       console.error("Logout failed:", error);
-    } finally {
-      // Don't set loading to false here, as the router will trigger a re-render
     }
   };
 

@@ -51,7 +51,7 @@ export default function InventoryPage() {
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [itemToDelete, setItemToDelete] = useState<InventoryItem | null>(null);
   const [businessProfile, setBusinessProfile] = useState<BusinessProfile | null>(null);
-  const { user, profile } = useAuth();
+  const { user } = useAuth();
   const { toast } = useToast();
 
   useEffect(() => {
@@ -68,14 +68,6 @@ export default function InventoryPage() {
   }, [user]);
 
   const handleAddItem = () => {
-    if (profile && !profile.trialActive && !profile.subscribed) {
-      toast({
-        variant: 'destructive',
-        title: 'Trial Expired',
-        description: 'Your free trial has ended. Please subscribe to add new items.',
-      });
-      return;
-    }
     setSelectedItem(null);
     setIsFormOpen(true);
   };
@@ -119,8 +111,6 @@ export default function InventoryPage() {
     setSelectedItem(null);
   };
   
-  const isAddDisabled = profile && !profile.trialActive && !profile.subscribed;
-
   return (
     <>
       <Card>
@@ -130,7 +120,7 @@ export default function InventoryPage() {
               <CardTitle>Inventory</CardTitle>
               <CardDescription>Manage your products, services, and stock levels.</CardDescription>
             </div>
-            <Button size="sm" onClick={handleAddItem} disabled={isAddDisabled}>
+            <Button size="sm" onClick={handleAddItem}>
               <PlusCircle className="mr-2 h-4 w-4" />
               Add Item
             </Button>

@@ -41,7 +41,6 @@ import {
 } from '@/components/ui/alert-dialog';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { useToast } from '@/hooks/use-toast';
-import { useAuth } from '@/hooks/use-auth';
 
 export default function ClientsPage() {
   const [clients, setClients] = useState<Client[]>([]);
@@ -51,7 +50,6 @@ export default function ClientsPage() {
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [clientToDelete, setClientToDelete] = useState<Client | null>(null);
   const { toast } = useToast();
-  const { profile } = useAuth();
 
   useEffect(() => {
     const unsubscribe = subscribeToClients((clientsData) => {
@@ -63,14 +61,6 @@ export default function ClientsPage() {
   }, []);
 
   const handleAddClient = () => {
-    if (profile && !profile.trialActive && !profile.subscribed) {
-      toast({
-        variant: 'destructive',
-        title: 'Trial Expired',
-        description: 'Your free trial has ended. Please subscribe to add new clients.',
-      });
-      return;
-    }
     setSelectedClient(null);
     setIsFormOpen(true);
   };
@@ -113,8 +103,6 @@ export default function ClientsPage() {
     setSelectedClient(null);
   };
   
-  const isAddDisabled = profile && !profile.trialActive && !profile.subscribed;
-
   return (
     <>
       <Card>
@@ -124,7 +112,7 @@ export default function ClientsPage() {
               <CardTitle>Clients</CardTitle>
               <CardDescription>Manage your clients and view their details.</CardDescription>
             </div>
-            <Button size="sm" onClick={handleAddClient} disabled={isAddDisabled}>
+            <Button size="sm" onClick={handleAddClient}>
               <PlusCircle className="mr-2 h-4 w-4" />
               Add Client
             </Button>
