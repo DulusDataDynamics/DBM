@@ -7,27 +7,32 @@ import { Logo } from '@/components/logo';
 import { Button } from '@/components/ui/button';
 import Link from 'next/link';
 import { Zap, ClipboardCheck, FileText } from 'lucide-react';
-import { LoadingScreen } from '@/components/app/LoadingScreen';
 
 export default function LandingPage() {
-  const { user, appReady } = useAuth(); // include appReady
+  const { user, loading } = useAuth();
   const router = useRouter();
-  const [redirecting, setRedirecting] = useState(false);
 
   useEffect(() => {
-    // Only redirect if auth is ready and user exists
-    if (appReady && user) {
-      setRedirecting(true);
+    if (!loading && user) {
       router.replace('/dashboard');
     }
-  }, [user, appReady, router]);
+  }, [user, loading, router]);
 
-  if (!appReady) {
-    return <LoadingScreen message="Getting things ready..." />;
-  }
-
-  if (redirecting) {
-    return <LoadingScreen message="Redirecting to dashboard..." />;
+  if (loading || user) {
+    return (
+       <div className="flex h-screen w-screen flex-col items-center justify-center gap-4 bg-background">
+        <Logo />
+        <div className="text-center">
+          <p className="text-lg font-medium text-foreground">
+            Loading
+            <span className="animate-pulse">.</span>
+            <span className="animate-pulse" style={{ animationDelay: '200ms' }}>.</span>
+            <span className="animate-pulse" style={{ animationDelay: '400ms' }}>.</span>
+          </p>
+          <p className="text-sm text-muted-foreground">Please wait a moment.</p>
+        </div>
+      </div>
+    )
   }
 
   // Default landing page for unauthenticated users
