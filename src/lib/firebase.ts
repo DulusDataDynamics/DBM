@@ -13,8 +13,14 @@ const firebaseConfig = {
   measurementId: "G-VP7JPGVJ7Z"
 };
 
-// Initialize Firebase safely
-const app: FirebaseApp = !getApps().length ? initializeApp(firebaseConfig) : getApp();
+// Initialize Firebase safely for both server and client
+let app: FirebaseApp;
+if (!getApps().length) {
+  app = initializeApp(firebaseConfig);
+} else {
+  app = getApp();
+}
+
 const auth = getAuth(app);
 const db = getFirestore(app);
 
