@@ -16,14 +16,19 @@ export default function LandingPage() {
   const router = useRouter();
 
   useEffect(() => {
+    // If the auth state is not loading and a user exists, redirect to the dashboard.
     if (!loading && user) {
       router.replace('/dashboard');
     }
   }, [user, loading, router]);
   
+  // While loading, we can show a skeleton or nothing, but for a smoother experience,
+  // we'll let the landing page render. The useEffect will handle the redirect.
+  // This prevents the "flash" of a loading screen.
   if (loading || user) {
+    // Render a minimal skeleton or null to avoid layout shifts while redirecting
     return (
-      <div className="flex h-screen w-screen flex-col items-center justify-center gap-4 bg-background">
+       <div className="flex h-screen w-screen flex-col items-center justify-center gap-4 bg-background">
         <Logo />
         <div className="text-center">
           <p className="text-lg font-medium text-foreground">
@@ -164,7 +169,7 @@ export default function LandingPage() {
                 <div className="p-8">
                   <h3 className="text-2xl font-bold">Unlimited Plan</h3>
                   <p className="mt-2 text-sm text-muted-foreground">
-                    14‑day free trial (up to 20 clients + 20 invoices).
+                    Get full access to all features, forever.
                   </p>
                   <div className="mt-6">
                     <span className="text-5xl font-bold">R349</span>

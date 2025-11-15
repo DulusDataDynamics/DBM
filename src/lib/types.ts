@@ -51,6 +51,7 @@ export type BusinessProfile = {
   branchCode?: string;
   defaultCurrency?: string;
   defaultTaxRate?: number;
+  subscribed?: boolean;
 };
 
 export type InvoiceSettings = {

@@ -78,6 +78,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         branchCode: '',
         defaultCurrency: 'ZAR',
         defaultTaxRate: 15,
+        subscribed: false,
       };
       await setDoc(doc(db, 'profiles', newUser.uid), initialProfile);
       setProfile(initialProfile);
