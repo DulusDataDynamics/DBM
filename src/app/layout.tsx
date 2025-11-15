@@ -1,47 +1,11 @@
+import "./globals.css";
+import { AuthProvider } from "@/contexts/auth-context";
 
-import type { Metadata } from 'next';
-import './globals.css';
-import { cn } from '@/lib/utils';
-import { Toaster } from '@/components/ui/toaster';
-import { AuthProvider } from '@/contexts/auth-context';
-import { ThemeProvider } from '@/components/app/theme-provider';
-
-export const metadata: Metadata = {
-  title: 'Dulus BS Manager',
-  description: 'The all-in-one platform to manage your business.',
-};
-
-export default function RootLayout({
-  children,
-}: Readonly<{
-  children: React.ReactNode;
-}>) {
+export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="en" suppressHydrationWarning>
-      <head>
-        <link rel="preconnect" href="https://fonts.googleapis.com" />
-        <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
-        <link
-          href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap"
-          rel="stylesheet"
-        />
-      </head>
-      <body
-        className={cn(
-          'min-h-screen bg-background font-body antialiased'
-        )}
-      >
-        <ThemeProvider
-          attribute="class"
-          defaultTheme="dark"
-          enableSystem
-          disableTransitionOnChange
-        >
-          <AuthProvider>
-            {children}
-            <Toaster />
-          </AuthProvider>
-        </ThemeProvider>
+    <html lang="en">
+      <body>
+        <AuthProvider>{children}</AuthProvider>
       </body>
     </html>
   );
