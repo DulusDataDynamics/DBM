@@ -35,25 +35,33 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const router = useRouter();
 
   useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, async (currentUser) => {
-      setLoading(true);
-      setUser(currentUser);
+    const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
+      (async () => {
+        setLoading(true);
+        setUser(currentUser);
 
-      if (currentUser) {
-        const ref = doc(db, 'profiles', currentUser.uid);
-        const snapshot = await getDoc(ref);
-        if (snapshot.exists()) {
-          setProfile(snapshot.data() as BusinessProfile);
+        if (currentUser) {
+          try {
+            const ref = doc(db, 'profiles', currentUser.uid);
+            const snapshot = await getDoc(ref);
+            if (snapshot.exists()) {
+              setProfile(snapshot.data() as BusinessProfile);
+            }
+          } catch (error) {
+            console.error("Failed to fetch user profile:", error);
+            // Still proceed even if profile fetch fails
+            setProfile(null);
+          }
+        } else {
+          setProfile(null);
         }
-      } else {
-        setProfile(null);
-      }
-      
-      setLoading(false);
-      setAppReady(true);
+        
+        setLoading(false);
+        setAppReady(true); // This is the crucial part
+      })();
     });
 
-    return unsubscribe;
+    return () => unsubscribe();
   }, []);
 
   const login = async (email: string, password: string) => {
@@ -81,9 +89,14 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       defaultTaxRate: 15,
       subscribed: false,
     };
-
-    await setDoc(doc(db, 'profiles', newUser.uid), initialProfile);
-    setProfile(initialProfile);
+    
+    try {
+        await setDoc(doc(db, 'profiles', newUser.uid), initialProfile);
+        setProfile(initialProfile);
+    } catch (error) {
+        console.error("Failed to create initial profile:", error);
+    }
+    
     router.push('/dashboard');
   };
 
