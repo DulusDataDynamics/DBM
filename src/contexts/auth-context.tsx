@@ -12,6 +12,7 @@ import {
 import { auth, db } from '@/lib/firebase';
 import { BusinessProfile } from '@/lib/types';
 import { doc, getDoc, setDoc } from 'firebase/firestore';
+import { Logo } from '@/components/logo';
 
 interface AuthContextType {
   user: User | null;
@@ -49,37 +50,68 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   }, []);
 
   const login = async (email: string, password: string) => {
-    await signInWithEmailAndPassword(auth, email, password);
-    // onAuthStateChanged will handle the rest
+    setLoading(true);
+    try {
+        await signInWithEmailAndPassword(auth, email, password);
+        router.push('/dashboard');
+    } catch (error) {
+      console.error("Login failed:", error);
+      setLoading(false);
+      throw error;
+    }
   };
 
   const signup = async (email: string, password: string) => {
-    const userCredential = await createUserWithEmailAndPassword(auth, email, password);
-    const newUser = userCredential.user;
-    const initialProfile: BusinessProfile = {
-      companyName: '',
-      ownerName: '',
-      businessEmail: newUser.email || '',
-      businessPhone: '',
-      businessAddress: '',
-      website: '',
-      taxNumber: '',
-      bankName: '',
-      accountHolder: '',
-      accountNumber: '',
-      branchCode: '',
-      defaultCurrency: 'ZAR',
-      defaultTaxRate: 15,
-    };
-    await setDoc(doc(db, 'profiles', newUser.uid), initialProfile);
-    setProfile(initialProfile);
-    // onAuthStateChanged will handle the rest
+     setLoading(true);
+    try {
+        const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+        const newUser = userCredential.user;
+        const initialProfile: Omit<BusinessProfile, 'trialStart' | 'trialActive' | 'subscribed'> = {
+          companyName: '',
+          ownerName: '',
+          businessEmail: newUser.email || '',
+          businessPhone: '',
+          businessAddress: '',
+          website: '',
+          taxNumber: '',
+          bankName: '',
+          accountHolder: '',
+          accountNumber: '',
+          branchCode: '',
+          defaultCurrency: 'ZAR',
+          defaultTaxRate: 15,
+        };
+        await setDoc(doc(db, 'profiles', newUser.uid), initialProfile);
+        setProfile(initialProfile);
+        router.push('/dashboard');
+    } catch (error) {
+      console.error("Signup failed:", error);
+      setLoading(false);
+      throw error;
+    }
   };
 
   const logout = async () => {
     await signOut(auth);
     router.push('/login');
   };
+  
+  if (loading) {
+    return (
+       <div className="flex h-screen w-screen flex-col items-center justify-center gap-4 bg-background">
+        <Logo />
+        <div className="text-center">
+          <p className="text-lg font-medium text-foreground">
+            Getting things ready
+            <span className="animate-pulse">.</span>
+            <span className="animate-pulse" style={{ animationDelay: '200ms' }}>.</span>
+            <span className="animate-pulse" style={{ animationDelay: '400ms' }}>.</span>
+          </p>
+          <p className="text-sm text-muted-foreground">Please wait a moment while we load the app.</p>
+        </div>
+      </div>
+    )
+  }
 
   return (
     <AuthContext.Provider value={{ user, profile, loading, login, logout, signup, setProfile }}>

@@ -22,6 +22,23 @@ export default function LandingPage() {
     }
   }, [user, loading, router]);
   
+  if (loading || user) {
+      return (
+      <div className="flex h-screen w-screen flex-col items-center justify-center gap-4 bg-background">
+        <Logo />
+        <div className="text-center">
+          <p className="text-lg font-medium text-foreground">
+            Getting things ready
+            <span className="animate-pulse">.</span>
+            <span className="animate-pulse" style={{ animationDelay: '200ms' }}>.</span>
+            <span className="animate-pulse" style={{ animationDelay: '400ms' }}>.</span>
+          </p>
+          <p className="text-sm text-muted-foreground">Please wait a moment while we load the app.</p>
+        </div>
+      </div>
+    );
+  }
+  
   // Always render the landing page. The useEffect above will handle the redirect for logged-in users.
   // This prevents any flash of a loading screen for new visitors.
   const heroImage = PlaceHolderImages && PlaceHolderImages.find((p) => p.id === 'landing-hero');

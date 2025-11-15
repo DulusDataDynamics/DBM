@@ -1,7 +1,7 @@
 'use client';
 
 import { usePathname, useRouter } from 'next/navigation';
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { useAuth } from '@/hooks/use-auth';
 import { NAV_LINKS, SUPPORT_LINKS } from '@/lib/constants';
@@ -20,17 +20,21 @@ import {
   SidebarInset,
   SidebarSeparator,
 } from '@/components/ui/sidebar';
+import { Button } from '@/components/ui/button';
+import { Progress } from '@/components/ui/progress';
 
 export default function AppLayout({ children }: { children: React.ReactNode }) {
-  const { user, loading } = useAuth();
+  const { user, loading, profile } = useAuth();
   const router = useRouter();
   const pathname = usePathname();
+  const [daysLeft, setDaysLeft] = useState<number | null>(null);
 
   useEffect(() => {
     if (!loading && !user) {
       router.replace('/login');
     }
   }, [user, loading, router]);
+
 
   if (loading || !user) {
     return (
