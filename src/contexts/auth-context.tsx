@@ -49,54 +49,36 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   }, []);
 
   const login = async (email: string, password: string) => {
-    setLoading(true);
-    try {
-      await signInWithEmailAndPassword(auth, email, password);
-    } catch (error) {
-      console.error("Login failed:", error);
-      setLoading(false);
-      throw error;
-    }
+    await signInWithEmailAndPassword(auth, email, password);
+    // onAuthStateChanged will handle the rest
   };
 
   const signup = async (email: string, password: string) => {
-    setLoading(true);
-    try {
-      const userCredential = await createUserWithEmailAndPassword(auth, email, password);
-      const newUser = userCredential.user;
-      const initialProfile: BusinessProfile = {
-        companyName: '',
-        ownerName: '',
-        businessEmail: newUser.email || '',
-        businessPhone: '',
-        businessAddress: '',
-        website: '',
-        taxNumber: '',
-        bankName: '',
-        accountHolder: '',
-        accountNumber: '',
-        branchCode: '',
-        defaultCurrency: 'ZAR',
-        defaultTaxRate: 15,
-        subscribed: false,
-      };
-      await setDoc(doc(db, 'profiles', newUser.uid), initialProfile);
-      setProfile(initialProfile);
-    } catch (error) {
-      console.error("Signup failed:", error);
-      setLoading(false);
-      throw error;
-    }
+    const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+    const newUser = userCredential.user;
+    const initialProfile: BusinessProfile = {
+      companyName: '',
+      ownerName: '',
+      businessEmail: newUser.email || '',
+      businessPhone: '',
+      businessAddress: '',
+      website: '',
+      taxNumber: '',
+      bankName: '',
+      accountHolder: '',
+      accountNumber: '',
+      branchCode: '',
+      defaultCurrency: 'ZAR',
+      defaultTaxRate: 15,
+    };
+    await setDoc(doc(db, 'profiles', newUser.uid), initialProfile);
+    setProfile(initialProfile);
+    // onAuthStateChanged will handle the rest
   };
 
   const logout = async () => {
-    setLoading(true);
-    try {
-      await signOut(auth);
-      router.push('/login');
-    } catch (error) {
-      console.error("Logout failed:", error);
-    }
+    await signOut(auth);
+    router.push('/login');
   };
 
   return (
