@@ -17,7 +17,7 @@ import { Logo } from '@/components/logo';
 interface AuthContextType {
   user: User | null;
   profile: BusinessProfile | null;
-  loading: boolean;
+  loading: boolean; // This remains for backward compatibility in other components, but appReady is the key.
   appReady: boolean;
   login: (email: string, password: string) => Promise<void>;
   signup: (email: string, password: string) => Promise<void>;
@@ -30,35 +30,30 @@ export const AuthContext = createContext<AuthContextType | undefined>(undefined)
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [user, setUser] = useState<User | null>(null);
   const [profile, setProfile] = useState<BusinessProfile | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [appReady, setAppReady] = useState(false);
+  const [appReady, setAppReady] = useState(false); // The one true loading state for the app's entry.
   const router = useRouter();
 
   useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
-      (async () => {
-        setLoading(true);
-        setUser(currentUser);
+    const unsubscribe = onAuthStateChanged(auth, async (currentUser) => {
+      setUser(currentUser);
 
-        if (currentUser) {
-          try {
-            const ref = doc(db, 'profiles', currentUser.uid);
-            const snapshot = await getDoc(ref);
-            if (snapshot.exists()) {
-              setProfile(snapshot.data() as BusinessProfile);
-            }
-          } catch (error) {
-            console.error("Failed to fetch user profile:", error);
-            // Still proceed even if profile fetch fails
-            setProfile(null);
+      if (currentUser) {
+        try {
+          const ref = doc(db, 'profiles', currentUser.uid);
+          const snapshot = await getDoc(ref);
+          if (snapshot.exists()) {
+            setProfile(snapshot.data() as BusinessProfile);
           }
-        } else {
+        } catch (error) {
+          console.error("Failed to fetch user profile:", error);
           setProfile(null);
         }
-        
-        setLoading(false);
-        setAppReady(true); // This is the crucial part
-      })();
+      } else {
+        setProfile(null);
+      }
+      
+      // Firebase auth state is now resolved. The app is ready.
+      setAppReady(true);
     });
 
     return () => unsubscribe();
@@ -123,7 +118,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   }
 
   return (
-    <AuthContext.Provider value={{ user, profile, loading, appReady, login, signup, logout, setProfile }}>
+    <AuthContext.Provider value={{ user, profile, loading: !appReady, appReady, login, signup, logout, setProfile }}>
       {children}
     </AuthContext.Provider>
   );

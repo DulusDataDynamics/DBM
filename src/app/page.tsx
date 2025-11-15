@@ -13,27 +13,16 @@ export default function LandingPage() {
   const router = useRouter();
 
   useEffect(() => {
+    // Only redirect if auth is ready and user exists
     if (appReady && user) {
       router.replace('/dashboard');
     }
   }, [user, appReady, router]);
 
-  // Prevent flash of landing page for authenticated users
+  // Prevent flash of landing page for authenticated users by waiting for appReady
+  // The full-screen loader in AuthProvider handles the initial loading state.
   if (!appReady || user) {
-    return (
-       <div className="flex h-screen w-screen flex-col items-center justify-center gap-4 bg-background">
-        <Logo />
-        <div className="text-center">
-          <p className="text-lg font-medium text-foreground">
-            Loading
-            <span className="animate-pulse">.</span>
-            <span className="animate-pulse" style={{ animationDelay: '200ms' }}>.</span>
-            <span className="animate-pulse" style={{ animationDelay: '400ms' }}>.</span>
-          </p>
-          <p className="text-sm text-muted-foreground">Please wait a moment.</p>
-        </div>
-      </div>
-    )
+    return null;
   }
 
   // Default landing page for unauthenticated users
