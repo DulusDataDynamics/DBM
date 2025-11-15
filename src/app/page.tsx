@@ -1,7 +1,6 @@
-
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/hooks/use-auth';
 import { Logo } from '@/components/logo';
@@ -10,19 +9,19 @@ import Link from 'next/link';
 import { Zap, ClipboardCheck, FileText } from 'lucide-react';
 
 export default function LandingPage() {
-  const { user, appReady } = useAuth();
+  const { user, initializing } = useAuth();
   const router = useRouter();
 
   useEffect(() => {
-    // Only redirect if auth is ready and user exists
-    if (appReady && user) {
+    // Only redirect when initialization is complete and we have a user
+    if (!initializing && user) {
       router.replace('/dashboard');
     }
-  }, [user, appReady, router]);
+  }, [user, initializing, router]);
 
-  // Prevent flash of landing page for authenticated users by waiting for appReady
-  // The full-screen loader in AuthProvider handles the initial loading state.
-  if (!appReady || user) {
+  // If we are still initializing, the AuthProvider shows a global loader,
+  // so we can just return null here to prevent flashing the landing page.
+  if (initializing || user) {
     return null;
   }
 

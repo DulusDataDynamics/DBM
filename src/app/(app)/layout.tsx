@@ -1,4 +1,3 @@
-
 'use client';
 
 import { usePathname, useRouter } from 'next/navigation';
@@ -23,21 +22,20 @@ import {
 } from '@/components/ui/sidebar';
 
 export default function AppLayout({ children }: { children: React.ReactNode }) {
-  const { user, loading } = useAuth();
+  const { user, initializing } = useAuth();
   const router = useRouter();
   const pathname = usePathname();
 
   useEffect(() => {
-    if (!loading && !user) {
+    // If initialization is done and there's no user, redirect to login.
+    if (!initializing && !user) {
       router.replace('/login');
     }
-  }, [user, loading, router]);
+  }, [user, initializing, router]);
 
-
-  if (!user) {
-    // AuthProvider will show a loading screen while appReady is false.
-    // If we're here and there's no user, it means auth is done and the user is logged out.
-    // We'll let the useEffect handle the redirect.
+  // If still initializing, the AuthProvider shows a global loader.
+  // If done initializing and there's no user, we'll redirect, so we can return null.
+  if (initializing || !user) {
     return null;
   }
 

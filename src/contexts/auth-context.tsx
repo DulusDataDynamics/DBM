@@ -17,7 +17,8 @@ import { Logo } from '@/components/logo';
 interface AuthContextType {
   user: User | null;
   profile: BusinessProfile | null;
-  loading: boolean;
+  loading: boolean; // This remains for UI feedback during login/signup, but not for init
+  initializing: boolean; // This is the new flag for initial app load
   login: (email: string, password: string) => Promise<void>;
   signup: (email: string, password: string) => Promise<void>;
   logout: () => Promise<void>;
@@ -29,14 +30,13 @@ export const AuthContext = createContext<AuthContextType | undefined>(undefined)
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [user, setUser] = useState<User | null>(null);
   const [profile, setProfile] = useState<BusinessProfile | null>(null);
-  const [loading, setLoading] = useState(true); // REAL loading state
+  const [loading, setLoading] = useState(false); // For actions like login/signup
+  const [initializing, setInitializing] = useState(true); // For the initial auth check
   const router = useRouter();
 
-  // Load user + profile
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, async (currentUser) => {
       setUser(currentUser);
-
       if (currentUser) {
         try {
           const ref = doc(db, 'profiles', currentUser.uid);
@@ -53,20 +53,22 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       } else {
         setProfile(null);
       }
-
-      // Auth is fully resolved
-      setLoading(false);
+      // This is crucial: set initializing to false only after everything is done.
+      setInitializing(false);
     });
 
     return () => unsubscribe();
   }, []);
 
   const login = async (email: string, password: string) => {
+    setLoading(true);
     await signInWithEmailAndPassword(auth, email, password);
-    router.push('/dashboard');
+    // onAuthStateChanged will handle the rest
+    setLoading(false);
   };
 
   const signup = async (email: string, password: string) => {
+    setLoading(true);
     const userCredential = await createUserWithEmailAndPassword(auth, email, password);
     const newUser = userCredential.user;
 
@@ -89,7 +91,9 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
     await setDoc(doc(db, 'profiles', newUser.uid), initialProfile);
     setProfile(initialProfile);
+    // onAuthStateChanged will handle setting user, then we can redirect
     router.push('/dashboard');
+    setLoading(false);
   };
 
   const logout = async () => {
@@ -97,8 +101,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     router.push('/login');
   };
 
-  // Loading screen
-  if (loading) {
+  if (initializing) {
     return (
       <div className="flex h-screen w-screen items-center justify-center flex-col gap-4 bg-background">
         <Logo />
@@ -116,7 +119,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   }
 
   return (
-    <AuthContext.Provider value={{ user, profile, loading, login, signup, logout, setProfile }}>
+    <AuthContext.Provider value={{ user, profile, loading, initializing, login, signup, logout, setProfile }}>
       {children}
     </AuthContext.Provider>
   );
