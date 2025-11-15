@@ -1,3 +1,4 @@
+
 'use client';
 
 import React, { createContext, useState, useEffect, ReactNode } from 'react';
@@ -29,7 +30,7 @@ export const AuthContext = createContext<AuthContextType | undefined>(undefined)
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [user, setUser] = useState<User | null>(null);
   const [profile, setProfile] = useState<BusinessProfile | null>(null);
-  const [loading, setLoading] = useState(true); // Kept for login/signup actions
+  const [loading, setLoading] = useState(true);
   const [appReady, setAppReady] = useState(false);
   const router = useRouter();
 
