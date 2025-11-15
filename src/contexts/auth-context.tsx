@@ -18,6 +18,7 @@ interface AuthContextType {
   user: User | null;
   profile: BusinessProfile | null;
   loading: boolean;
+  appReady: boolean;
   login: (email: string, password: string) => Promise<void>;
   signup: (email: string, password: string) => Promise<void>;
   logout: () => Promise<void>;
@@ -34,74 +35,66 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const router = useRouter();
 
   useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, async (user) => {
-      if (user) {
-        setUser(user);
-        const profileDoc = await getDoc(doc(db, 'profiles', user.uid));
-        if (profileDoc.exists()) {
-          setProfile(profileDoc.data() as BusinessProfile);
+    const unsubscribe = onAuthStateChanged(auth, async (currentUser) => {
+      setLoading(true);
+      setUser(currentUser);
+
+      if (currentUser) {
+        const ref = doc(db, 'profiles', currentUser.uid);
+        const snapshot = await getDoc(ref);
+        if (snapshot.exists()) {
+          setProfile(snapshot.data() as BusinessProfile);
         }
       } else {
-        setUser(null);
         setProfile(null);
       }
+      
       setLoading(false);
-      setAppReady(true); // Signal that all initial auth checks are done.
+      setAppReady(true);
     });
 
-    return () => unsubscribe();
+    return unsubscribe;
   }, []);
 
   const login = async (email: string, password: string) => {
-    setLoading(true);
-    try {
-        await signInWithEmailAndPassword(auth, email, password);
-        router.push('/dashboard');
-    } catch (error) {
-      console.error("Login failed:", error);
-      setLoading(false);
-      throw error;
-    }
+    await signInWithEmailAndPassword(auth, email, password);
+    router.push('/dashboard');
   };
 
   const signup = async (email: string, password: string) => {
-     setLoading(true);
-    try {
-        const userCredential = await createUserWithEmailAndPassword(auth, email, password);
-        const newUser = userCredential.user;
-        const initialProfile: Omit<BusinessProfile, 'subscribed'> = {
-          companyName: '',
-          ownerName: '',
-          businessEmail: newUser.email || '',
-          businessPhone: '',
-          businessAddress: '',
-          website: '',
-          taxNumber: '',
-          bankName: '',
-          accountHolder: '',
-          accountNumber: '',
-          branchCode: '',
-          defaultCurrency: 'ZAR',
-          defaultTaxRate: 15,
-        };
-        await setDoc(doc(db, 'profiles', newUser.uid), initialProfile);
-        setProfile(initialProfile);
-        router.push('/dashboard');
-    } catch (error) {
-      console.error("Signup failed:", error);
-      setLoading(false);
-      throw error;
-    }
+    const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+    const newUser = userCredential.user;
+
+    const initialProfile: BusinessProfile = {
+      companyName: '',
+      ownerName: '',
+      businessEmail: newUser.email || '',
+      businessPhone: '',
+      businessAddress: '',
+      website: '',
+      taxNumber: '',
+      bankName: '',
+      accountHolder: '',
+      accountNumber: '',
+      branchCode: '',
+      defaultCurrency: 'ZAR',
+      defaultTaxRate: 15,
+      subscribed: false,
+    };
+
+    await setDoc(doc(db, 'profiles', newUser.uid), initialProfile);
+    setProfile(initialProfile);
+    router.push('/dashboard');
   };
 
   const logout = async () => {
     await signOut(auth);
     router.push('/login');
   };
-  
+
   if (!appReady) {
     return (
-       <div className="flex h-screen w-screen flex-col items-center justify-center gap-4 bg-background">
+      <div className="flex h-screen w-screen flex-col items-center justify-center gap-4 bg-background">
         <Logo />
         <div className="text-center">
           <p className="text-lg font-medium text-foreground">
@@ -110,14 +103,14 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
             <span className="animate-pulse" style={{ animationDelay: '200ms' }}>.</span>
             <span className="animate-pulse" style={{ animationDelay: '400ms' }}>.</span>
           </p>
-          <p className="text-sm text-muted-foreground">Please wait a moment while we load the app.</p>
+          <p className="text-sm text-muted-foreground">Please wait a moment.</p>
         </div>
       </div>
-    )
+    );
   }
 
   return (
-    <AuthContext.Provider value={{ user, profile, loading, login, logout, signup, setProfile }}>
+    <AuthContext.Provider value={{ user, profile, loading, appReady, login, signup, logout, setProfile }}>
       {children}
     </AuthContext.Provider>
   );

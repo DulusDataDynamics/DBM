@@ -9,16 +9,17 @@ import Link from 'next/link';
 import { Zap, ClipboardCheck, FileText } from 'lucide-react';
 
 export default function LandingPage() {
-  const { user, loading } = useAuth();
+  const { user, appReady } = useAuth();
   const router = useRouter();
 
   useEffect(() => {
-    if (!loading && user) {
+    if (appReady && user) {
       router.replace('/dashboard');
     }
-  }, [user, loading, router]);
+  }, [user, appReady, router]);
 
-  if (loading || user) {
+  // Prevent flash of landing page for authenticated users
+  if (!appReady || user) {
     return (
        <div className="flex h-screen w-screen flex-col items-center justify-center gap-4 bg-background">
         <Logo />
