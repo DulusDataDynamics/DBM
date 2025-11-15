@@ -1,7 +1,7 @@
 'use client';
 
 import { usePathname, useRouter } from 'next/navigation';
-import React, { useEffect, useState } from 'react';
+import React, { useEffect } from 'react';
 import Link from 'next/link';
 import { useAuth } from '@/hooks/use-auth';
 import { NAV_LINKS, SUPPORT_LINKS } from '@/lib/constants';
@@ -20,14 +20,11 @@ import {
   SidebarInset,
   SidebarSeparator,
 } from '@/components/ui/sidebar';
-import { Button } from '@/components/ui/button';
-import { Progress } from '@/components/ui/progress';
 
 export default function AppLayout({ children }: { children: React.ReactNode }) {
-  const { user, loading, profile } = useAuth();
+  const { user, loading } = useAuth();
   const router = useRouter();
   const pathname = usePathname();
-  const [daysLeft, setDaysLeft] = useState<number | null>(null);
 
   useEffect(() => {
     if (!loading && !user) {
@@ -36,21 +33,11 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
   }, [user, loading, router]);
 
 
-  if (loading || !user) {
-    return (
-      <div className="flex h-screen w-screen flex-col items-center justify-center gap-4 bg-background">
-        <Logo />
-        <div className="text-center">
-          <p className="text-lg font-medium text-foreground">
-            Getting things ready
-            <span className="animate-pulse">.</span>
-            <span className="animate-pulse" style={{ animationDelay: '200ms' }}>.</span>
-            <span className="animate-pulse" style={{ animationDelay: '400ms' }}>.</span>
-          </p>
-          <p className="text-sm text-muted-foreground">Please wait a moment while we load the app.</p>
-        </div>
-      </div>
-    );
+  if (!user) {
+    // AuthProvider will show a loading screen while appReady is false.
+    // If we're here and there's no user, it means auth is done and the user is logged out.
+    // We'll let the useEffect handle the redirect.
+    return null;
   }
 
   return (

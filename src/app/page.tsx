@@ -17,30 +17,18 @@ export default function LandingPage() {
 
   useEffect(() => {
     // If the auth state is not loading and a user exists, redirect to the dashboard.
+    // This runs after the initial render, preventing the flash of the landing page for logged-in users.
     if (!loading && user) {
       router.replace('/dashboard');
     }
   }, [user, loading, router]);
   
+  // If the user is logged in, we render null to avoid a flash of the landing page
+  // while the redirect is in progress. The AuthProvider will show a loading screen anyway.
   if (loading || user) {
-      return (
-      <div className="flex h-screen w-screen flex-col items-center justify-center gap-4 bg-background">
-        <Logo />
-        <div className="text-center">
-          <p className="text-lg font-medium text-foreground">
-            Getting things ready
-            <span className="animate-pulse">.</span>
-            <span className="animate-pulse" style={{ animationDelay: '200ms' }}>.</span>
-            <span className="animate-pulse" style={{ animationDelay: '400ms' }}>.</span>
-          </p>
-          <p className="text-sm text-muted-foreground">Please wait a moment while we load the app.</p>
-        </div>
-      </div>
-    );
+      return null;
   }
   
-  // Always render the landing page. The useEffect above will handle the redirect for logged-in users.
-  // This prevents any flash of a loading screen for new visitors.
   const heroImage = PlaceHolderImages && PlaceHolderImages.find((p) => p.id === 'landing-hero');
 
   const features = [

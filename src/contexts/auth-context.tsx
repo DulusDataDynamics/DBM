@@ -29,21 +29,24 @@ export const AuthContext = createContext<AuthContextType | undefined>(undefined)
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [user, setUser] = useState<User | null>(null);
   const [profile, setProfile] = useState<BusinessProfile | null>(null);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(true); // Kept for login/signup actions
+  const [appReady, setAppReady] = useState(false);
   const router = useRouter();
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, async (user) => {
-      setUser(user);
       if (user) {
+        setUser(user);
         const profileDoc = await getDoc(doc(db, 'profiles', user.uid));
         if (profileDoc.exists()) {
           setProfile(profileDoc.data() as BusinessProfile);
         }
       } else {
+        setUser(null);
         setProfile(null);
       }
       setLoading(false);
+      setAppReady(true); // Signal that all initial auth checks are done.
     });
 
     return () => unsubscribe();
@@ -66,7 +69,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     try {
         const userCredential = await createUserWithEmailAndPassword(auth, email, password);
         const newUser = userCredential.user;
-        const initialProfile: Omit<BusinessProfile, 'trialStart' | 'trialActive' | 'subscribed'> = {
+        const initialProfile: Omit<BusinessProfile, 'subscribed'> = {
           companyName: '',
           ownerName: '',
           businessEmail: newUser.email || '',
@@ -96,7 +99,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     router.push('/login');
   };
   
-  if (loading) {
+  if (!appReady) {
     return (
        <div className="flex h-screen w-screen flex-col items-center justify-center gap-4 bg-background">
         <Logo />
